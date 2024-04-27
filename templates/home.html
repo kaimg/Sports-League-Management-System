@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Welcome to the Sports League Management System!</h2>
+<p>Manage your sports league efficiently.</p>
+{% if 'username' not in session %}
+<p><a href="{{ url_for('login') }}">Login</a> or <a href="{{ url_for('register') }}">register</a> to start managing your league.</p>
+{% endif %}
+{% endblock %}

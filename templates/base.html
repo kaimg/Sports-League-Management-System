@@ -1,8 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sports League Management System</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <header>
@@ -12,8 +14,8 @@
                 <li><a href="{{ url_for('home') }}">Home</a></li>
                 {% if 'username' in session %}
                 <li><a href="{{ url_for('manage_teams') }}">Teams</a></li>
-                <li><a href="{{ url_for('manage_games') }}">Games</a></li>
                 <li><a href="{{ url_for('manage_players') }}">Players</a></li>
+                <li><a href="{{ url_for('manage_games') }}">Games</a></li>
                 <li><a href="{{ url_for('logout') }}">Logout</a></li>
                 {% else %}
                 <li><a href="{{ url_for('login') }}">Login</a></li>
@@ -25,5 +27,8 @@
     <main>
         {% block content %}{% endblock %}
     </main>
+    <footer>
+        <p>© 2024 Sports League Management System</p>
+    </footer>
 </body>
 </html>
