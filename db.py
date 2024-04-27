@@ -5,8 +5,8 @@ def get_db_connection():
     conn = psycopg2.connect(
         host='localhost',
         dbname='sports_league',
-        user='your_username',
-        password='your_password'
+        user='postgres',
+        password='admin'
     )
     return conn
 

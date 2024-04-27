@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key_here'
+app.config['DATABASE_URL'] = 'DATABASE_URL=postgresql://postgres:admin@localhost:5432/postgres'
 
 @app.route('/')
 def home():
@@ -40,19 +41,21 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html')
 
-@app.route('/manage_teams', methods=['GET', 'POST'])
+@app.route('/manage_teams')
 def manage_teams():
-    if request.method == 'POST':
-        team_name = request.form['team_name']
-        query_db('INSERT INTO teams (name) VALUES (%s)', (team_name,), commit=True)
-    teams = query_db('SELECT * FROM teams')
+    teams = query_db('SELECT * FROM teams')  # Adjust the SQL based on your schema
     return render_template('manage_teams.html', teams=teams)
 
-@app.route('/add_team', methods=['POST'])
-def add_team():
-    team_name = request.form['team_name']
-    query_db('INSERT INTO teams (name) VALUES (%s)', (team_name,), commit=True)
-    return redirect(url_for('manage_teams'))
+@app.route('/manage_players')
+def manage_players():
+    players = query_db('SELECT * FROM players')  # Adjust the SQL based on your schema
+    return render_template('manage_players.html', players=players)
+
+@app.route('/manage_games')
+def manage_games():
+    games = query_db('SELECT * FROM games')  # Adjust the SQL based on your schema
+    return render_template('manage_games.html', games=games)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

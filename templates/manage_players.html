@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Manage Players</h2>
+<form method="post" action="{{ url_for('manage_players') }}">
+    Player Name: <input type="text" name="player_name"><br>
+    <input type="submit" value="Add Player">
+</form>
+
+<ul>
+    {% for player in players %}
+    <li>{{ player.name }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}
