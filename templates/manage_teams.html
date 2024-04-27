@@ -2,12 +2,13 @@
 
 {% block content %}
 <h2>Manage Teams</h2>
-<form method="post" action="{{ url_for('manage_teams') }}">
-    Team Name: <input type="text" name="team_name"><br>
+<form method="post" action="{{ url_for('manage_teams') }}" class="manage-form">
+    <label for="team_name">Team Name:</label>
+    <input type="text" id="team_name" name="team_name" required>
     <input type="submit" value="Add Team">
 </form>
 
-<ul>
+<ul class="item-list">
     {% for team in teams %}
     <li>{{ team.name }}</li>
     {% endfor %}

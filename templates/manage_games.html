@@ -2,14 +2,19 @@
 
 {% block content %}
 <h2>Manage Games</h2>
-<form method="post" action="{{ url_for('manage_games') }}">
-    Game Details: <input type="text" name="game_details"><br>
+<form method="post" action="{{ url_for('manage_games') }}" class="manage-form">
+    <label for="team1_id">Team 1 ID:</label>
+    <input type="number" id="team1_id" name="team1_id" required>
+    <label for="team2_id">Team 2 ID:</label>
+    <input type="number" id="team2_id" name="team2_id" required>
+    <label for="date">Date:</label>
+    <input type="datetime-local" id="date" name="date" required>
     <input type="submit" value="Add Game">
 </form>
 
-<ul>
+<ul class="item-list">
     {% for game in games %}
-    <li>{{ game.details }}</li>
+    <li>Game between Team ID {{ game.team1_id }} and Team ID {{ game.team2_id }} on {{ game.date }}</li>
     {% endfor %}
 </ul>
 {% endblock %}

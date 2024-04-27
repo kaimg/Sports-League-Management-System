@@ -41,20 +41,46 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html')
 
-@app.route('/manage_teams')
+from flask import Flask, render_template, request, redirect, url_for
+
+@app.route('/manage_teams', methods=['GET', 'POST'])
 def manage_teams():
-    teams = query_db('SELECT * FROM teams')  # Adjust the SQL based on your schema
+    if request.method == 'POST':
+        team_name = request.form['team_name']
+        # Assume the function 'query_db' is your way to interact with the database
+        query_db('INSERT INTO teams (name) VALUES (%s)', [team_name], commit=True)
+        return redirect(url_for('manage_teams'))  # Redirect to clear the form / prevent re-submission
+
+    teams = query_db('SELECT * FROM teams', one=False)  # Fetch all teams to display
     return render_template('manage_teams.html', teams=teams)
 
-@app.route('/manage_players')
+@app.route('/manage_players', methods=['GET', 'POST'])
 def manage_players():
-    players = query_db('SELECT * FROM players')  # Adjust the SQL based on your schema
+    if request.method == 'POST':
+        player_name = request.form['player_name']
+        team_id = request.form['team_id']
+        position = request.form['position']
+        query_db('INSERT INTO players (team_id, name, position) VALUES (%s, %s, %s)',
+                 [team_id, player_name, position], commit=True)
+        return redirect(url_for('manage_players'))
+
+    players = query_db('SELECT * FROM players', one=False)
     return render_template('manage_players.html', players=players)
 
-@app.route('/manage_games')
+
+@app.route('/manage_games', methods=['GET', 'POST'])
 def manage_games():
-    games = query_db('SELECT * FROM games')  # Adjust the SQL based on your schema
+    if request.method == 'POST':
+        team1_id = request.form['team1_id']
+        team2_id = request.form['team2_id']
+        date = request.form['date']
+        query_db('INSERT INTO games (team1_id, team2_id, date) VALUES (%s, %s, %s)',
+                 [team1_id, team2_id, date], commit=True)
+        return redirect(url_for('manage_games'))
+
+    games = query_db('SELECT * FROM games', one=False)
     return render_template('manage_games.html', games=games)
+
 
 
 if __name__ == '__main__':

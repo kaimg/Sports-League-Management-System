@@ -60,3 +60,50 @@ button {
 button:hover {
     background-color: #3e66a3;
 }
+
+/* Styling for forms on management pages */
+.manage-form {
+    margin: 20px auto;
+    width: 300px;
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+.manage-form input[type="text"] {
+    width: calc(100% - 18px); /* Full width minus padding */
+    display: block;
+}
+
+.manage-form input[type="submit"] {
+    width: 100%;
+    padding: 10px;
+    background-color: #4CAF50; /* Green */
+    color: white;
+}
+
+.manage-form input[type="submit"]:hover {
+    background-color: #45a049;
+}
+
+/* Styling for the list of items */
+.item-list {
+    margin: 20px auto;
+    width: 300px;
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    list-style-type: none; /* Removes bullet points */
+}
+
+.item-list li {
+    border-bottom: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.item-list li:last-child {
+    border-bottom: none;
+}

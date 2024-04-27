@@ -2,14 +2,19 @@
 
 {% block content %}
 <h2>Manage Players</h2>
-<form method="post" action="{{ url_for('manage_players') }}">
-    Player Name: <input type="text" name="player_name"><br>
+<form method="post" action="{{ url_for('manage_players') }}" class="manage-form">
+    <label for="player_name">Player Name:</label>
+    <input type="text" id="player_name" name="player_name" required>
+    <label for="team_id">Team ID:</label>
+    <input type="number" id="team_id" name="team_id" required>
+    <label for="position">Position:</label>
+    <input type="text" id="position" name="position">
     <input type="submit" value="Add Player">
 </form>
 
-<ul>
+<ul class="item-list">
     {% for player in players %}
-    <li>{{ player.name }}</li>
+    <li>{{ player.name }} - {{ player.position }} (Team ID: {{ player.team_id }})</li>
     {% endfor %}
 </ul>
 {% endblock %}
