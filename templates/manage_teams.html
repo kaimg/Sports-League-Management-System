@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Manage Teams</h2>
+<form method="post" action="{{ url_for('add_team') }}">
+    Team Name: <input type="text" name="team_name"><br>
+    <input type="submit" value="Add Team">
+</form>
+
+<ul>
+    {% for team in teams %}
+    <li>{{ team.name }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}

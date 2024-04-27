@@ -37,6 +37,19 @@ def register():
         query_db('INSERT INTO users (username, password) VALUES (%s, %s)', (username, hashed_password), commit=True)
         return redirect(url_for('login'))
     return render_template('register.html')
+@app.route('/manage_teams', methods=['GET', 'POST'])
+def manage_teams():
+    if request.method == 'POST':
+        team_name = request.form['team_name']
+        query_db('INSERT INTO teams (name) VALUES (%s)', (team_name,), commit=True)
+    teams = query_db('SELECT * FROM teams')
+    return render_template('manage_teams.html', teams=teams)
+
+@app.route('/add_team', methods=['POST'])
+def add_team():
+    team_name = request.form['team_name']
+    query_db('INSERT INTO teams (name) VALUES (%s)', (team_name,), commit=True)
+    return redirect(url_for('manage_teams'))
 
 if __name__ == '__main__':
     app.run(debug=True)
