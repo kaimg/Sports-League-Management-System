@@ -7,9 +7,11 @@ app.config['SECRET_KEY'] = 'your_secret_key_here'
 
 @app.route('/')
 def home():
+    # If a user is logged in, use the home.html to display a welcome message
     if 'username' in session:
-        return f"Welcome {session['username']}!"
-    return "Welcome to the Sports League Management System!"
+        return render_template('home.html', username=session['username'])
+    # If no user is logged in, display the generic welcome message
+    return render_template('home.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -20,7 +22,7 @@ def login():
         if user and check_password_hash(user['password'], password):
             session['username'] = user['username']
             return redirect(url_for('home'))
-        return 'Invalid username or password'
+        return 'Invalid username or password'  # Consider updating this to show the error within the login.html template
     return render_template('login.html')
 
 @app.route('/logout')
@@ -37,6 +39,7 @@ def register():
         query_db('INSERT INTO users (username, password) VALUES (%s, %s)', (username, hashed_password), commit=True)
         return redirect(url_for('login'))
     return render_template('register.html')
+
 @app.route('/manage_teams', methods=['GET', 'POST'])
 def manage_teams():
     if request.method == 'POST':
