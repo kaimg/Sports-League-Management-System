@@ -1,3 +1,4 @@
+/* General Body Styles */
 body {
     font-family: Arial, sans-serif;
     background-color: #f4f4f4;
@@ -5,6 +6,7 @@ body {
     padding: 0;
 }
 
+/* Header Styles */
 header {
     background-color: #333;
     color: #fff;
@@ -12,6 +14,7 @@ header {
     text-align: center;
 }
 
+/* Navigation Styles */
 nav ul {
     list-style-type: none;
     padding: 0;
@@ -27,11 +30,13 @@ nav ul li a {
     text-decoration: none;
 }
 
+/* Main Content Area */
 main {
     padding: 20px;
     text-align: center;
 }
 
+/* Footer Styles */
 footer {
     background-color: #333;
     color: #fff;
@@ -42,52 +47,53 @@ footer {
     bottom: 0;
 }
 
-input[type="text"], input[type="password"] {
+/* Apply a consistent display, width, and margin to all input elements */
+input[type="text"], input[type="password"], input[type="datetime-local"], input[type="number"], input[type="submit"] {
+    display: block;
+    width: 100%;
     margin: 10px 0;
     padding: 8px;
-    width: 200px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
 }
 
-button {
-    background-color: #5c85d6;
+/* Adjust labels to display as block for proper alignment */
+label {
+    display: block;
+    margin-top: 20px;
+    margin-bottom: 5px;
+}
+
+/* Adjust the button to look consistent with the inputs */
+input[type="submit"], button {
+    background-color: #5c85d6; /* Blue */
     color: white;
     border: none;
-    padding: 10px 20px;
-    margin: 10px 0;
+    padding: 10px;
+    margin-top: 10px;
     cursor: pointer;
+    border-radius: 4px;
 }
 
-button:hover {
-    background-color: #3e66a3;
+input[type="submit"]:hover, button:hover {
+    background-color: #3e66a3; /* Darker blue on hover */
 }
 
-/* Styling for forms on management pages */
+/* Ensure form container uses flexbox to align items properly */
 .manage-form {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch; /* Align items to stretch to fill the form container */
     margin: 20px auto;
-    width: 300px;
-    background-color: #fff;
     padding: 20px;
+    background-color: #fff;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
+    width: 300px; /* Set a fixed width for the form container */
 }
 
-.manage-form input[type="text"] {
-    width: calc(100% - 18px); /* Full width minus padding */
-    display: block;
-}
-
-.manage-form input[type="submit"] {
-    width: 100%;
-    padding: 10px;
-    background-color: #4CAF50; /* Green */
-    color: white;
-}
-
-.manage-form input[type="submit"]:hover {
-    background-color: #45a049;
-}
-
-/* Styling for the list of items */
+/* List Styles for Displaying Items */
 .item-list {
     margin: 20px auto;
     width: 300px;
@@ -102,8 +108,46 @@ button:hover {
     border-bottom: 1px solid #ddd;
     padding: 8px;
     text-align: left;
+    position: relative;
 }
 
 .item-list li:last-child {
     border-bottom: none;
+}
+
+/* List item styling with flexbox */
+.game-item {
+    display: flex;
+    justify-content: space-between; /* Aligns children with space between */
+    align-items: center; /* Vertically centers children */
+    padding: 8px;
+    border-bottom: 1px solid #ddd; /* Separator for each game item */
+}
+
+/* Game details styling */
+.game-details {
+    flex-grow: 1; /* Allows the game details to take up available space */
+}
+
+/* Delete Button Style*/
+.delete-form {
+    display: inline-block; 
+    vertical-align: middle;
+}
+
+.delete-button {
+    background-color: #e73c3c;
+    border: 1px solid #cc3333;
+    color: white;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+}
+
+.delete-button:hover {
+    background-color: rgb(187, 47, 47); /* A darker red for the hover state */
 }

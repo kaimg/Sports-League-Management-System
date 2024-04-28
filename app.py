@@ -77,11 +77,20 @@ def manage_games():
         query_db('INSERT INTO games (team1_id, team2_id, date) VALUES (%s, %s, %s)',
                  [team1_id, team2_id, date], commit=True)
         return redirect(url_for('manage_games'))
-
-    games = query_db('SELECT * FROM games', one=False)
+    pass
+    # Adjust the SQL query to join with the teams table and get team names
+    games = query_db('''SELECT games.game_id, games.date,
+                               team1.name as team1_name, team2.name as team2_name
+                        FROM games
+                        JOIN teams as team1 ON games.team1_id = team1.team_id
+                        JOIN teams as team2 ON games.team2_id = team2.team_id
+                        ORDER BY games.date ASC''', one=False)
     return render_template('manage_games.html', games=games)
 
-
+@app.route('/delete_game/<int:game_id>', methods=['POST'])
+def delete_game(game_id):
+    query_db('DELETE FROM games WHERE game_id = %s', [game_id], commit=True)
+    return redirect(url_for('manage_games'))
 
 if __name__ == '__main__':
     app.run(debug=True)

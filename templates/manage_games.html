@@ -14,7 +14,14 @@
 
 <ul class="item-list">
     {% for game in games %}
-    <li>Game between Team ID {{ game.team1_id }} and Team ID {{ game.team2_id }} on {{ game.date }}</li>
+    <li class="game-item">
+        <div class="game-details">
+            Game between {{ game.team1_name }} and {{ game.team2_name }} on {{ game.date.strftime('%Y-%m-%d %H:%M') }}
+        </div>
+        <form action="{{ url_for('delete_game', game_id=game.game_id) }}" method="post" class="delete-form">
+            <button type="submit" class="delete-button">&#8722;</button> <!-- Minus symbol -->
+        </form>
+    </li>
     {% endfor %}
 </ul>
 {% endblock %}
