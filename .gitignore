@@ -1,0 +1,21 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment folder
+venv/
+.env
+
+# Instance folder where Flask stores instance-specific files
+instance/
+
+# OS generated files
+.DS_Store  # macOS specific
+Thumbs.db  # Windows specific
+
+# Environment files
+.env
+
+# Folder for storing logs
+logs/
