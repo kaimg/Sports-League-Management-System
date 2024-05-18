@@ -10,14 +10,33 @@
             </div>
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" name="password" class="form-control" required>
+                <div class="input-group">
+                    <input type="password" id="password" name="password" class="form-control" required>
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                            <i class="fa fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="form-group">
                 <label for="email">Email</label>
                 <input type="email" name="email" class="form-control" required>
             </div>
-            <button type="submit" class="btn btn-primary">Register</button>
+            <div class="form-group d-flex justify-content-start">
+                <button type="submit" class="btn btn-primary">Sign Up</button>
+                <a href="{{ url_for('login') }}" class="btn btn-secondary ml-2">Login</a>
+            </div>
         </form>
     </div>
 </div>
+<script>
+    document.getElementById('togglePassword').addEventListener('click', function () {
+        const passwordField = document.getElementById('password');
+        const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordField.setAttribute('type', type);
+        this.querySelector('i').classList.toggle('fa-eye');
+        this.querySelector('i').classList.toggle('fa-eye-slash');
+    });
+</script>
 {% endblock %}

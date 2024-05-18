@@ -23,7 +23,7 @@ def home():
         if session.get('is_admin'):
             return redirect(url_for('admin'))
         else:
-            return redirect(url_for('user.dashboard'))
+            return redirect(url_for('user'))
     else:
         return redirect(url_for('login'))
 
@@ -36,7 +36,7 @@ def login():
         password = request.form['password']
         cur.execute(
             'SELECT user_id, username, password, is_admin FROM users WHERE username = %s',
-            (username,))
+            (username, ))
         user = cur.fetchone()
         cur.close()
         if user and user[2] == password:
@@ -59,6 +59,21 @@ def register():
             username = request.form['username']
             password = request.form['password']
             email = request.form['email']
+
+            # Check if the username already exists
+            cur.execute('SELECT * FROM users WHERE username = %s', (username,))
+            existing_user = cur.fetchone()
+            if existing_user:
+                flash('Username already taken', 'error')
+                return redirect(url_for('register'))
+
+            # Check if the email already exists
+            cur.execute('SELECT * FROM users WHERE email = %s', (email,))
+            existing_email = cur.fetchone()
+            if existing_email:
+                flash('Email already registered', 'error')
+                return redirect(url_for('register'))
+
             cur.execute(
                 'INSERT INTO users (username, password, email, is_admin) VALUES (%s, %s, %s, %s)',
                 (username, password, email, False))
