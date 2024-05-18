@@ -135,5 +135,46 @@ def add_user():
             return redirect(url_for('add_user'))
     return render_template('add_user.html')
 
+@app.route('/profile', methods=['GET', 'POST'])
+def profile():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    db = get_db()
+    cur = db.cursor()
+    user_id = session['user_id']
+
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+
+        # Check if the username already exists
+        cur.execute('SELECT * FROM users WHERE username = %s AND user_id != %s', (username, user_id))
+        existing_user = cur.fetchone()
+        if existing_user:
+            flash('Username already taken', 'error')
+            return redirect(url_for('profile'))
+
+        # Check if the email already exists
+        cur.execute('SELECT * FROM users WHERE email = %s AND user_id != %s', (email, user_id))
+        existing_email = cur.fetchone()
+        if existing_email:
+            flash('Email already registered', 'error')
+            return redirect(url_for('profile'))
+
+        cur.execute('UPDATE users SET username = %s, email = %s, password = %s WHERE user_id = %s',
+                    (username, email, password, user_id))
+        db.commit()
+        flash('Profile updated successfully', 'success')
+        return redirect(url_for('profile'))
+
+    cur.execute('SELECT username, email FROM users WHERE user_id = %s', (user_id,))
+    user = cur.fetchone()
+    cur.close()
+
+    return render_template('profile.html', user=user)
+
+
 if __name__ == '__main__':
     app.run(debug=True)
