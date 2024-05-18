@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% block title %}Add Result - Admin Panel{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Add Result</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <form action="/add_result" method="POST">
+                <div class="form-group">
+                    <label for="match_id">Match ID:</label>
+                    <input type="number" class="form-control" id="match_id" name="match_id" required>
+                </div>
+                <div class="form-group">
+                    <label for="team_id">Team ID:</label>
+                    <input type="number" class="form-control" id="team_id" name="team_id" required>
+                </div>
+                <div class="form-group">
+                    <label for="score">Score:</label>
+                    <input type="number" class="form-control" id="score" name="score" required>
+                </div>
+                <div class="form-group">
+                    <label for="win">Win:</label>
+                    <input type="checkbox" id="win" name="win">
+                </div>
+                <div class="form-group">
+                    <label for="draw">Draw:</label>
+                    <input type="checkbox" id="draw" name="draw">
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+                <a href="{{ url_for('admin') }}" class="btn btn-secondary">Back</a>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <h2>Existing Results</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Match ID</th>
+                        <th>Team ID</th>
+                        <th>Score</th>
+                        <th>Win</th>
+                        <th>Draw</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                    <tr>
+                        <td>{{ result[0] }}</td>
+                        <td>{{ result[1] }}</td>
+                        <td>{{ result[2] }}</td>
+                        <td>{{ result[3] }}</td>
+                        <td>{{ result[4] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

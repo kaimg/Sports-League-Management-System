@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+{% block title %}View Seasons - User Panel{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">View Seasons</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <h2>Edit Season</h2>
+            {% if season %}
+            <form action="{{ url_for('user.view_season') }}" method="POST">
+                <input type="hidden" name="season_id" value="{{ season_id }}">
+                <div class="form-group">
+                    <label for="league_id">League ID:</label>
+                    <input type="number" class="form-control" id="league_id" name="league_id" value="{{ season[0] }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="year">Year:</label>
+                    <input type="text" class="form-control" id="year" name="year" value="{{ season[1] }}" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Update</button>
+                <a href="{{ url_for('user.view_season') }}" class="btn btn-secondary mt-3">Back</a>
+            </form>
+            {% else %}
+            <p>Select a season to edit.</p>
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            <h2>Existing Seasons</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>League ID</th>
+                        <th>Year</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for season in seasons %}
+                    <tr>
+                        <td>{{ season[0] }}</td>
+                        <td>{{ season[1] }}</td>
+                        <td>{{ season[2] }}</td>
+                        <td>
+                            <a href="{{ url_for('user.edit_season', season_id=season[0]) }}" class="btn btn-sm btn-warning">Edit</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

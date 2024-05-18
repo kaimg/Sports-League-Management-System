@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+{% block title %}View Players - User Panel{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">View Players</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <h2>Edit Player</h2>
+            {% if player %}
+            <form action="{{ url_for('user.view_player') }}" method="POST">
+                <input type="hidden" name="player_id" value="{{ player_id }}">
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{ player[0] }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="age">Age:</label>
+                    <input type="number" class="form-control" id="age" name="age" value="{{ player[1] }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="position">Position:</label>
+                    <input type="text" class="form-control" id="position" name="position" value="{{ player[2] }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="team_id">Team ID:</label>
+                    <input type="number" class="form-control" id="team_id" name="team_id" value="{{ player[3] }}" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Update</button>
+                <a href="{{ url_for('user.view_player') }}" class="btn btn-secondary mt-3">Back</a>
+            </form>
+            {% else %}
+            <p>Select a player to edit.</p>
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            <h2>Existing Players</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Age</th>
+                        <th>Position</th>
+                        <th>Team ID</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for player in players %}
+                    <tr>
+                        <td>{{ player[0] }}</td>
+                        <td>{{ player[1] }}</td>
+                        <td>{{ player[2] }}</td>
+                        <td>{{ player[3] }}</td>
+                        <td>{{ player[4] }}</td>
+                        <td>
+                            <a href="{{ url_for('user.edit_player', player_id=player[0]) }}" class="btn btn-sm btn-warning">Edit</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

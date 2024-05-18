@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+{% block title %}User Dashboard - Sports League Management{% endblock %}
+{% block content %}
+<div class="container">
+    <h1 class="mt-4">User Dashboard</h1>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="list-group">
+                <a href="{{ url_for('user.view_stadium') }}" class="list-group-item list-group-item-action">View Stadiums</a>
+                <a href="{{ url_for('user.view_league') }}" class="list-group-item list-group-item-action">View Leagues</a>
+                <a href="{{ url_for('user.view_season') }}" class="list-group-item list-group-item-action">View Seasons</a>
+                <a href="{{ url_for('user.view_team') }}" class="list-group-item list-group-item-action">View Teams</a>
+                <a href="{{ url_for('user.view_coach') }}" class="list-group-item list-group-item-action">View Coaches</a>
+                <a href="{{ url_for('user.view_player') }}" class="list-group-item list-group-item-action">View Players</a>
+                <a href="{{ url_for('user.view_match') }}" class="list-group-item list-group-item-action">View Matches</a>
+                <a href="{{ url_for('user.view_result') }}" class="list-group-item list-group-item-action">View Results</a>
+                <a href="{{ url_for('user.view_score') }}" class="list-group-item list-group-item-action">View Scores</a>
+                <a href="{{ url_for('user.view_game_stat') }}" class="list-group-item list-group-item-action">View Game Stats</a>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <h2>Welcome to the User Dashboard</h2>
+            <p>Use the sidebar to view and edit data.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

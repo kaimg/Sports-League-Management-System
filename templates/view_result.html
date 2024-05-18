@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+{% block title %}View Results - User Panel{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">View Results</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <h2>Edit Result</h2>
+            {% if result %}
+            <form action="{{ url_for('user.view_result') }}" method="POST">
+                <input type="hidden" name="match_id" value="{{ match_id }}">
+                <input type="hidden" name="team_id" value="{{ team_id }}">
+                <div class="form-group">
+                    <label for="score">Score:</label>
+                    <input type="number" class="form-control" id="score" name="score" value="{{ result[0] }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="win">Win:</label>
+                    <input type="checkbox" class="form-control" id="win" name="win" {% if result[1] %}checked{% endif %}>
+                </div>
+                <div class="form-group">
+                    <label for="draw">Draw:</label>
+                    <input type="checkbox" class="form-control" id="draw" name="draw" {% if result[2] %}checked{% endif %}>
+                </div>
+                <button type="submit" class="btn btn-primary">Update</button>
+                <a href="{{ url_for('user.view_result') }}" class="btn btn-secondary mt-3">Back</a>
+            </form>
+            {% else %}
+            <p>Select a result to edit.</p>
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            <h2>Existing Results</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Match ID</th>
+                        <th>Team ID</th>
+                        <th>Score</th>
+                        <th>Win</th>
+                        <th>Draw</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                    <tr>
+                        <td>{{ result[0] }}</td>
+                        <td>{{ result[1] }}</td>
+                        <td>{{ result[2] }}</td>
+                        <td>{{ result[3] }}</td>
+                        <td>{{ result[4] }}</td>
+                        <td>
+                            <a href="{{ url_for('user.edit_result', match_id=result[0], team_id=result[1]) }}" class="btn btn-sm btn-warning">Edit</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

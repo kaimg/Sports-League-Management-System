@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% block title %}View Game Stats - User Panel{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">View Game Stats</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <h2>Edit Game Stat</h2>
+            {% if game_stat %}
+            <form action="{{ url_for('user.view_game_stat') }}" method="POST">
+                <input type="hidden" name="match_id" value="{{ match_id }}">
+                <input type="hidden" name="stat_type" value="{{ stat_type }}">
+                <div class="form-group">
+                    <label for="value">Value:</label>
+                    <input type="number" class="form-control" id="value" name="value" value="{{ game_stat[0] }}" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Update</button>
+                <a href="{{ url_for('user.view_game_stat') }}" class="btn btn-secondary mt-3">Back</a>
+            </form>
+            {% else %}
+            <p>Select a game stat to edit.</p>
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            <h2>Existing Game Stats</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Match ID</th>
+                        <th>Stat Type</th>
+                        <th>Value</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for game_stat in game_stats %}
+                    <tr>
+                        <td>{{ game_stat[0] }}</td>
+                        <td>{{ game_stat[1] }}</td>
+                        <td>{{ game_stat[2] }}</td>
+                        <td>
+                            <a href="{{ url_for('user.edit_game_stat', match_id=game_stat[0], stat_type=game_stat[1]) }}" class="btn btn-sm btn-warning">Edit</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

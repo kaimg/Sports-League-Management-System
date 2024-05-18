@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">Welcome to the Sports League Management System</h1>
+    <p class="lead">Manage leagues, teams, players, and more.</p>
+    <hr class="my-4">
+    <p>Log in to get started or register if you don't have an account.</p>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('login') }}" role="button">Login</a>
+    <a class="btn btn-secondary btn-lg" href="{{ url_for('register') }}" role="button">Register</a>
+</div>
+{% endblock %}

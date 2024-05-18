@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+{% block title %}View Leagues - User Panel{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">View Leagues</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <h2>Edit League</h2>
+            {% if league %}
+            <form action="{{ url_for('user.view_league') }}" method="POST">
+                <input type="hidden" name="league_id" value="{{ league_id }}">
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{ league[0] }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="country">Country:</label>
+                    <input type="text" class="form-control" id="country" name="country" value="{{ league[1] }}" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Update</button>
+                <a href="{{ url_for('user.view_league') }}" class="btn btn-secondary mt-3">Back</a>
+            </form>
+            {% else %}
+            <p>Select a league to edit.</p>
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            <h2>Existing Leagues</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Country</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for league in leagues %}
+                    <tr>
+                        <td>{{ league[0] }}</td>
+                        <td>{{ league[1] }}</td>
+                        <td>{{ league[2] }}</td>
+                        <td>
+                            <a href="{{ url_for('user.edit_league', league_id=league[0]) }}" class="btn btn-sm btn-warning">Edit</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

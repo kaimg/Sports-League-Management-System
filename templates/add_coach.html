@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block title %}Add Coach - Admin Panel{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Add Coach</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <form action="/add_coach" method="POST">
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" class="form-control" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="team_id">Team ID:</label>
+                    <input type="number" class="form-control" id="team_id" name="team_id" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+                <a href="{{ url_for('admin') }}" class="btn btn-secondary">Back</a>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <h2>Existing Coaches</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Team ID</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for coach in coaches %}
+                    <tr>
+                        <td>{{ coach[0] }}</td>
+                        <td>{{ coach[1] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

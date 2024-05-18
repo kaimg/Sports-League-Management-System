@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% block title %}View Scores - User Panel{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">View Scores</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <h2>Edit Score</h2>
+            {% if score %}
+            <form action="{{ url_for('user.view_score') }}" method="POST">
+                <input type="hidden" name="match_id" value="{{ match_id }}">
+                <input type="hidden" name="player_id" value="{{ player_id }}">
+                <div class="form-group">
+                    <label for="score">Score:</label>
+                    <input type="number" class="form-control" id="score" name="score" value="{{ score[0] }}" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Update</button>
+                <a href="{{ url_for('user.view_score') }}" class="btn btn-secondary mt-3">Back</a>
+            </form>
+            {% else %}
+            <p>Select a score to edit.</p>
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            <h2>Existing Scores</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Match ID</th>
+                        <th>Player ID</th>
+                        <th>Score</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for score in scores %}
+                    <tr>
+                        <td>{{ score[0] }}</td>
+                        <td>{{ score[1] }}</td>
+                        <td>{{ score[2] }}</td>
+                        <td>
+                            <a href="{{ url_for('user.edit_score', match_id=score[0], player_id=score[1]) }}" class="btn btn-sm btn-warning">Edit</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
