@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+{% block title %}Search - Sports League Management{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1>Search</h1>
+    <form method="POST" class="mb-4">
+        <div class="input-group">
+            <input type="text" class="form-control" name="query" placeholder="Search..." required>
+            <div class="input-group-append">
+                <button class="btn btn-outline-secondary" type="button" id="searchIcon">
+                    <i class="fa fa-search"></i>
+                </button>
+            </div>
+        </div>
+    </form>
+
+    {% if query %}
+    <div>
+        <h2>Search Results for "{{ query }}"</h2>
+        {% if results %}
+            <ul class="list-group">
+                {% for result in results %}
+                    <li class="list-group-item">
+                        {{ result[1] }} ({{ result[2] }})
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No results found.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+<script>
+    document.getElementById('searchIcon').addEventListener('click', function() {
+        this.closest('form').submit();
+    });
+</script>
+{% endblock %}

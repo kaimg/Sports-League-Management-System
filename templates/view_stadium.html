@@ -26,6 +26,9 @@
             </form>
             {% else %}
             <p>Select a stadium to edit.</p>
+            <div class="d-flex">
+                <a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary mt-3">Back</a>
+            </div>
             {% endif %}
         </div>
         <div class="col-md-6">
@@ -54,9 +57,6 @@
                     {% endfor %}
                 </tbody>
             </table>
-            <div class="d-flex justify-content-end">
-                <a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary mt-3">Back</a>
-            </div>
         </div>
     </div>
 </div>

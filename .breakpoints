@@ -1,3 +1,12 @@
 {
-  "files": {}
+  "files": {
+    "templates/layout.html": [
+      {
+        "id": "26b7a55a-b772-4451-afec-93af10352132",
+        "line": 5,
+        "version": 5,
+        "index": 67
+      }
+    ]
+  }
 }

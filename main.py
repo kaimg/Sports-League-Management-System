@@ -93,6 +93,46 @@ def logout():
     session.clear()
     return redirect(url_for('landing'))
 
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+@app.route('/search', methods=['GET', 'POST'])
+def search():
+    results = []
+    query = ""
+    if request.method == 'POST':
+        query = request.form['query']
+        db = get_db()
+        cur = db.cursor()
+
+        # Search in teams
+        cur.execute("SELECT team_id, name, 'team' AS source FROM teams WHERE name ILIKE %s", ('%' + query + '%',))
+        results.extend(cur.fetchall())
+
+        # Search in coaches
+        cur.execute("SELECT coach_id, name, 'coach' AS source FROM coaches WHERE name ILIKE %s", ('%' + query + '%',))
+        results.extend(cur.fetchall())
+
+        # Search in players
+        cur.execute("SELECT player_id, name, 'player' AS source FROM players WHERE name ILIKE %s", ('%' + query + '%',))
+        results.extend(cur.fetchall())
+
+        # Search in stadiums
+        cur.execute("SELECT stadium_id, name, 'stadium' AS source FROM stadiums WHERE name ILIKE %s", ('%' + query + '%',))
+        results.extend(cur.fetchall())
+
+        # Search in leagues
+        cur.execute("SELECT league_id, name, 'league' AS source FROM leagues WHERE name ILIKE %s", ('%' + query + '%',))
+        results.extend(cur.fetchall())
+
+        cur.close()
+
+    return render_template('search.html', results=results, query=query)
+
+
+
+
 @app.route('/admin')
 def admin():
     if 'user_id' not in session or not session.get('is_admin'):

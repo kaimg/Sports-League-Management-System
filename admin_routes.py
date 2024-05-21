@@ -36,10 +36,26 @@ def add_stadium():
             return redirect(url_for('admin.add_stadium'))
 
     cur = db.cursor()
-    cur.execute('SELECT name, location, capacity FROM stadiums')
+    cur.execute('SELECT stadium_id, name, location, capacity FROM stadiums')
     stadiums = cur.fetchall()
     cur.close()
     return render_template('add_stadium.html', stadiums=stadiums)
+
+@admin_bp.route('/delete_stadium/<int:stadium_id>', methods=['POST'])
+@admin_required
+def delete_stadium(stadium_id):
+    db = get_db()
+    try:
+        cur = db.cursor()
+        cur.execute('DELETE FROM stadiums WHERE stadium_id = %s', (stadium_id,))
+        db.commit()
+        cur.close()
+        flash('Stadium deleted successfully', 'success')
+    except Exception as e:
+        db.rollback()
+        print("Error: ", str(e))
+        flash('Failed to delete stadium', 'error')
+    return redirect(url_for('admin.add_stadium'))
 
 
 @admin_bp.route('/add_league', methods=['GET', 'POST'])
