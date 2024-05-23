@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+{% block title %}{{ team[0] }} - Team Profile{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1>{{ team[0] }}'s Profile</h1>
+    <p><strong>Founded Year:</strong> {{ team[1] }}</p>
+    <p><strong>Stadium:</strong> {{ team[2] }}</p>
+    <p><strong>Coach:</strong> {{ team[3] }}</p>
+    
+    <h2>Players</h2>
+    {% if players %}
+        <ul class="list-group">
+            {% for player in players %}
+                <li class="list-group-item">
+                    <a href="{{ url_for('player_profile', player_id=player[0]) }}"><strong>{{ player[1] }}</strong></a> - {{ player[2] }} years old, Position: {{ player[3] }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No players found.</p>
+    {% endif %}
+    
+    <h2>Scores</h2>
+    {% if scores %}
+        <ul class="list-group">
+            {% for score in scores %}
+                <li class="list-group-item">
+                    <strong>{{ score[0] }}</strong> - Score: {{ score[1] }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No scores found.</p>
+    {% endif %}
+</div>
+{% endblock %}
