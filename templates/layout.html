@@ -34,10 +34,13 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('register') }}">Register</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('about') }}">About Us</a>
-                    </li>
                 {% endif %}
+                <li class="nav-item">
+                    <form class="form-inline my-2 my-lg-0" method="POST" action="{{ url_for('search') }}">
+                        <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" name="query" required>
+                        <button class="btn btn-outline-success my-2 my-sm-0" type="submit"><i class="fa fa-search"></i></button>
+                    </form>
+                </li>
             </ul>
         </div>
     </nav>
