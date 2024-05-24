@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% block title %}Internal Server Error{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <div class="alert alert-danger text-center">
+        <h1 class="display-4">500</h1>
+        <p class="lead">Internal Server Error</p>
+        <p>Something went wrong on our end. Please try again later.</p>
+        <a href="{{ url_for('landing') }}" class="btn btn-primary">Return to Home</a>
+    </div>
+</div>
+{% endblock %}

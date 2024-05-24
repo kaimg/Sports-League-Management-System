@@ -13,6 +13,11 @@ app.register_blueprint(user_bp)
 def teardown_db(exception):
     close_db()
 
+# Internal server error handling
+@app.errorhandler(500)
+def internal_error(error):
+    return render_template('500.html'), 500
+
 @app.route('/')
 def landing():
     if 'user_id' in session:
