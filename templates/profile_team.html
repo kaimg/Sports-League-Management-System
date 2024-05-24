@@ -12,7 +12,7 @@
         <ul class="list-group">
             {% for player in players %}
                 <li class="list-group-item">
-                    <a href="{{ url_for('player_profile', player_id=player[0]) }}"><strong>{{ player[1] }}</strong></a> - {{ player[2] }} years old, Position: {{ player[3] }}
+                    <a href="{{ url_for('profile_player', player_id=player[0]) }}"><strong>{{ player[1] }}</strong></a> - {{ player[2] }} years old, Position: {{ player[3] }}
                 </li>
             {% endfor %}
         </ul>

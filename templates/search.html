@@ -22,9 +22,9 @@
                 {% for result in results %}
                     <li class="list-group-item">
                         {% if result[2] == 'team' %}
-                            <a href="{{ url_for('team_profile', team_id=result[0]) }}">{{ result[1] }}</a> ({{ result[2] }})
+                            <a href="{{ url_for('profile_team', team_id=result[0]) }}">{{ result[1] }}</a> ({{ result[2] }})
                         {% elif result[2] == 'player' %}
-                            <a href="{{ url_for('player_profile', player_id=result[0]) }}">{{ result[1] }}</a> ({{ result[2] }})
+                            <a href="{{ url_for('profile_player', player_id=result[0]) }}">{{ result[1] }}</a> ({{ result[2] }})
                         {% else %}
                             {{ result[1] }} ({{ result[2] }})
                         {% endif %}

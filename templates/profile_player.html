@@ -5,6 +5,6 @@
     <h1>{{ player[0] }}'s Profile</h1>
     <p><strong>Age:</strong> {{ player[1] }}</p>
     <p><strong>Position:</strong> {{ player[2] }}</p>
-    <p><strong>Team:</strong> <a href="{{ url_for('team_profile', team_id=player[3]) }}">{{ player[4] }}</a></p>
+    <p><strong>Team:</strong> <a href="{{ url_for('profile_team', team_id=player[3]) }}">{{ player[4] }}</a></p>
 </div>
 {% endblock %}
