@@ -11,7 +11,7 @@
 </head>
 <body class="d-flex flex-column min-vh-100">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a class="navbar-brand" href="{{ url_for('landing') }}">
+        <a class="navbar-brand" href="{% if 'user_id' in session %}{% if session.get('is_admin') %}{{ url_for('admin') }}{% else %}{{ url_for('user') }}{% endif %}{% else %}{{ url_for('landing') }}{% endif %}">
             <img src="{{ url_for('static', filename='images/icon.png') }}" width="40" class="d-inline-block align-top" alt="">
             Sports League Management System
         </a>

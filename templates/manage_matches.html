@@ -1,0 +1,118 @@
+{% extends "layout.html" %}
+{% block title %}Manage Matches - Admin Panel{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Manage Matches</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <h2 id="form-title">Add Match</h2>
+            <form action="{{ url_for('admin.manage_matches') }}" method="POST">
+                <input type="hidden" id="match_id" name="match_id">
+                <div class="form-group">
+                    <label for="date">Date:</label>
+                    <input type="date" class="form-control" id="date" name="date" required>
+                </div>
+                <div class="form-group">
+                    <label for="location">Location:</label>
+                    <input type="text" class="form-control" id="location" name="location" required>
+                </div>
+                <div class="form-group">
+                    <label for="team1_id">Team 1:</label>
+                    <select class="form-control" id="team1_id" name="team1_id" required>
+                        {% for team in teams %}
+                        <option value="{{ team[0] }}">{{ team[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="team2_id">Team 2:</label>
+                    <select class="form-control" id="team2_id" name="team2_id" required>
+                        {% for team in teams %}
+                        <option value="{{ team[0] }}">{{ team[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="season_id">Season:</label>
+                    <select class="form-control" id="season_id" name="season_id" required>
+                        {% for season in seasons %}
+                        <option value="{{ season[0] }}">{{ season[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="league_id">League:</label>
+                    <select class="form-control" id="league_id" name="league_id" required>
+                        {% for league in leagues %}
+                        <option value="{{ league[0] }}">{{ league[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" name="add" class="btn btn-primary" id="submit-button">Add Match</button>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <h2>Existing Matches</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Date</th>
+                        <th>Location</th>
+                        <th>Team 1</th>
+                        <th>Team 2</th>
+                        <th>Season</th>
+                        <th>League</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for match in matches %}
+                    <tr>
+                        <td>{{ match[0] }}</td>
+                        <td>{{ match[1] }}</td>
+                        <td>{{ match[2] }}</td>
+                        <td>{{ match[3] }}</td>
+                        <td>{{ match[4] }}</td>
+                        <td>{{ match[5] }}</td>
+                        <td>{{ match[6] }}</td>
+                        <td>
+                            <button class="btn btn-success btn-sm" onclick="editMatch('{{ match[0] }}', '{{ match[1] }}', '{{ match[2] }}', '{{ match[3] }}', '{{ match[4] }}', '{{ match[5] }}', '{{ match[6] }}')">
+                                <i class="fa fa-pencil-alt"></i>
+                            </button>
+                        </td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{ match[0] }}')">
+                                <i class="fa fa-minus"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% include 'delete_modal.html' %}
+
+<script>
+    function editMatch(id, date, location, team1_id, team2_id, season_id, league_id) {
+        document.getElementById('match_id').value = id;
+        document.getElementById('date').value = date;
+        document.getElementById('location').value = location;
+        document.getElementById('team1_id').value = team1_id;
+        document.getElementById('team2_id').value = team2_id;
+        document.getElementById('season_id').value = season_id;
+        document.getElementById('league_id').value = league_id;
+        document.getElementById('submit-button').innerText = 'Update Match';
+        document.getElementById('form-title').innerText = 'Edit Match';
+    }
+
+    function confirmDelete(id) {
+        document.getElementById('deleteEntityId').value = id;
+        $('#deleteModal').modal('show');
+    }
+</script>
+{% endblock %}

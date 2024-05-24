@@ -1,0 +1,78 @@
+{% extends "layout.html" %}
+{% block title %}Manage Scores - Admin Panel{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Manage Scores</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <h2 id="form-title">Add Score</h2>
+            <form action="{{ url_for('admin.manage_scores') }}" method="POST">
+                <input type="hidden" id="match_id" name="match_id">
+                <div class="form-group">
+                    <label for="player_id">Player:</label>
+                    <select class="form-control" id="player_id" name="player_id" required>
+                        {% for player in players %}
+                        <option value="{{ player[0] }}">{{ player[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="score">Score:</label>
+                    <input type="number" class="form-control" id="score" name="score" required>
+                </div>
+                <button type="submit" name="add" class="btn btn-primary" id="submit-button">Add Score</button>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <h2>Existing Scores</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Match ID</th>
+                        <th>Player</th>
+                        <th>Score</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for score in scores %}
+                    <tr>
+                        <td>{{ score[0] }}</td>
+                        <td>{{ score[1] }}</td>
+                        <td>{{ score[2] }}</td>
+                        <td>
+                            <button class="btn btn-success btn-sm" onclick="editScore('{{ score[0] }}', '{{ score[1] }}', '{{ score[2] }}')">
+                                <i class="fa fa-pencil-alt"></i>
+                            </button>
+                        </td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{ score[0] }},{{ score[1] }}')">
+                                <i class="fa fa-minus"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% include 'delete_modal.html' %}
+
+<script>
+    function editScore(match_id, player_id, score) {
+        document.getElementById('match_id').value = match_id;
+        document.getElementById('player_id').value = player_id;
+        document.getElementById('score').value = score;
+        document.getElementById('submit-button').innerText = 'Update Score';
+        document.getElementById('form-title').innerText = 'Edit Score';
+    }
+
+    function confirmDelete(id) {
+        document.getElementById('deleteEntityId').value = id;
+        $('#deleteModal').modal('show');
+    }
+</script>
+{% endblock %}

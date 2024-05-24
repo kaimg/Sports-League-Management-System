@@ -1,0 +1,129 @@
+{% extends "layout.html" %}
+{% block title %}Manage Teams - Admin Panel{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Manage Teams</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <h2 id="form-title">Add Team</h2>
+            <form action="{{ url_for('admin.manage_teams') }}" method="POST">
+                <input type="hidden" id="team_id" name="team_id">
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" class="form-control" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="founded_year">Founded Year:</label>
+                    <input type="number" class="form-control" id="founded_year" name="founded_year" required>
+                </div>
+                <div class="form-group">
+                    <label for="stadium_id">Stadium:</label>
+                    <select class="form-control" id="stadium_id" name="stadium_id" required>
+                        {% for stadium in stadiums %}
+                        <option value="{{ stadium[0] }}">{{ stadium[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="league_id">League:</label>
+                    <select class="form-control" id="league_id" name="league_id" required>
+                        {% for league in leagues %}
+                        <option value="{{ league[0] }}">{{ league[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="coach_id">Coach:</label>
+                    <select class="form-control" id="coach_id" name="coach_id" required>
+                        {% for coach in coaches %}
+                        <option value="{{ coach[0] }}">{{ coach[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" name="add" class="btn btn-primary" id="submit-button">Add Team</button>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <h2>Existing Teams</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Founded Year</th>
+                        <th>Stadium</th>
+                        <th>League</th>
+                        <th>Coach</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for team in teams %}
+                    <tr>
+                        <td>{{ team[0] }}</td>
+                        <td>{{ team[1] }}</td>
+                        <td>{{ team[2] }}</td>
+                        <td>{{ team[3] }}</td>
+                        <td>{{ team[4] }}</td>
+                        <td>{{ team[5] }}</td>
+                        <td>
+                            <button class="btn btn-success btn-sm" onclick="editTeam('{{ team[0] }}', '{{ team[1] }}', '{{ team[2] }}', '{{ team[3] }}', '{{ team[4] }}', '{{ team[5] }}')">
+                                <i class="fa fa-pencil-alt"></i>
+                            </button>
+                        </td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{ team[0] }}')">
+                                <i class="fa fa-minus"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Delete Confirmation</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this team?
+            </div>
+            <div class="modal-footer">
+                <form action="{{ url_for('admin.manage_teams') }}" method="POST" id="deleteForm">
+                    <input type="hidden" name="team_id" id="deleteTeamId">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" name="delete" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function editTeam(id, name, founded_year, stadium_id, league_id, coach_id) {
+        document.getElementById('team_id').value = id;
+        document.getElementById('name').value = name;
+        document.getElementById('founded_year').value = founded_year;
+        document.getElementById('stadium_id').value = stadium_id;
+        document.getElementById('league_id').value = league_id;
+        document.getElementById('coach_id').value = coach_id;
+        document.getElementById('submit-button').innerText = 'Update Team';
+        document.getElementById('form-title').innerText = 'Edit Team';
+    }
+
+    function confirmDelete(id) {
+        document.getElementById('deleteTeamId').value = id;
+        $('#deleteModal').modal('show');
+    }
+</script>
+{% endblock %}

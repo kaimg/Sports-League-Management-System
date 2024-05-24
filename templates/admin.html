@@ -1,21 +1,21 @@
 {% extends "layout.html" %}
 {% block title %}Admin Panel - Sports League Management{% endblock %}
 {% block content %}
-<div class="container">
-    <h1 class="mt-4">Admin Panel</h1>
+<div class="container mt-4">
+    <h1>Admin Panel</h1>
     <div class="row">
         <div class="col-md-3">
             <div class="list-group">
-                <a href="/add_stadium" class="list-group-item list-group-item-action">Add Stadium</a>
-                <a href="/add_league" class="list-group-item list-group-item-action">Add League</a>
-                <a href="/add_season" class="list-group-item list-group-item-action">Add Season</a>
-                <a href="/add_team" class="list-group-item list-group-item-action">Add Team</a>
-                <a href="/add_coach" class="list-group-item list-group-item-action">Add Coach</a>
-                <a href="/add_player" class="list-group-item list-group-item-action">Add Player</a>
-                <a href="/add_match" class="list-group-item list-group-item-action">Add Match</a>
-                <a href="/add_result" class="list-group-item list-group-item-action">Add Result</a>
-                <a href="/add_score" class="list-group-item list-group-item-action">Add Score</a>
-                <a href="/add_game_stat" class="list-group-item list-group-item-action">Add Game Stat</a>
+                <a href="{{ url_for('admin.manage_stadiums') }}" class="list-group-item list-group-item-action">Manage Stadiums</a>
+                <a href="{{ url_for('admin.manage_leagues') }}" class="list-group-item list-group-item-action">Manage Leagues</a>
+                <a href="{{ url_for('admin.manage_seasons') }}" class="list-group-item list-group-item-action">Manage Seasons</a>
+                <a href="{{ url_for('admin.manage_teams') }}" class="list-group-item list-group-item-action">Manage Teams</a>
+                <a href="{{ url_for('admin.manage_coaches') }}" class="list-group-item list-group-item-action">Manage Coaches</a>
+                <a href="{{ url_for('admin.manage_players') }}" class="list-group-item list-group-item-action">Manage Players</a>
+                <a href="{{ url_for('admin.manage_matches') }}" class="list-group-item list-group-item-action">Manage Matches</a>
+                <a href="{{ url_for('admin.manage_results') }}" class="list-group-item list-group-item-action">Manage Results</a>
+                <a href="{{ url_for('admin.manage_scores') }}" class="list-group-item list-group-item-action">Manage Scores</a>
+                <a href="{{ url_for('admin.manage_game_stats') }}" class="list-group-item list-group-item-action">Manage Game Stats</a>
             </div>
         </div>
         <div class="col-md-9">
@@ -26,7 +26,7 @@
     <nav class="mt-4">
         <ul class="nav">
             <li class="nav-item">
-                <a href="/logout" class="nav-link">Logout</a>
+                <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
             </li>
         </ul>
     </nav>

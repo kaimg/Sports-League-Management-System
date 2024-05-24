@@ -1,0 +1,92 @@
+{% extends "layout.html" %}
+{% block title %}Manage Players - Admin Panel{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Manage Players</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <h2 id="form-title">Add Player</h2>
+            <form action="{{ url_for('admin.manage_players') }}" method="POST">
+                <input type="hidden" id="player_id" name="player_id">
+                <div class="form-group">
+                    <label for="team_id">Team:</label>
+                    <select class="form-control" id="team_id" name="team_id" required>
+                        {% for team in teams %}
+                        <option value="{{ team[0] }}">{{ team[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" class="form-control" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="age">Age:</label>
+                    <input type="number" class="form-control" id="age" name="age" required>
+                </div>
+                <div class="form-group">
+                    <label for="position">Position:</label>
+                    <input type="text" class="form-control" id="position" name="position" required>
+                </div>
+                <button type="submit" name="add" class="btn btn-primary" id="submit-button">Add Player</button>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <h2>Existing Players</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Team</th>
+                        <th>Name</th>
+                        <th>Age</th>
+                        <th>Position</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for player in players %}
+                    <tr>
+                        <td>{{ player[0] }}</td>
+                        <td>{{ player[1] }}</td>
+                        <td>{{ player[2] }}</td>
+                        <td>{{ player[3] }}</td>
+                        <td>{{ player[4] }}</td>
+                        <td>
+                            <button class="btn btn-success btn-sm" onclick="editPlayer('{{ player[0] }}', '{{ player[1] }}', '{{ player[2] }}', '{{ player[3] }}', '{{ player[4] }}')">
+                                <i class="fa fa-pencil-alt"></i>
+                            </button>
+                        </td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{ player[0] }}')">
+                                <i class="fa fa-minus"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% include 'delete_modal.html' %}
+
+<script>
+    function editPlayer(id, team_id, name, age, position) {
+        document.getElementById('player_id').value = id;
+        document.getElementById('team_id').value = team_id;
+        document.getElementById('name').value = name;
+        document.getElementById('age').value = age;
+        document.getElementById('position').value = position;
+        document.getElementById('submit-button').innerText = 'Update Player';
+        document.getElementById('form-title').innerText = 'Edit Player';
+    }
+
+    function confirmDelete(id) {
+        document.getElementById('deleteEntityId').value = id;
+        $('#deleteModal').modal('show');
+    }
+</script>
+{% endblock %}

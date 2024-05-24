@@ -1,0 +1,78 @@
+{% extends "layout.html" %}
+{% block title %}Manage Leagues - Admin Panel{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Manage Leagues</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <h2 id="form-title">Add League</h2>
+            <form action="{{ url_for('admin.manage_leagues') }}" method="POST" id="leagueForm">
+                <input type="hidden" id="league_id" name="league_id">
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" class="form-control" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="country">Country:</label>
+                    <input type="text" class="form-control" id="country" name="country" required>
+                </div>
+                <button type="submit" name="add" class="btn btn-primary" id="submit-button">Add League</button>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <h2>Existing Leagues</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Country</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for league in leagues %}
+                    <tr>
+                        <td>{{ league[0] }}</td>
+                        <td>{{ league[1] }}</td>
+                        <td>{{ league[2] }}</td>
+                        <td>
+                            <button class="btn btn-success btn-sm" onclick="editLeague('{{ league[0] }}', '{{ league[1] }}', '{{ league[2] }}')">
+                                <i class="fa fa-pencil-alt"></i>
+                            </button>
+                        </td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal" data-id="{{ league[0] }}" data-action="{{ url_for('admin.manage_leagues') }}">
+                                <i class="fa fa-minus"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Include the delete modal -->
+{% include 'delete_modal.html' %}
+
+<script>
+    function editLeague(id, name, country) {
+        document.getElementById('league_id').value = id;
+        document.getElementById('name').value = name;
+        document.getElementById('country').value = country;
+        document.getElementById('submit-button').innerText = 'Update League';
+        document.getElementById('form-title').innerText = 'Edit League';
+    }
+
+    $('#deleteModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var id = button.data('id');
+        var action = button.data('action');
+        document.getElementById('deleteItemId').value = id;
+        document.getElementById('deleteForm').action = action;
+    });
+</script>
+{% endblock %}

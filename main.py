@@ -9,16 +9,13 @@ app.secret_key = 'your_secret_key'  # Replace with a secure key
 app.register_blueprint(admin_bp)
 app.register_blueprint(user_bp)
 
-
 @app.teardown_appcontext
 def teardown_db(exception):
     close_db()
 
-
 @app.route('/')
 def landing():
     return render_template('landing.html')
-
 
 @app.route('/home')
 def home():
@@ -29,7 +26,6 @@ def home():
             return redirect(url_for('user'))
     else:
         return redirect(url_for('login'))
-
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -53,7 +49,6 @@ def login():
             return redirect(url_for('login'))
 
     return render_template('login.html')
-
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -94,20 +89,21 @@ def register():
             return redirect(url_for('register'))
     return render_template('register.html')
 
-
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('landing'))
 
-
 @app.route('/about')
 def about():
     return render_template('about.html')
 
-
 @app.route('/search', methods=['GET', 'POST'])
 def search():
+    if 'user_id' not in session:
+        flash('You need to log in to search', 'error')
+        return redirect(url_for('login'))
+
     results = []
     query = ""
     if request.method == 'POST':
@@ -149,15 +145,13 @@ def search():
 
     return render_template('search.html', results=results, query=query)
 
-
 @app.route('/team/<int:team_id>')
 def profile_team(team_id):
     db = get_db()
     cur = db.cursor()
 
     # Get team details along with stadium and coach
-    cur.execute(
-        """
+    cur.execute("""
         SELECT t.name, t.founded_year, s.name AS stadium_name, c.name AS coach_name 
         FROM teams t 
         JOIN stadiums s ON t.stadium_id = s.stadium_id 
@@ -167,8 +161,7 @@ def profile_team(team_id):
     team = cur.fetchone()
 
     # Get players
-    cur.execute(
-        """
+    cur.execute("""
         SELECT p.player_id, p.name, p.age, p.position 
         FROM players p 
         WHERE p.team_id = %s
@@ -176,8 +169,7 @@ def profile_team(team_id):
     players = cur.fetchall()
 
     # Get scores
-    cur.execute(
-        """
+    cur.execute("""
         SELECT m.date, s.score 
         FROM scores s 
         JOIN matches m ON s.match_id = m.match_id 
@@ -196,15 +188,13 @@ def profile_team(team_id):
         flash('Team not found', 'error')
         return redirect(url_for('search'))
 
-
 @app.route('/player/<int:player_id>')
 def profile_player(player_id):
     db = get_db()
     cur = db.cursor()
 
     # Get player details along with team
-    cur.execute(
-        """
+    cur.execute("""
         SELECT p.name, p.age, p.position, t.team_id, t.name AS team_name 
         FROM players p 
         JOIN teams t ON p.team_id = t.team_id 
@@ -218,7 +208,6 @@ def profile_player(player_id):
     else:
         flash('Player not found', 'error')
         return redirect(url_for('search'))
-
 
 @app.route('/admin')
 def admin():
@@ -264,7 +253,6 @@ def add_user():
             return redirect(url_for('add_user'))
     return render_template('add_user.html')
 
-
 @app.route('/profile', methods=['GET', 'POST'])
 def profile():
     if 'user_id' not in session:
@@ -309,7 +297,6 @@ def profile():
     cur.close()
 
     return render_template('profile.html', user=user)
-
 
 if __name__ == '__main__':
     app.run(debug=True)

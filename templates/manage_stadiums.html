@@ -1,0 +1,85 @@
+{% extends "layout.html" %}
+{% block title %}Manage Stadiums - Admin Panel{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Manage Stadiums</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <h2 id="form-title">Add Stadium</h2>
+            <form action="{{ url_for('admin.manage_stadiums') }}" method="POST" id="stadiumForm">
+                <input type="hidden" id="stadium_id" name="stadium_id">
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" class="form-control" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="location">Location:</label>
+                    <input type="text" class="form-control" id="location" name="location" required>
+                </div>
+                <div class="form-group">
+                    <label for="capacity">Capacity:</label>
+                    <input type="number" class="form-control" id="capacity" name="capacity" required>
+                </div>
+                <button type="submit" name="add" class="btn btn-primary" id="submit-button">Add Stadium</button>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <h2>Existing Stadiums</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Location</th>
+                        <th>Capacity</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stadium in stadiums %}
+                    <tr>
+                        <td>{{ stadium[0] }}</td>
+                        <td>{{ stadium[1] }}</td>
+                        <td>{{ stadium[2] }}</td>
+                        <td>{{ stadium[3] }}</td>
+                        <td>
+                            <button class="btn btn-success btn-sm" onclick="editStadium('{{ stadium[0] }}', '{{ stadium[1] }}', '{{ stadium[2] }}', '{{ stadium[3] }}')">
+                                <i class="fa fa-pencil-alt"></i>
+                            </button>
+                        </td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal" data-id="{{ stadium[0] }}" data-action="{{ url_for('admin.manage_stadiums') }}">
+                                <i class="fa fa-minus"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Include the delete modal -->
+{% include 'delete_modal.html' %}
+
+<script>
+    function editStadium(id, name, location, capacity) {
+        document.getElementById('stadium_id').value = id;
+        document.getElementById('name').value = name;
+        document.getElementById('location').value = location;
+        document.getElementById('capacity').value = capacity;
+        document.getElementById('submit-button').innerText = 'Update Stadium';
+        document.getElementById('form-title').innerText = 'Edit Stadium';
+    }
+
+    $('#deleteModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var id = button.data('id');
+        var action = button.data('action');
+        document.getElementById('deleteItemId').value = id;
+        document.getElementById('deleteForm').action = action;
+    });
+</script>
+{% endblock %}
