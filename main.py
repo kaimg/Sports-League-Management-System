@@ -15,7 +15,10 @@ def teardown_db(exception):
 
 @app.route('/')
 def landing():
+    if 'user_id' in session:
+        session.clear()
     return render_template('landing.html')
+
 
 @app.route('/home')
 def home():
