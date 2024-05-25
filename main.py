@@ -2,9 +2,14 @@ from flask import Flask, render_template, request, redirect, session, g, url_for
 from db import get_db, close_db
 from admin_routes import admin_bp
 from user_routes import user_bp
+import os
+from dotenv import load_dotenv
 
-app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Replace with a secure key
+# Load environment variables from .env file
+load_dotenv()
+
+app = Flask(__name__) 
+app.secret_key = os.getenv('SECRET_KEY')
 
 app.register_blueprint(admin_bp)
 app.register_blueprint(user_bp)
@@ -153,69 +158,6 @@ def search():
 
     return render_template('search.html', results=results, query=query)
 
-@app.route('/team/<int:team_id>')
-def profile_team(team_id):
-    db = get_db()
-    cur = db.cursor()
-
-    # Get team details along with stadium and coach
-    cur.execute("""
-        SELECT t.name, t.founded_year, s.name AS stadium_name, c.name AS coach_name 
-        FROM teams t 
-        JOIN stadiums s ON t.stadium_id = s.stadium_id 
-        JOIN coaches c ON t.coach_id = c.coach_id 
-        WHERE t.team_id = %s
-    """, (team_id, ))
-    team = cur.fetchone()
-
-    # Get players
-    cur.execute("""
-        SELECT p.player_id, p.name, p.age, p.position 
-        FROM players p 
-        WHERE p.team_id = %s
-    """, (team_id, ))
-    players = cur.fetchall()
-
-    # Get scores
-    cur.execute("""
-        SELECT m.date, s.score 
-        FROM scores s 
-        JOIN matches m ON s.match_id = m.match_id 
-        WHERE m.team1_id = %s OR m.team2_id = %s
-    """, (team_id, team_id))
-    scores = cur.fetchall()
-
-    cur.close()
-
-    if team:
-        return render_template('profile_team.html',
-                               team=team,
-                               players=players,
-                               scores=scores)
-    else:
-        flash('Team not found', 'error')
-        return redirect(url_for('search'))
-
-@app.route('/player/<int:player_id>')
-def profile_player(player_id):
-    db = get_db()
-    cur = db.cursor()
-
-    # Get player details along with team
-    cur.execute("""
-        SELECT p.name, p.age, p.position, t.team_id, t.name AS team_name 
-        FROM players p 
-        JOIN teams t ON p.team_id = t.team_id 
-        WHERE p.player_id = %s
-    """, (player_id, ))
-    player = cur.fetchone()
-    cur.close()
-
-    if player:
-        return render_template('profile_player.html', player=player)
-    else:
-        flash('Player not found', 'error')
-        return redirect(url_for('search'))
 
 @app.route('/admin')
 def admin():

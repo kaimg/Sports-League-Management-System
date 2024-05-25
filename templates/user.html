@@ -6,22 +6,40 @@
     <div class="row">
         <div class="col-md-3">
             <div class="list-group">
-                <a href="{{ url_for('user.view_stadium') }}" class="list-group-item list-group-item-action">View Stadiums</a>
-                <a href="{{ url_for('user.view_league') }}" class="list-group-item list-group-item-action">View Leagues</a>
-                <a href="{{ url_for('user.view_season') }}" class="list-group-item list-group-item-action">View Seasons</a>
-                <a href="{{ url_for('user.view_team') }}" class="list-group-item list-group-item-action">View Teams</a>
-                <a href="{{ url_for('user.view_coach') }}" class="list-group-item list-group-item-action">View Coaches</a>
-                <a href="{{ url_for('user.view_player') }}" class="list-group-item list-group-item-action">View Players</a>
-                <a href="{{ url_for('user.view_match') }}" class="list-group-item list-group-item-action">View Matches</a>
-                <a href="{{ url_for('user.view_result') }}" class="list-group-item list-group-item-action">View Results</a>
-                <a href="{{ url_for('user.view_score') }}" class="list-group-item list-group-item-action">View Scores</a>
-                <a href="{{ url_for('user.view_game_stat') }}" class="list-group-item list-group-item-action">View Game Stats</a>
+                <a href="#teams" class="list-group-item list-group-item-action" data-toggle="tab">Teams</a>
+                <a href="#players" class="list-group-item list-group-item-action" data-toggle="tab">Players</a>
             </div>
         </div>
-        <div class="col-md-9">
-            <h2>Welcome to the User Dashboard</h2>
-            <p>Use the sidebar to view and edit data.</p>
+        <div class="col-md-9 tab-content">
+            <div class="tab-pane fade" id="teams">
+                <h2>Team Profiles</h2>
+                <ul class="list-group">
+                    {% for team in teams %}
+                        <li class="list-group-item">
+                            <a href="{{ url_for('user.profile_team', team_id=team[0]) }}">{{ team[1] }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="tab-pane fade" id="players">
+                <h2>Player Profiles</h2>
+                <ul class="list-group">
+                    {% for player in players %}
+                        <li class="list-group-item">
+                            <a href="{{ url_for('user.profile_player', player_id=player[0]) }}">{{ player[1] }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
         </div>
     </div>
 </div>
+<script>
+    $(document).ready(function () {
+        $('.list-group-item-action').on('click', function (e) {
+            e.preventDefault();
+            $(this).tab('show');
+        });
+    });
+</script>
 {% endblock %}
