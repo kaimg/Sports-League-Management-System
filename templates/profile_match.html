@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+{% block title %}Match Profile{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1>Match Profile</h1>
+    <p><strong>Date:</strong> {{ match[5] }}</p>
+    <p><strong>Location:</strong> {{ match[6] }}</p>
+    <p><strong>{{ match[1] }}:</strong> {{ match[3] }}</p>
+    <p><strong>{{ match[2] }}:</strong> {{ match[4] }}</p>
+    
+    <h2>Scores</h2>
+    {% if scores %}
+        <ul class="list-group">
+            {% for score in scores %}
+                <li class="list-group-item">
+                    {{ score[0] }} - {{ score[1] }} points
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No scores found.</p>
+    {% endif %}
+    
+    <h2>Game Stats</h2>
+    {% if game_stats %}
+        <ul class="list-group">
+            {% for stat in game_stats %}
+                <li class="list-group-item">
+                    {{ stat[0] }}: {{ stat[1] }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No game stats found.</p>
+    {% endif %}
+</div>
+{% endblock %}
