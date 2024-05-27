@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, session, url_for, flash
 from functools import wraps
 from db import get_db
+import requests
 
 user_bp = Blueprint('user', __name__)
 
@@ -54,28 +55,55 @@ def user_dashboard():
     return render_template('user.html', teams=teams, players=players, matches=matches)
 
 
+
+# Your mapping of internal team IDs to API team IDs
+team_mapping = {
+    1: 66,  # Manchester United
+    2: 81,  # FC Barcelona
+    3: 5,   # Bayern Munich
+    4: 98,  # AC Milan
+    5: 523  # Paris Saint-Germain
+}
+
+# Function to get team logo from the API
+def get_team_logo(api_team_id):
+    api_url = f"https://api.football-data.org/v2/teams/{api_team_id}"
+    headers = {"X-Auth-Token": "e6f7020a8dbe4e8aa4c5b7fd0f99c22c"}
+    response = requests.get(api_url, headers=headers)
+
+    if response.status_code == 200:
+        team_data = response.json()
+        return team_data.get("crestUrl", "")
+    else:
+        print(f"Failed to get team details: {response.status_code}, {response.text}")
+        return ""
+
 @user_bp.route('/team/<int:team_id>')
 @login_required
 def profile_team(team_id):
     db = get_db()
     cur = db.cursor()
 
+    # Get team details along with stadium, coach, and league
     cur.execute("""
-        SELECT t.name, t.founded_year, s.name AS stadium_name, c.name AS coach_name 
+        SELECT t.name, t.founded_year, s.name AS stadium_name, c.name AS coach_name, l.name AS league_name
         FROM teams t 
         JOIN stadiums s ON t.stadium_id = s.stadium_id 
         JOIN coaches c ON t.coach_id = c.coach_id 
+        JOIN leagues l ON t.league_id = l.league_id
         WHERE t.team_id = %s
-    """, (team_id,))
+    """, (team_id, ))
     team = cur.fetchone()
 
+    # Get players
     cur.execute("""
         SELECT p.player_id, p.name, p.age, p.position 
         FROM players p 
         WHERE p.team_id = %s
-    """, (team_id,))
+    """, (team_id, ))
     players = cur.fetchall()
 
+    # Get scores
     cur.execute("""
         SELECT m.date, s.score 
         FROM scores s 
@@ -87,10 +115,16 @@ def profile_team(team_id):
     cur.close()
 
     if team:
-        return render_template('profile_team.html', team=team, players=players, scores=scores)
+        api_team_id = team_mapping.get(team_id)
+        logo_url = get_team_logo(api_team_id) if api_team_id else ""
+        return render_template('profile_team.html',
+                               team=team,
+                               players=players,
+                               scores=scores,
+                               logo_url=logo_url)
     else:
         flash('Team not found', 'error')
-        return redirect(url_for('user.user_dashboard'))
+        return redirect(url_for('user_dashboard'))
 
 @user_bp.route('/player/<int:player_id>')
 @login_required
