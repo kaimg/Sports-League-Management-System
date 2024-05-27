@@ -2,7 +2,12 @@ from flask import Blueprint, render_template, request, redirect, session, url_fo
 from functools import wraps
 from db import get_db
 import requests
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
+
+api_key = os.getenv('API_KEY')  
 user_bp = Blueprint('user', __name__)
 
 def login_required(f):
@@ -70,7 +75,7 @@ team_mapping = {
 # Function to get team logo from the API
 def get_team_logo(api_team_id):
     api_url = f"https://api.football-data.org/v2/teams/{api_team_id}"
-    headers = {"X-Auth-Token": "e6f7020a8dbe4e8aa4c5b7fd0f99c22c"}
+    headers = {"X-Auth-Token": api_key}
     response = requests.get(api_url, headers=headers)
 
     if response.status_code == 200:
