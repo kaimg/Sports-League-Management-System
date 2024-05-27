@@ -2,14 +2,10 @@ from flask import Flask, render_template, request, redirect, session, g, url_for
 from db import get_db, close_db
 from admin_routes import admin_bp
 from user_routes import user_bp
-import os
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
+from config import Config
 
 app = Flask(__name__) 
-app.secret_key = os.getenv('SECRET_KEY')
+app.secret_key = Config.SECRET_KEY
 
 app.register_blueprint(admin_bp)
 app.register_blueprint(user_bp)

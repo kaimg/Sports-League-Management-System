@@ -1,12 +1,8 @@
-import os
 import psycopg2
 from flask import g
-from dotenv import load_dotenv
+from config import Config
 
-# Load environment variables from .env file
-load_dotenv()
-
-DATABASE_URL = os.getenv('DATABASE_URL')
+DATABASE_URL = Config.DATABASE_URL
 
 def get_db():
     if 'db' not in g:

@@ -2,12 +2,9 @@ from flask import Blueprint, render_template, request, redirect, session, url_fo
 from functools import wraps
 from db import get_db
 import requests
-import os
-from dotenv import load_dotenv
+from config import Config
 
-load_dotenv()
-
-api_key = os.getenv('API_KEY')  
+api_key = Config.FOOTBALL_API_KEY  
 user_bp = Blueprint('user', __name__)
 
 def login_required(f):
