@@ -8,6 +8,7 @@
             <div class="list-group">
                 <a href="#teams" class="list-group-item list-group-item-action" data-toggle="tab">Teams</a>
                 <a href="#players" class="list-group-item list-group-item-action" data-toggle="tab">Players</a>
+                <a href="#leagues" class="list-group-item list-group-item-action" data-toggle="tab">Leagues</a>
                 <a href="#matches" class="list-group-item list-group-item-action" data-toggle="tab">Matches</a>
             </div>
         </div>
@@ -28,6 +29,16 @@
                     {% for player in players %}
                         <li class="list-group-item">
                             <a href="{{ url_for('user.profile_player', player_id=player[0]) }}">{{ player[1] }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="tab-pane fade" id="leagues">
+                <h2>League Profiles</h2>
+                <ul class="list-group">
+                    {% for league in leagues %}
+                        <li class="list-group-item">
+                            <a href="{{ url_for('user.profile_league', league_id=league[0]) }}">{{ league[1] }}</a>
                         </li>
                     {% endfor %}
                 </ul>

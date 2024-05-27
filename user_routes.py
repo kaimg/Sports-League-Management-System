@@ -26,6 +26,8 @@ def user_dashboard():
     cur.execute('SELECT player_id, name FROM players')
     players = cur.fetchall()
 
+    cur.execute('SELECT league_id, name FROM leagues')
+    leagues = cur.fetchall()
     cur.execute("""
         SELECT m.match_id, 
                t1.name AS team1_name, 
@@ -52,7 +54,7 @@ def user_dashboard():
 
     cur.close()
 
-    return render_template('user.html', teams=teams, players=players, matches=matches)
+    return render_template('user.html', teams=teams, players=players, leagues=leagues, matches=matches)
 
 
 
@@ -199,3 +201,23 @@ def profile_match(match_id):
     else:
         flash('Match not found', 'error')
         return redirect(url_for('user.user_dashboard'))
+
+@user_bp.route('/league/<int:league_id>')
+@login_required
+def profile_league(league_id):
+    db = get_db()
+    cur = db.cursor()
+
+    cur.execute('SELECT name, country FROM leagues WHERE league_id = %s', (league_id,))
+    league = cur.fetchone()
+
+    cur.execute('SELECT team_id, name FROM teams WHERE league_id = %s', (league_id,))
+    teams = cur.fetchall()
+
+    cur.close()
+
+    if league:
+        return render_template('profile_league.html', league=league, teams=teams)
+    else:
+        flash('League not found', 'error')
+        return redirect(url_for('user_dashboard'))

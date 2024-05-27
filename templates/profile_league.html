@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block title %}{{ league[0] }} - League Profile{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1>{{ league[0] }}'s Profile</h1>
+    <p><strong>Country:</strong> {{ league[1] }}</p>
+
+    <h2>Teams in this League</h2>
+    {% if teams %}
+        <ul class="list-group">
+            {% for team in teams %}
+                <li class="list-group-item">
+                    <a href="{{ url_for('user.profile_team', team_id=team[0]) }}"><strong>{{ team[1] }}</strong></a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No teams found.</p>
+    {% endif %}
+</div>
+{% endblock %}
