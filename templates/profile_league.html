@@ -2,20 +2,32 @@
 {% block title %}{{ league[0] }} - League Profile{% endblock %}
 {% block content %}
 <div class="container mt-4">
-    <h1>{{ league[0] }}'s Profile</h1>
-    <p><strong>Country:</strong> {{ league[1] }}</p>
-
-    <h2>Teams in this League</h2>
-    {% if teams %}
-        <ul class="list-group">
-            {% for team in teams %}
-                <li class="list-group-item">
-                    <a href="{{ url_for('user.profile_team', team_id=team[0]) }}"><strong>{{ team[1] }}</strong></a>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No teams found.</p>
-    {% endif %}
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <h1>{{ league[0] }}'s Profile</h1>
+            {% if league_logo %}
+                <img src="{{ league_logo }}" alt="{{ league[0] }} Logo" style="height: 100px;">
+            {% endif %}
+            {% if country_flag %}
+                <img src="{{ country_flag }}" alt="{{ league[1] }} Flag" style="height: 50px;">
+            {% endif %}
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h2>Teams</h2>
+            {% if teams %}
+                <ul class="list-group">
+                    {% for team in teams %}
+                        <li class="list-group-item">
+                            <a href="{{ url_for('user.profile_team', team_id=team[0]) }}">{{ team[1] }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No teams found in this league.</p>
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endblock %}
