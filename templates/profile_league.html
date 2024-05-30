@@ -1,32 +1,83 @@
 {% extends "layout.html" %}
+
 {% block title %}{{ league[0] }} - League Profile{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <div class="row">
-        <div class="col-md-12 text-center">
-            <h1>{{ league[0] }}'s Profile</h1>
-            {% if league_logo %}
-                <img src="{{ league_logo }}" alt="{{ league[0] }} Logo" style="height: 100px;">
-            {% endif %}
-            {% if country_flag %}
-                <img src="{{ country_flag }}" alt="{{ league[1] }} Flag" style="height: 50px;">
-            {% endif %}
+        <div class="col-md-4">
+            <div class="card border-0">
+                <div class="card-body text-center p-0">
+                    <h1>{{ league[0] }}'s Profile</h1>
+                    {% if league_logo %}
+                        <img src="{{ league_logo }}" alt="{{ league[0] }} Logo" class="img-fluid rounded border" style="max-height: 100px;">
+                    {% endif %}
+                    {% if country_flag %}
+                        <img src="{{ country_flag }}" alt="{{ league[1] }} Flag" class="img-fluid rounded border mt-2" style="max-height: 50px;">
+                    {% endif %}
+                </div>
+            </div>
         </div>
-    </div>
-    <div class="row mt-4">
-        <div class="col-md-12">
-            <h2>Teams</h2>
-            {% if teams %}
-                <ul class="list-group">
-                    {% for team in teams %}
-                        <li class="list-group-item">
-                            <a href="{{ url_for('user.profile_team', team_id=team[0]) }}">{{ team[1] }}</a>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>No teams found in this league.</p>
-            {% endif %}
+        <div class="col-md-8">
+            <div class="row">
+                <div class="col-md-12">
+                    <h2>Standings</h2>
+                    {% if standings %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>Position</th>
+                                        <th>Team</th>
+                                        <th>Played</th>
+                                        <th>Won</th>
+                                        <th>Draw</th>
+                                        <th>Lost</th>
+                                        <th>Points</th>
+                                        <th>Goals For</th>
+                                        <th>Goals Against</th>
+                                        <th>Goal Difference</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for standing in standings %}
+                                        <tr>
+                                            <td>{{ standing[0] }}</td>
+                                            <td><a href="{{ url_for('user.profile_team', team_id=standing[1]) }}">{{ standing[2] }}</a></td>
+                                            <td>{{ standing[3] }}</td>
+                                            <td>{{ standing[4] }}</td>
+                                            <td>{{ standing[5] }}</td>
+                                            <td>{{ standing[6] }}</td>
+                                            <td>{{ standing[7] }}</td>
+                                            <td>{{ standing[8] }}</td>
+                                            <td>{{ standing[9] }}</td>
+                                            <td>{{ standing[10] }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p>No standings available for this league.</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <h2>Teams</h2>
+                    {% if teams %}
+                        <ul class="list-group">
+                            {% for team in teams %}
+                                <li class="list-group-item">
+                                    <a href="{{ url_for('user.profile_team', team_id=team[0]) }}">{{ team[1] }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>No teams found in this league.</p>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </div>

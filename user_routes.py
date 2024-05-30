@@ -62,16 +62,6 @@ def user_dashboard():
     return render_template('user.html', teams=teams, players=players, matches=matches, leagues=leagues_with_flags)
 
 
-
-# Your mapping of internal team IDs to API team IDs
-team_mapping = {
-    1: 66,  # Manchester United
-    2: 81,  # FC Barcelona
-    3: 5,   # Bayern Munich
-    4: 98,  # AC Milan
-    5: 523  # Paris Saint-Germain
-}
-
 # Function to get team logo from the API
 def get_team_logo(api_team_id):
     api_url = f"https://api.football-data.org/v2/teams/{api_team_id}"
@@ -209,11 +199,11 @@ def profile_match(match_id):
 
 # Mapping of internal league IDs to API league IDs and general flag URLs
 league_mapping = {
-    1: {'api_id': 2021, 'flag_url': 'https://crests.football-data.org/770.svg'},  # Premier League (England)
-    2: {'api_id': 2019, 'flag_url': 'https://crests.football-data.org/784.svg'},  # Serie A (Italy)
-    3: {'api_id': 2014, 'flag_url': 'https://crests.football-data.org/760.svg'},  # La Liga (Spain)
-    4: {'api_id': 2002, 'flag_url': 'https://crests.football-data.org/759.svg'},  # Bundesliga (Germany)
-    5: {'api_id': 2015, 'flag_url': 'https://crests.football-data.org/773.svg'}   # Ligue 1 (France)
+    1: {'api_id': 'https://crests.football-data.org/PL.png', 'flag_url': 'https://crests.football-data.org/770.svg'},  # Premier League (England)
+    2: {'api_id': 'https://crests.football-data.org/SA.png', 'flag_url': 'https://crests.football-data.org/784.svg'},  # Serie A (Italy)
+    3: {'api_id': 'https://crests.football-data.org/PD.png', 'flag_url': 'https://crests.football-data.org/760.svg'},  # La Liga (Spain)
+    4: {'api_id': 'https://crests.football-data.org/BL1.png', 'flag_url': 'https://crests.football-data.org/759.svg'},  # Bundesliga (Germany)
+    5: {'api_id': 'https://crests.football-data.org/FL1.png', 'flag_url': 'https://crests.football-data.org/773.svg'}   # Ligue 1 (France)
 }
 
 def get_league_data(api_league_id):
@@ -228,31 +218,36 @@ def get_league_data(api_league_id):
         print(f"Failed to get league details: {response.status_code}, {response.text}")
         return ""
 
+
 @user_bp.route('/league/<int:league_id>')
 @login_required
 def profile_league(league_id):
     db = get_db()
     cur = db.cursor()
-    cur.execute("""
-        SELECT l.name, l.country 
-        FROM leagues l
-        WHERE l.league_id = %s
-    """, (league_id,))
+
+    cur.execute('SELECT name, country FROM leagues WHERE league_id = %s', (league_id,))
     league = cur.fetchone()
 
-    cur.execute("""
-        SELECT t.team_id, t.name
-        FROM teams t
-        WHERE t.league_id = %s
-    """, (league_id,))
+    cur.execute('SELECT team_id, name FROM teams WHERE league_id = %s', (league_id,))
     teams = cur.fetchall()
-    cur.close()
+
+    cur.execute("""
+        SELECT s.position, s.team_id, t.name AS team_name, s.played_games, s.won, s.draw, s.lost, 
+               s.points, s.goals_for, s.goals_against, s.goal_difference
+        FROM standings s
+        JOIN teams t ON s.team_id = t.team_id
+        WHERE s.league_id = %s
+        ORDER BY s.position
+    """, (league_id,))
+    standings = cur.fetchall()
 
     if league:
         api_league_id = league_mapping.get(league_id, {}).get('api_id')
         flag_url = league_mapping.get(league_id, {}).get('flag_url')
         league_logo = get_league_data(api_league_id) if api_league_id else ""
-        return render_template('profile_league.html', league=league, teams=teams, league_logo=league_logo, country_flag=flag_url)
-    else:
-        flash('League not found', 'error')
-        return redirect(url_for('user_dashboard'))
+    league_logo = league_mapping[league_id]['api_id']
+    country_flag = league_mapping[league_id]['flag_url']
+
+    cur.close()
+
+    return render_template('profile_league.html', league=league, teams=teams, standings=standings, league_logo=league_logo, country_flag=country_flag)
