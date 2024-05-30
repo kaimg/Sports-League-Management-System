@@ -21,13 +21,12 @@ def user_dashboard():
     db = get_db()
     cur = db.cursor()
 
-    cur.execute('SELECT team_id, name FROM teams')
+    cur.execute('SELECT team_id, name, crestURL FROM teams')
     teams = cur.fetchall()
 
     cur.execute('SELECT player_id, name, position FROM players')
     players = cur.fetchall()
 
-    
     cur.execute("""
         SELECT m.match_id, 
                t1.name AS team1_name, 
@@ -51,6 +50,7 @@ def user_dashboard():
         ON (m.match_id = s2.match_id AND m.team2_id = s2.team_id)
     """)
     matches = cur.fetchall()
+
     cur.execute('SELECT league_id, name FROM leagues')
     leagues = cur.fetchall()
     cur.close()
@@ -60,6 +60,7 @@ def user_dashboard():
     ]
 
     return render_template('user.html', teams=teams, players=players, matches=matches, leagues=leagues_with_flags)
+
 
 
 # Your mapping of internal team IDs to API team IDs
@@ -90,15 +91,15 @@ def profile_team(team_id):
     db = get_db()
     cur = db.cursor()
 
-    # Get team details along with stadium, coach, and league
+    # Get team details along with stadium, coach, league, and crestURL
     cur.execute("""
-        SELECT t.name, t.founded_year, s.name AS stadium_name, c.name AS coach_name, l.name AS league_name
+        SELECT t.name, t.founded_year, s.name AS stadium_name, c.name AS coach_name, l.name AS league_name, t.crestURL
         FROM teams t 
         JOIN stadiums s ON t.stadium_id = s.stadium_id 
         JOIN coaches c ON t.coach_id = c.coach_id 
         JOIN leagues l ON t.league_id = l.league_id
         WHERE t.team_id = %s
-    """, (team_id, ))
+    """, (team_id,))
     team = cur.fetchone()
 
     # Get players
@@ -106,7 +107,7 @@ def profile_team(team_id):
         SELECT p.player_id, p.name, p.age, p.position 
         FROM players p 
         WHERE p.team_id = %s
-    """, (team_id, ))
+    """, (team_id,))
     players = cur.fetchall()
 
     # Get scores
@@ -121,16 +122,15 @@ def profile_team(team_id):
     cur.close()
 
     if team:
-        api_team_id = team_mapping.get(team_id)
-        logo_url = get_team_logo(api_team_id) if api_team_id else ""
         return render_template('profile_team.html',
                                team=team,
                                players=players,
                                scores=scores,
-                               logo_url=logo_url)
+                               logo_url=team[5])
     else:
         flash('Team not found', 'error')
         return redirect(url_for('user_dashboard'))
+
 
 @user_bp.route('/player/<int:player_id>')
 @login_required
