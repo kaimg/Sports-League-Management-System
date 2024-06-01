@@ -13,10 +13,12 @@
     
     <h2>Players</h2>
     {% if players %}
-        <ul class="list-group">
+        <ul class="list-group" id="player-list">
             {% for player in players %}
                 <li class="list-group-item">
-                    <a href="{{ url_for('user.profile_player', player_id=player[0]) }}"><strong>{{ player[1] }}</strong></a> - {{ player[2] }} years old, Position: {{ player[3] }}
+                    <a href="{{ url_for('user.profile_player', player_id=player[0]) }}">
+                        <strong>{{ player[1] }}</strong>
+                    </a> - <span class="dob">{{ player[2] }}</span>, Position: {{ player[3] }}
                 </li>
             {% endfor %}
         </ul>
@@ -37,4 +39,26 @@
         <p>No scores found.</p>
     {% endif %}
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        function calculateAge(dob) {
+            const birthDate = new Date(dob);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            return age;
+        }
+
+        const dobElements = document.querySelectorAll(".dob");
+        dobElements.forEach(function(dobElement) {
+            const dob = dobElement.textContent;
+            const age = calculateAge(dob);
+            dobElement.textContent = `${age} years old`;
+        });
+    });
+</script>
 {% endblock %}

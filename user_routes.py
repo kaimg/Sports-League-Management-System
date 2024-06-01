@@ -94,7 +94,7 @@ def profile_team(team_id):
 
     # Get players
     cur.execute("""
-        SELECT p.player_id, p.name, p.age, p.position 
+        SELECT p.player_id, p.name, p.date_of_birth, p.position 
         FROM players p 
         WHERE p.team_id = %s
     """, (team_id,))
@@ -129,7 +129,7 @@ def profile_player(player_id):
     cur = db.cursor()
 
     cur.execute("""
-        SELECT p.name, p.age, p.position, t.team_id, t.name AS team_name 
+        SELECT p.name, p.date_of_birth, p.position, t.team_id, t.name AS team_name 
         FROM players p 
         JOIN teams t ON p.team_id = t.team_id 
         WHERE p.player_id = %s
