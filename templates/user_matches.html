@@ -1,0 +1,16 @@
+{% extends "user_dashboard.html" %}
+{% block user_content %}
+<h2>Match Profiles</h2>
+<ul class="list-group">
+    {% for match in matches %}
+        <li class="list-group-item">
+            <div>
+                <strong>{{ match[5] }}</strong><br>
+                <a href="{{ url_for('user.profile_match', match_id=match[0]) }}">
+                    {{ match[1] }} {{ match[3] }} - {{ match[4] }} {{ match[2] }}
+                </a>
+            </div>
+        </li>
+    {% endfor %}
+</ul>
+{% endblock %}

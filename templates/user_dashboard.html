@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block title %}User Dashboard - Sports League Management{% endblock %}
+{% block content %}
+<div class="container">
+    <h1 class="mt-4">User Dashboard</h1>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="list-group">
+                <a href="{{ url_for('user.user_dashboard') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'user.user_dashboard' %}active{% endif %}">Dashboard</a>
+                <a href="{{ url_for('user.user_teams') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'user.user_teams' %}active{% endif %}">Teams</a>
+                <a href="{{ url_for('user.user_players') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'user.user_players' %}active{% endif %}">Players</a>
+                <a href="{{ url_for('user.user_leagues') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'user.user_leagues' %}active{% endif %}">Leagues</a>
+                <a href="{{ url_for('user.user_matches') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'user.user_matches' %}active{% endif %}">Matches</a>
+            </div>
+        </div>
+        <div class="col-md-9">
+            {% block user_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}

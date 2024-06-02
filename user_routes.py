@@ -18,15 +18,81 @@ def login_required(f):
 @user_bp.route('/user')
 @login_required
 def user_dashboard():
+    return render_template('user_dashboard.html')
+
+@user_bp.route('/user/teams')
+@login_required
+def user_teams():
     db = get_db()
     cur = db.cursor()
 
-    cur.execute('SELECT team_id, name, crestURL FROM teams')
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    offset = (page - 1) * per_page
+
+    cur.execute('SELECT COUNT(*) FROM teams')
+    total_teams = cur.fetchone()[0]
+
+    cur.execute('SELECT team_id, name, crestURL FROM teams LIMIT %s OFFSET %s', (per_page, offset))
     teams = cur.fetchall()
+    cur.close()
 
-    cur.execute('SELECT player_id, name, position FROM players')
+    total_pages = (total_teams + per_page - 1) // per_page
+
+    return render_template('user_teams.html', teams=teams, page=page, total_pages=total_pages)
+
+@user_bp.route('/user/players')
+@login_required
+def user_players():
+    db = get_db()
+    cur = db.cursor()
+
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    offset = (page - 1) * per_page
+
+    cur.execute('SELECT COUNT(*) FROM players')
+    total_players = cur.fetchone()[0]
+
+    cur.execute('''
+        SELECT p.player_id, p.name, p.position, t.crestURL, t.name 
+        FROM players p 
+        JOIN teams t ON p.team_id = t.team_id 
+        LIMIT %s OFFSET %s
+    ''', (per_page, offset))
     players = cur.fetchall()
+    cur.close()
 
+    total_pages = (total_players + per_page - 1) // per_page
+
+    return render_template('user_players.html', players=players, page=page, total_pages=total_pages, max=max, min=min)
+
+
+@user_bp.route('/user/leagues')
+@login_required
+def user_leagues():
+    db = get_db()
+    cur = get_db().cursor()
+    cur.execute('SELECT league_id, name FROM leagues')
+    leagues = cur.fetchall()
+    cur.close()
+
+    leagues_with_flags_and_logos = [
+        (
+            league[0], 
+            league[1], 
+            league_mapping.get(league[0], {}).get('flag_url', ''), 
+            league_mapping.get(league[0], {}).get('api_id', '')
+        ) for league in leagues
+    ]
+
+    return render_template('user_leagues.html', leagues=leagues_with_flags_and_logos)
+
+@user_bp.route('/user/matches')
+@login_required
+def user_matches():
+    db = get_db()
+    cur = get_db().cursor()
     cur.execute("""
         SELECT m.match_id, 
                t1.name AS team1_name, 
@@ -50,16 +116,8 @@ def user_dashboard():
         ON (m.match_id = s2.match_id AND m.team2_id = s2.team_id)
     """)
     matches = cur.fetchall()
-
-    cur.execute('SELECT league_id, name FROM leagues')
-    leagues = cur.fetchall()
     cur.close()
-
-    leagues_with_flags = [
-        (league[0], league[1], league_mapping.get(league[0], {}).get('flag_url', '')) for league in leagues
-    ]
-
-    return render_template('user.html', teams=teams, players=players, matches=matches, leagues=leagues_with_flags)
+    return render_template('user_matches.html', matches=matches)
 
 
 # Function to get team logo from the API

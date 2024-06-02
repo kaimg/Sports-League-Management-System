@@ -1,0 +1,59 @@
+{% extends "user_dashboard.html" %}
+{% block user_content %}
+<h2>Player Profiles</h2>
+<ul class="list-group">
+    {% for player in players %}
+        <li class="list-group-item">
+            {% if player[3] %}
+                <img src="{{ player[3] }}" alt="{{ player[4] }} Logo" title="{{ player[4] }}" class="team-logo-tooltip" style="height: 20px; margin-right: 10px;">
+            {% endif %}
+            <span class="badge {% if player[2] == 'Goalkeeper' %}badge-secondary{% elif player[2] == 'Defence' %}badge-primary{% elif player[2] == 'Midfield' %}badge-success{% elif player[2] == 'Offence' %}badge-danger{% endif %} mr-2">&bull;</span>
+            <a href="{{ url_for('user.profile_player', player_id=player[0]) }}">{{ player[1] }}</a>
+        </li>
+    {% endfor %}
+</ul>
+
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+        {% if page > 1 %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('user.user_players', page=1) }}" aria-label="First">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('user.user_players', page=page-1) }}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+        {% endif %}
+        {% for p in range(max(1, page-2), min(total_pages, page+2) + 1) %}
+            <li class="page-item {% if page == p %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('user.user_players', page=p) }}">{{ p }}</a>
+            </li>
+        {% endfor %}
+        {% if page < total_pages %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('user.user_players', page=page+1) }}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('user.user_players', page=total_pages) }}" aria-label="Last">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+
+<script>
+    $(document).ready(function () {
+        $('.team-logo-tooltip').tooltip();
+        $('.list-group-item-action').on('click', function (e) {
+            e.preventDefault();
+            $(this).tab('show');
+        });
+    });
+</script>
+{% endblock %}
