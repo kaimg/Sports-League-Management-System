@@ -233,14 +233,13 @@ def profile_league(league_id):
 
     cur.execute("""
         SELECT s.position, s.team_id, t.name AS team_name, s.played_games, s.won, s.draw, s.lost, 
-               s.points, s.goals_for, s.goals_against, s.goal_difference
+               s.points, s.goals_for, s.goals_against, s.goal_difference, s.form, t.crestURL
         FROM standings s
         JOIN teams t ON s.team_id = t.team_id
         WHERE s.league_id = %s
         ORDER BY s.position
     """, (league_id,))
     standings = cur.fetchall()
-
     if league:
         api_league_id = league_mapping.get(league_id, {}).get('api_id')
         flag_url = league_mapping.get(league_id, {}).get('flag_url')
