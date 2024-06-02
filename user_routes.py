@@ -55,9 +55,10 @@ def user_players():
     total_players = cur.fetchone()[0]
 
     cur.execute('''
-        SELECT p.player_id, p.name, p.position, t.crestURL, t.name 
-        FROM players p 
-        JOIN teams t ON p.team_id = t.team_id 
+        SELECT p.player_id, p.name, p.position, t.crestURL, t.name, c.flag_url
+        FROM players p
+        JOIN teams t ON p.team_id = t.team_id
+        JOIN countries c ON p.nationality = c.name
         LIMIT %s OFFSET %s
     ''', (per_page, offset))
     players = cur.fetchall()
@@ -68,26 +69,22 @@ def user_players():
     return render_template('user_players.html', players=players, page=page, total_pages=total_pages, max=max, min=min)
 
 
+
 @user_bp.route('/user/leagues')
 @login_required
 def user_leagues():
     db = get_db()
-    cur = get_db().cursor()
-    cur.execute('SELECT league_id, name FROM leagues')
+    cur = db.cursor()
+    cur.execute('''
+        SELECT l.league_id, l.name, c.flag_url, l.icon_url
+        FROM leagues l
+        JOIN countries c ON l.country_id = c.country_id
+    ''')
     leagues = cur.fetchall()
     cur.close()
 
-    leagues_with_flags_and_logos = [
-        (
-            league[0], 
-            league[1], 
-            league_mapping.get(league[0], {}).get('flag_url', ''), 
-            league_mapping.get(league[0], {}).get('api_id', '')
-        ) for league in leagues
-    ]
-
-    return render_template('user_leagues.html', leagues=leagues_with_flags_and_logos)
-
+    return render_template('user_leagues.html', leagues=leagues)
+    
 @user_bp.route('/user/matches')
 @login_required
 def user_matches():
@@ -120,18 +117,6 @@ def user_matches():
     return render_template('user_matches.html', matches=matches)
 
 
-# Function to get team logo from the API
-def get_team_logo(api_team_id):
-    api_url = f"https://api.football-data.org/v2/teams/{api_team_id}"
-    headers = {"X-Auth-Token": Config.FOOTBALL_DATA_API_KEY}
-    response = requests.get(api_url, headers=headers)
-
-    if response.status_code == 200:
-        team_data = response.json()
-        return team_data.get("crestUrl", "")
-    else:
-        print(f"Failed to get team details: {response.status_code}, {response.text}")
-        return ""
 
 @user_bp.route('/team/<int:team_id>')
 @login_required
@@ -255,35 +240,18 @@ def profile_match(match_id):
         return redirect(url_for('user.user_dashboard'))
 
 
-# Mapping of internal league IDs to API league IDs and general flag URLs
-league_mapping = {
-    1: {'api_id': 'https://crests.football-data.org/PL.png', 'flag_url': 'https://crests.football-data.org/770.svg'},  # Premier League (England)
-    2: {'api_id': 'https://crests.football-data.org/SA.png', 'flag_url': 'https://crests.football-data.org/784.svg'},  # Serie A (Italy)
-    3: {'api_id': 'https://crests.football-data.org/PD.png', 'flag_url': 'https://crests.football-data.org/760.svg'},  # La Liga (Spain)
-    4: {'api_id': 'https://crests.football-data.org/BL1.png', 'flag_url': 'https://crests.football-data.org/759.svg'},  # Bundesliga (Germany)
-    5: {'api_id': 'https://crests.football-data.org/FL1.png', 'flag_url': 'https://crests.football-data.org/773.svg'}   # Ligue 1 (France)
-}
-
-def get_league_data(api_league_id):
-    api_url = f"https://api.football-data.org/v2/competitions/{api_league_id}"
-    headers = {"X-Auth-Token": Config.FOOTBALL_DATA_API_KEY}
-    response = requests.get(api_url, headers=headers)
-    if response.status_code == 200:
-        league_data = response.json()
-        league_logo = league_data.get("emblemUrl", "")
-        return league_logo
-    else:
-        print(f"Failed to get league details: {response.status_code}, {response.text}")
-        return ""
-
-
 @user_bp.route('/league/<int:league_id>')
 @login_required
 def profile_league(league_id):
     db = get_db()
     cur = db.cursor()
 
-    cur.execute('SELECT name, country FROM leagues WHERE league_id = %s', (league_id,))
+    cur.execute("""
+        SELECT l.name, c.name AS country, l.icon_url, c.flag_url
+        FROM leagues l
+        JOIN countries c ON l.country_id = c.country_id
+        WHERE l.league_id = %s
+    """, (league_id,))
     league = cur.fetchone()
 
     cur.execute('SELECT team_id, name FROM teams WHERE league_id = %s', (league_id,))
@@ -298,13 +266,7 @@ def profile_league(league_id):
         ORDER BY s.position
     """, (league_id,))
     standings = cur.fetchall()
-    if league:
-        api_league_id = league_mapping.get(league_id, {}).get('api_id')
-        flag_url = league_mapping.get(league_id, {}).get('flag_url')
-        league_logo = get_league_data(api_league_id) if api_league_id else ""
-    league_logo = league_mapping[league_id]['api_id']
-    country_flag = league_mapping[league_id]['flag_url']
 
     cur.close()
 
-    return render_template('profile_league.html', league=league, teams=teams, standings=standings, league_logo=league_logo, country_flag=country_flag)
+    return render_template('profile_league.html', league=league, teams=teams, standings=standings)

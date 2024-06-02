@@ -3,9 +3,12 @@
 <h2>Player Profiles</h2>
 <ul class="list-group">
     {% for player in players %}
-        <li class="list-group-item">
+        <li class="list-group-item d-flex align-items-center">
             {% if player[3] %}
-                <img src="{{ player[3] }}" alt="{{ player[4] }} Logo" title="{{ player[4] }}" class="team-logo-tooltip" style="height: 20px; margin-right: 10px;">
+                <img src="{{ player[3] }}" alt="{{ player[4] }} Logo" title="{{ player[4] }}" class="team-logo-tooltip mr-2" style="height: 20px;">
+            {% endif %}
+            {% if player[5] %}
+                <img src="{{ player[5] }}" alt="Nationality Flag" class="mr-2" style="height: 20px;">
             {% endif %}
             <span class="badge {% if player[2] == 'Goalkeeper' %}badge-secondary{% elif player[2] == 'Defence' %}badge-primary{% elif player[2] == 'Midfield' %}badge-success{% elif player[2] == 'Offence' %}badge-danger{% endif %} mr-2">&bull;</span>
             <a href="{{ url_for('user.profile_player', player_id=player[0]) }}">{{ player[1] }}</a>

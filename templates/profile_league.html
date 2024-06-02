@@ -9,11 +9,11 @@
             <div class="card border-0">
                 <div class="card-body text-center">
                     <h1>{{ league[0] }}'s Profile</h1>
-                    {% if league_logo %}
-                        <img src="{{ league_logo }}" alt="{{ league[0] }} Logo" class="img-fluid rounded border mb-2" style="max-height: 100px;">
+                    {% if league[2] %}
+                        <img src="{{ league[2] }}" alt="{{ league[0] }} Logo" class="img-fluid rounded border mb-2" style="max-height: 100px;">
                     {% endif %}
-                    {% if country_flag %}
-                        <img src="{{ country_flag }}" alt="{{ league[1] }} Flag" class="img-fluid rounded border" style="max-height: 50px;">
+                    {% if league[3] %}
+                        <img src="{{ league[3] }}" alt="{{ league[1] }} Flag" class="img-fluid rounded border" style="max-height: 50px;">
                     {% endif %}
                     <p class="mt-3">This is the profile of the {{ league[0] }}. It includes the latest standings, team information, and recent match results.</p>
                 </div>
@@ -47,7 +47,9 @@
                                 <tr>
                                     <td>{{ standing[0] }}</td>
                                     <td>
-                                        <img src="{{ standing[12] }}" alt="{{ standing[2] }} Logo" style="height: 20px; width: 20px; margin-right: 5px;">
+                                        {% if standing[12] %}
+                                            <img src="{{ standing[12] }}" alt="{{ standing[2] }} Logo" style="height: 20px; width: 20px; margin-right: 5px;">
+                                        {% endif %}
                                         <a href="{{ url_for('user.profile_team', team_id=standing[1]) }}">{{ standing[2] }}</a>
                                     </td>
                                     <td>{{ standing[3] }}</td>
