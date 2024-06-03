@@ -89,32 +89,27 @@ def user_leagues():
 @login_required
 def user_matches():
     db = get_db()
-    cur = get_db().cursor()
+    cur = db.cursor()
     cur.execute("""
         SELECT m.match_id, 
-               t1.name AS team1_name, 
-               t2.name AS team2_name, 
-               COALESCE(s1.total_score, 0) AS team1_score, 
-               COALESCE(s2.total_score, 0) AS team2_score,
-               TO_CHAR(m.date, 'Month DD, YYYY') AS formatted_date,
-               m.location
+               t1.name AS home_team_name, 
+               t2.name AS away_team_name, 
+               s.full_time_home AS home_score, 
+               s.full_time_away AS away_score,
+               TO_CHAR(m.utc_date, 'Month DD, YYYY') AS formatted_date,
+               t1.crestURL AS home_team_logo,
+               t2.crestURL AS away_team_logo,
+               m.matchday
         FROM matches m
-        JOIN teams t1 ON m.team1_id = t1.team_id
-        JOIN teams t2 ON m.team2_id = t2.team_id
-        LEFT JOIN (SELECT match_id, players.team_id, SUM(score) AS total_score 
-                   FROM scores 
-                   JOIN players ON scores.player_id = players.player_id
-                   GROUP BY match_id, players.team_id) s1 
-        ON (m.match_id = s1.match_id AND m.team1_id = s1.team_id)
-        LEFT JOIN (SELECT match_id, players.team_id, SUM(score) AS total_score 
-                   FROM scores 
-                   JOIN players ON scores.player_id = players.player_id
-                   GROUP BY match_id, players.team_id) s2 
-        ON (m.match_id = s2.match_id AND m.team2_id = s2.team_id)
+        JOIN teams t1 ON m.home_team_id = t1.team_id
+        JOIN teams t2 ON m.away_team_id = t2.team_id
+        LEFT JOIN scores s ON m.match_id = s.match_id
+        ORDER BY m.utc_date DESC
     """)
     matches = cur.fetchall()
     cur.close()
     return render_template('user_matches.html', matches=matches)
+
 
 
 
