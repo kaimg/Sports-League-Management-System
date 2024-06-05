@@ -9,36 +9,16 @@
                     <small>{{ match[5] }} | Matchday: {{ match[8] }}</small>
                 </div>
             </div>
-            <div class="d-flex justify-content-center align-items-center match-result-box p-3">
-                <img src="{{ match[6] }}" alt="{{ match[1] }} Logo" class="team-logo">
-                <strong class="mx-2">{{ match[1] }}</strong>
-                <span class="match-score-box mx-2">{{ match[3] }} - {{ match[4] }}</span>
-                <strong class="mx-2">{{ match[2] }}</strong>
-                <img src="{{ match[7] }}" alt="{{ match[2] }} Logo" class="team-logo">
+            <div class="d-flex justify-content-center align-items-center match-result-box p-3 bg-light rounded shadow-sm">
+                <a href="{{ url_for('user.profile_match', match_id=match[0]) }}" class="d-flex align-items-center text-dark">
+                    <img src="{{ match[6] }}" alt="{{ match[1] }} Logo" style="height: 30px; margin-right: 10px;">
+                    <strong class="mx-2">{{ match[1] }}</strong>
+                    <span class="match-score-box mx-2 bg-primary text-white px-2 py-1 rounded">{{ match[3] }} - {{ match[4] }}</span>
+                    <strong class="mx-2">{{ match[2] }}</strong>
+                    <img src="{{ match[7] }}" alt="{{ match[2] }} Logo" style="height: 30px; margin-left: 10px;">
+                </a>
             </div>
         </li>
     {% endfor %}
 </ul>
-
-<style>
-    body {
-        font-family: 'Arial', sans-serif;
-    }
-    .match-result-box {
-        background-color: #f8f9fa;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    .team-logo {
-        height: 30px;
-        margin-right: 10px;
-    }
-    .match-score-box {
-        background-color: #007bff;
-        color: #fff;
-        padding: 5px 10px;
-        border-radius: 5px;
-        font-size: 18px;
-    }
-</style>
 {% endblock %}

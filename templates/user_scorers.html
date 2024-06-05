@@ -1,0 +1,21 @@
+{% extends "user_dashboard.html" %}
+{% block user_content %}
+<h2>Top Scorers</h2>
+<ul class="list-group">
+    {% for scorer in scorers %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+                {% if scorer[5] %}
+                    <img src="{{ scorer[5] }}" alt="{{ scorer[1] }} Logo" style="height: 20px; margin-right: 10px;">
+                {% endif %}
+                <a href="{{ url_for('user.profile_player', player_id=scorer[0]) }}">{{ scorer[1] }}</a> ({{ scorer[6] }})
+            </div>
+            <div>
+                <span class="badge badge-primary badge-pill">Goals: {{ scorer[2] }}</span>
+                <span class="badge badge-success badge-pill">Assists: {{ scorer[3] }}</span>
+                <span class="badge badge-warning badge-pill">Penalties: {{ scorer[4] }}</span>
+            </div>
+        </li>
+    {% endfor %}
+</ul>
+{% endblock %}

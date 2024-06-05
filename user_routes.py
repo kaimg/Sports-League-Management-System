@@ -112,7 +112,6 @@ def user_matches():
 
 
 
-
 @user_bp.route('/team/<int:team_id>')
 @login_required
 def profile_team(team_id):
@@ -189,50 +188,40 @@ def profile_match(match_id):
 
     cur.execute("""
         SELECT m.match_id, 
-               t1.name AS team1_name, 
-               t2.name AS team2_name, 
-               COALESCE(s1.total_score, 0) AS team1_score, 
-               COALESCE(s2.total_score, 0) AS team2_score,
-               m.date, m.location
+               t1.name AS home_team_name, 
+               t2.name AS away_team_name, 
+               s.full_time_home AS home_score, 
+               s.full_time_away AS away_score,
+               TO_CHAR(m.utc_date, 'Month DD, YYYY') AS formatted_date,
+               m.matchday,
+               t1.crestURL AS home_team_logo,
+               t2.crestURL AS away_team_logo,
+               st.name AS stadium_name,
+               st.location AS stadium_location
         FROM matches m
-        JOIN teams t1 ON m.team1_id = t1.team_id
-        JOIN teams t2 ON m.team2_id = t2.team_id
-        LEFT JOIN (SELECT match_id, players.team_id, SUM(score) AS total_score 
-                   FROM scores 
-                   JOIN players ON scores.player_id = players.player_id
-                   GROUP BY match_id, players.team_id) s1 
-        ON (m.match_id = s1.match_id AND m.team1_id = s1.team_id)
-        LEFT JOIN (SELECT match_id, players.team_id, SUM(score) AS total_score 
-                   FROM scores 
-                   JOIN players ON scores.player_id = players.player_id
-                   GROUP BY match_id, players.team_id) s2 
-        ON (m.match_id = s2.match_id AND m.team2_id = s2.team_id)
+        JOIN teams t1 ON m.home_team_id = t1.team_id
+        JOIN teams t2 ON m.away_team_id = t2.team_id
+        LEFT JOIN scores s ON m.match_id = s.match_id
+        JOIN stadiums st ON t1.stadium_id = st.stadium_id
         WHERE m.match_id = %s
     """, (match_id,))
     match = cur.fetchone()
 
     cur.execute("""
-        SELECT p.name, s.score
+        SELECT s.full_time_home, s.full_time_away, s.half_time_home, s.half_time_away
         FROM scores s
-        JOIN players p ON s.player_id = p.player_id
         WHERE s.match_id = %s
     """, (match_id,))
     scores = cur.fetchall()
 
-    cur.execute("""
-        SELECT stat_type, value
-        FROM game_stats
-        WHERE match_id = %s
-    """, (match_id,))
-    game_stats = cur.fetchall()
-
     cur.close()
 
     if match:
-        return render_template('profile_match.html', match=match, scores=scores, game_stats=game_stats)
+        return render_template('profile_match.html', match=match, scores=scores)
     else:
         flash('Match not found', 'error')
         return redirect(url_for('user.user_dashboard'))
+
 
 
 @user_bp.route('/league/<int:league_id>')
@@ -265,3 +254,22 @@ def profile_league(league_id):
     cur.close()
 
     return render_template('profile_league.html', league=league, teams=teams, standings=standings)
+
+@user_bp.route('/user/scorers')
+@login_required
+def user_scorers():
+    db = get_db()
+    cur = db.cursor()
+
+    cur.execute("""
+        SELECT sc.player_id, p.name, sc.goals, sc.assists, sc.penalties, t.crestURL, p.nationality
+        FROM scorers sc
+        JOIN players p ON sc.player_id = p.player_id
+        JOIN teams t ON p.team_id = t.team_id
+        ORDER BY sc.goals DESC
+    """)
+    scorers = cur.fetchall()
+    cur.close()
+
+    return render_template('user_scorers.html', scorers=scorers)
+

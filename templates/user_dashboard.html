@@ -11,6 +11,7 @@
                 <a href="{{ url_for('user.user_players') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'user.user_players' %}active{% endif %}">Players</a>
                 <a href="{{ url_for('user.user_leagues') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'user.user_leagues' %}active{% endif %}">Leagues</a>
                 <a href="{{ url_for('user.user_matches') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'user.user_matches' %}active{% endif %}">Matches</a>
+                <a href="{{ url_for('user.user_scorers') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'user.user_scorers' %}active{% endif %}">Top Scorers</a>
             </div>
         </div>
         <div class="col-md-9">
