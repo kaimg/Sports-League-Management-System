@@ -1,14 +1,24 @@
 {% extends "user_dashboard.html" %}
 {% block user_content %}
 <h2>League Profiles</h2>
+<style>
+    .flag-img {
+        width: 40px;
+        height: auto;
+        max-height: 30px;
+        object-fit: cover;
+        border-radius: 5px;
+        margin-right: 10px;
+    }
+</style>
 <ul class="list-group">
     {% for league in leagues %}
         <li class="list-group-item">
             {% if league[3] %}
-                <img src="{{ league[3] }}" alt="{{ league[1] }} Logo" style="height: 20px; margin-right: 10px;">
+                <img src="{{ league[3] }}" alt="{{ league[1] }} Logo" style="height: 40px;">
             {% endif %}
             {% if league[2] %}
-                <img src="{{ league[2] }}" alt="{{ league[1] }} Flag" style="height: 20px; margin-right: 10px;">
+                <img src="{{ league[2] }}" alt="{{ league[1] }} Flag" class="flag-img mr-2"">
             {% endif %}
             <a href="{{ url_for('user.profile_league', league_id=league[0]) }}">{{ league[1] }}</a>
         </li>

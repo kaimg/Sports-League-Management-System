@@ -1,6 +1,16 @@
 {% extends "user_dashboard.html" %}
 {% block user_content %}
 <h2>Player Profiles</h2>
+<style>
+    .flag-img {
+        width: 40px;
+        height: auto;
+        max-height: 30px;
+        object-fit: cover;
+        border-radius: 5px;
+        margin-right: 10px;
+    }
+</style>
 <form method="get" action="{{ url_for('user.user_players') }}">
     <div class="form-row">
         <div class="form-group col-md-3">
@@ -47,10 +57,10 @@
     {% for player in players %}
         <li class="list-group-item d-flex align-items-center">
             {% if player[3] %}
-                <img src="{{ player[3] }}" alt="{{ player[4] }} Logo" title="{{ player[4] }}" class="team-logo-tooltip mr-2" style="height: 20px;">
+                <img src="{{ player[3] }}" alt="{{ player[4] }} Logo" title="{{ player[4] }}" class="team-logo-tooltip mr-2" style="width: 40px;">
             {% endif %}
             {% if player[5] %}
-                <img src="{{ player[5] }}" alt="Nationality Flag" class="mr-2" style="height: 20px;">
+                <img src="{{ player[5] }}" alt="Nationality Flag" class="flag-img mr-2">
             {% endif %}
             <span class="badge {% if player[2] == 'Goalkeeper' %}badge-secondary{% elif player[2] == 'Defence' %}badge-primary{% elif player[2] == 'Midfield' %}badge-success{% elif player[2] == 'Offence' %}badge-danger{% endif %} mr-2">&bull;</span>
             <a href="{{ url_for('user.profile_player', player_id=player[0]) }}">{{ player[1] }}</a>

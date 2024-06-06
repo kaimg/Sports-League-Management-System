@@ -361,7 +361,7 @@ def profile_league(league_id):
     cur = db.cursor()
 
     cur.execute("""
-        SELECT l.name, c.name AS country, l.icon_url, c.flag_url
+        SELECT l.name, c.name AS country, l.icon_url, c.flag_url, l.cl_spot, l.uel_spot, l.relegation_spot
         FROM leagues l
         JOIN countries c ON l.country_id = c.country_id
         WHERE l.league_id = %s
@@ -373,9 +373,13 @@ def profile_league(league_id):
 
     cur.execute("""
         SELECT s.position, s.team_id, t.name AS team_name, s.played_games, s.won, s.draw, s.lost, 
-               s.points, s.goals_for, s.goals_against, s.goal_difference, s.form, t.crestURL
+               s.points, s.goals_for, s.goals_against, s.goal_difference, s.form, t.crestURL,
+               CASE WHEN s.position <= l.cl_spot THEN TRUE ELSE FALSE END AS cl_spot,
+               CASE WHEN s.position > l.cl_spot AND s.position <= l.uel_spot THEN TRUE ELSE FALSE END AS uel_spot,
+               CASE WHEN s.position >= l.relegation_spot THEN TRUE ELSE FALSE END AS relegation_spot
         FROM standings s
         JOIN teams t ON s.team_id = t.team_id
+        JOIN leagues l ON s.league_id = l.league_id
         WHERE s.league_id = %s
         ORDER BY s.position
     """, (league_id,))
@@ -384,6 +388,9 @@ def profile_league(league_id):
     cur.close()
 
     return render_template('profile_league.html', league=league, teams=teams, standings=standings)
+
+
+
 
 @user_bp.route('/user/scorers')
 @login_required
