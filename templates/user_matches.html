@@ -1,7 +1,49 @@
 {% extends "user_dashboard.html" %}
 {% block user_content %}
 <h2>Match Profiles</h2>
-<ul class="list-group">
+<form method="get" action="{{ url_for('user.user_matches') }}">
+    <div class="form-row">
+        <div class="form-group col-md-3">
+            <label for="league_id">League</label>
+            <select id="league_id" name="league_id" class="form-control">
+                <option value="">All Leagues</option>
+                {% for league in leagues %}
+                    <option value="{{ league[0] }}" {% if request.args.get('league_id') == str(league[0]) %}selected{% endif %}>{{ league[1] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="country_id">Country</label>
+            <select id="country_id" name="country_id" class="form-control">
+                <option value="">All Countries</option>
+                {% for country in countries %}
+                    <option value="{{ country[0] }}" {% if request.args.get('country_id') == str(country[0]) %}selected{% endif %}>{{ country[1] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="team_id">Team</label>
+            <select id="team_id" name="team_id" class="form-control">
+                <option value="">All Teams</option>
+                {% for team in teams %}
+                    <option value="{{ team[0] }}" {% if request.args.get('team_id') == str(team[0]) %}selected{% endif %}>{{ team[1] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="matchday">Matchday</label>
+            <select id="matchday" name="matchday" class="form-control">
+                <option value="">All Matchdays</option>
+                {% for day in matchdays %}
+                    <option value="{{ day }}" {% if request.args.get('matchday') == str(day) %}selected{% endif %}>{{ day }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Filter</button>
+</form>
+
+<ul class="list-group mt-3">
     {% for match in matches %}
         <li class="list-group-item d-flex flex-column">
             <div class="d-flex justify-content-between w-100 mb-2">

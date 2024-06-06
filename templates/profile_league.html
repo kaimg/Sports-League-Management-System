@@ -45,7 +45,7 @@
                         <tbody>
                             {% for standing in standings %}
                                 <tr>
-                                    <td>{{ standing[0] }}</td>
+                                    <td style="border-left: 10px solid {% if loop.index <= 4 %}#007bff{% elif loop.index <= 6 %}#fd7e14{% elif loop.index > 17 %}#dc3545{% else %}transparent{% endif %};">{{ standing[0] }}</td>
                                     <td>
                                         {% if standing[12] %}
                                             <img src="{{ standing[12] }}" alt="{{ standing[2] }} Logo" style="height: 20px; width: 20px; margin-right: 5px;">
@@ -56,7 +56,7 @@
                                     <td>{{ standing[4] }}</td>
                                     <td>{{ standing[5] }}</td>
                                     <td>{{ standing[6] }}</td>
-                                    <td>{{ standing[7] }}</td>
+                                    <td><span class="badge badge-primary">{{ standing[7] }}</span></td>
                                     <td>{{ standing[8] }}</td>
                                     <td>{{ standing[9] }}</td>
                                     <td>{{ "+" if standing[10] > 0 else "" }}{{ standing[10] }}</td>
@@ -70,6 +70,13 @@
                         </tbody>
                     </table>
                 </div>
+            <div class="card mt-3 bg-light">
+                <div class="card-body">
+                    <p><span style="background-color: #007bff; color: white; padding: 0.2em 0.5em;">&nbsp;</span> Top 4: Champions League qualification</p>
+                    <p><span style="background-color: #fd7e14; color: white; padding: 0.2em 0.5em;">&nbsp;</span> 5th and 6th: Europa League qualification</p>
+                    <p><span style="background-color: #dc3545; color: white; padding: 0.2em 0.5em;">&nbsp;</span> Bottom 3: Relegation zone</p>
+                </div>
+            </div>
             {% else %}
                 <p>No standings available for this league.</p>
             {% endif %}
