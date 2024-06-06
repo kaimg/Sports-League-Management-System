@@ -1,7 +1,41 @@
 {% extends "user_dashboard.html" %}
 {% block user_content %}
 <h2>Top Scorers</h2>
-<ul class="list-group">
+
+<form method="get" action="{{ url_for('user.user_scorers') }}">
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label for="league">League</label>
+            <select id="league" name="league_id" class="form-control">
+                <option value="">All Leagues</option>
+                {% for league in leagues %}
+                    <option value="{{ league[0] }}" {% if request.args.get('league_id') == str(league[0]) %}selected{% endif %}>{{ league[1] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group col-md-4">
+            <label for="country">Country</label>
+            <select id="country" name="country_id" class="form-control">
+                <option value="">All Countries</option>
+                {% for country in countries %}
+                    <option value="{{ country[0] }}" {% if request.args.get('country_id') == str(country[0]) %}selected{% endif %}>{{ country[1] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group col-md-4">
+            <label for="team">Team</label>
+            <select id="team" name="team_id" class="form-control">
+                <option value="">All Teams</option>
+                {% for team in teams %}
+                    <option value="{{ team[0] }}" {% if request.args.get('team_id') == str(team[0]) %}selected{% endif %}>{{ team[1] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Filter</button>
+</form>
+
+<ul class="list-group mt-4">
     {% for scorer in scorers %}
         <li class="list-group-item d-flex justify-content-between align-items-center">
             <div>

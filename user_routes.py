@@ -111,7 +111,6 @@ def user_matches():
     return render_template('user_matches.html', matches=matches)
 
 
-
 @user_bp.route('/team/<int:team_id>')
 @login_required
 def profile_team(team_id):
@@ -139,11 +138,29 @@ def profile_team(team_id):
 
     # Get scores
     cur.execute("""
-        SELECT m.date, s.score 
-        FROM scores s 
-        JOIN matches m ON s.match_id = m.match_id 
-        WHERE m.team1_id = %s OR m.team2_id = %s
-    """, (team_id, team_id))
+        SELECT 
+            m.utc_date, 
+            t1.name AS home_team_name, 
+            t2.name AS away_team_name, 
+            s.full_time_home, 
+            s.full_time_away,
+            CASE 
+                WHEN m.home_team_id = %s THEN s.full_time_home 
+                ELSE s.full_time_away 
+            END AS team_score,
+            CASE 
+                WHEN m.home_team_id = %s THEN s.full_time_away 
+                ELSE s.full_time_home 
+            END AS opponent_score,
+            t1.crestURL AS home_team_logo,
+            t2.crestURL AS away_team_logo,
+            m.matchday
+        FROM matches m
+        JOIN teams t1 ON m.home_team_id = t1.team_id
+        JOIN teams t2 ON m.away_team_id = t2.team_id
+        LEFT JOIN scores s ON m.match_id = s.match_id
+        WHERE m.home_team_id = %s OR m.away_team_id = %s
+    """, (team_id, team_id, team_id, team_id))
     scores = cur.fetchall()
 
     cur.close()
@@ -157,6 +174,7 @@ def profile_team(team_id):
     else:
         flash('Team not found', 'error')
         return redirect(url_for('user_dashboard'))
+
 
 
 @user_bp.route('/player/<int:player_id>')
@@ -261,15 +279,48 @@ def user_scorers():
     db = get_db()
     cur = db.cursor()
 
-    cur.execute("""
+    # Get filter parameters from the request
+    league_id = request.args.get('league_id')
+    country_id = request.args.get('country_id')
+    team_id = request.args.get('team_id')
+
+    # Fetch available leagues, countries, and teams for filtering
+    cur.execute('SELECT league_id, name FROM leagues')
+    leagues = cur.fetchall()
+
+    cur.execute('SELECT country_id, name FROM countries')
+    countries = cur.fetchall()
+
+    cur.execute('SELECT team_id, name FROM teams')
+    teams = cur.fetchall()
+
+    # Build the base query
+    query = """
         SELECT sc.player_id, p.name, sc.goals, sc.assists, sc.penalties, t.crestURL, p.nationality
         FROM scorers sc
         JOIN players p ON sc.player_id = p.player_id
         JOIN teams t ON p.team_id = t.team_id
-        ORDER BY sc.goals DESC
-    """)
+        WHERE 1=1
+    """
+    filters = []
+
+    # Add filters based on the selected values
+    if league_id:
+        query += " AND sc.league_id = %s"
+        filters.append(league_id)
+    if country_id:
+        query += " AND p.nationality = (SELECT name FROM countries WHERE country_id = %s)"
+        filters.append(country_id)
+    if team_id:
+        query += " AND p.team_id = %s"
+        filters.append(team_id)
+
+    query += " ORDER BY sc.goals DESC"
+
+    cur.execute(query, filters)
     scorers = cur.fetchall()
     cur.close()
 
-    return render_template('user_scorers.html', scorers=scorers)
+    return render_template('user_scorers.html', scorers=scorers, leagues=leagues, countries=countries, teams=teams, str=str)
+
 

@@ -3,62 +3,57 @@
 {% block content %}
 <div class="container mt-4">
     <h1>{{ team[0] }}'s Profile</h1>
-    {% if logo_url %}
-        <img src="{{ logo_url }}" alt="{{ team[0] }} logo" class="img-fluid mb-4" style="max-width: 200px;">
-    {% endif %}
-    <p><strong>Founded Year:</strong> {{ team[1] }}</p>
+    <p><strong>Founded:</strong> {{ team[1] }}</p>
     <p><strong>Stadium:</strong> {{ team[2] }}</p>
     <p><strong>Coach:</strong> {{ team[3] }}</p>
     <p><strong>League:</strong> {{ team[4] }}</p>
-    
+    {% if logo_url %}
+        <img src="{{ logo_url }}" alt="{{ team[0] }} Logo" class="img-fluid rounded border mb-2" style="max-height: 100px;">
+    {% endif %}
+
     <h2>Players</h2>
     {% if players %}
-        <ul class="list-group" id="player-list">
+        <ul class="list-group">
             {% for player in players %}
                 <li class="list-group-item">
-                    <a href="{{ url_for('user.profile_player', player_id=player[0]) }}">
-                        <strong>{{ player[1] }}</strong>
-                    </a> - <span class="dob">{{ player[2] }}</span>, Position: {{ player[3] }}
+                    <a href="{{ url_for('user.profile_player', player_id=player[0]) }}">{{ player[1] }}</a>
                 </li>
             {% endfor %}
         </ul>
     {% else %}
         <p>No players found.</p>
     {% endif %}
-    
-    <h2>Scores</h2>
+
+    <h2>Recent Matches</h2>
     {% if scores %}
         <ul class="list-group">
             {% for score in scores %}
-                <li class="list-group-item">
-                    <strong>{{ score[0] }}</strong> - Score: {{ score[1] }}
+                <li class="list-group-item d-flex flex-column">
+                    <div class="d-flex justify-content-between w-100 mb-2">
+                        <div class="font-weight-bold">
+                            <small>{{ score[0] }}</small> | <small>Matchday: {{ score[9] }}</small>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-center align-items-center match-result-box p-3 bg-light rounded shadow-sm">
+                        <figure class="figure text-center">
+                            <img src="{{ score[7] }}" alt="{{ score[1] }} Logo" class="figure-img img-fluid rounded" style="height: 50px;">
+                            <figcaption class="figure-caption"><strong>{{ score[1] }}</strong></figcaption>
+                        </figure>
+                        <div class="mx-4 display-4">
+                            <span class="match-score-box mx-2 bg-primary text-white px-2 py-1 rounded">{{ score[3] }}</span>
+                            <span class="mx-2">-</span>
+                            <span class="match-score-box mx-2 bg-primary text-white px-2 py-1 rounded">{{ score[4] }}</span>
+                        </div>
+                        <figure class="figure text-center">
+                            <img src="{{ score[8] }}" alt="{{ score[2] }} Logo" class="figure-img img-fluid rounded" style="height: 50px;">
+                            <figcaption class="figure-caption"><strong>{{ score[2] }}</strong></figcaption>
+                        </figure>
+                    </div>
                 </li>
             {% endfor %}
         </ul>
     {% else %}
-        <p>No scores found.</p>
+        <p>No match scores found.</p>
     {% endif %}
 </div>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        function calculateAge(dob) {
-            const birthDate = new Date(dob);
-            const today = new Date();
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const monthDiff = today.getMonth() - birthDate.getMonth();
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                age--;
-            }
-            return age;
-        }
-
-        const dobElements = document.querySelectorAll(".dob");
-        dobElements.forEach(function(dobElement) {
-            const dob = dobElement.textContent;
-            const age = calculateAge(dob);
-            dobElement.textContent = `${age} years old`;
-        });
-    });
-</script>
 {% endblock %}
