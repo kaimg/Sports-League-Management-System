@@ -1,11 +1,40 @@
 {% extends "layout.html" %}
 {% block title %}{{ team[0] }} - Team Profile{% endblock %}
 {% block content %}
+<style>
+    .flag-img {
+        width: 20px;
+        height: auto;
+        max-height: 15px;
+        object-fit: cover;
+        border-radius: 5px;
+        margin-right: 5px;
+    }
+    .team-logo {
+        height: 50px;
+        margin-right: 10px;
+    }
+    .match-result-box {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        padding: 10px;
+        border-radius: 5px;
+    }
+    .match-score-box {
+        background-color: #007bff;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-weight: bold;
+    }
+</style>
 <div class="container mt-4">
     <h1>{{ team[0] }}'s Profile</h1>
     <p><strong>Founded:</strong> {{ team[1] }}</p>
     <p><strong>Stadium:</strong> {{ team[2] }}</p>
-    <p><strong>Coach:</strong> {{ team[3] }}</p>
+    <p><strong>Coach:</strong> {{ team[3] }} <img src="{{ team[6] }}" alt="Flag" class="flag-img"></p>
     <p><strong>League:</strong> {{ team[4] }}</p>
     {% if logo_url %}
         <img src="{{ logo_url }}" alt="{{ team[0] }} Logo" class="img-fluid rounded border mb-2" style="max-height: 100px;">
@@ -16,7 +45,12 @@
         <ul class="list-group">
             {% for player in players %}
                 <li class="list-group-item">
-                    <a href="{{ url_for('user.profile_player', player_id=player[0]) }}">{{ player[1] }}</a>
+                    <span class="badge {% if player[3] == 'Goalkeeper' %}badge-secondary{% elif player[3] == 'Defence' %}badge-primary{% elif player[3] == 'Midfield' %}badge-success{% elif player[3] == 'Offence' %}badge-danger{% endif %} mr-2">&bull;</span>
+                    <a href="{{ url_for('user.profile_player', player_id=player[0]) }}">{{ player[1] }} ({{ player[3] }})</a>
+                    {% if player[4] %}
+                    {{player[4]}}
+                        <img src="{{ player[5] }}" alt="Flag" class="flag-img">
+                    {% endif %}
                 </li>
             {% endfor %}
         </ul>
@@ -31,23 +65,17 @@
                 <li class="list-group-item d-flex flex-column">
                     <div class="d-flex justify-content-between w-100 mb-2">
                         <div class="font-weight-bold">
-                            <small>{{ score[0] }}</small> | <small>Matchday: {{ score[9] }}</small>
+                            <small>{{ score[1] }}</small> | <small>Matchday: {{ score[8] }}</small>
                         </div>
                     </div>
                     <div class="d-flex justify-content-center align-items-center match-result-box p-3 bg-light rounded shadow-sm">
-                        <figure class="figure text-center">
-                            <img src="{{ score[7] }}" alt="{{ score[1] }} Logo" class="figure-img img-fluid rounded" style="height: 50px;">
-                            <figcaption class="figure-caption"><strong>{{ score[1] }}</strong></figcaption>
-                        </figure>
-                        <div class="mx-4 display-4">
-                            <span class="match-score-box mx-2 bg-primary text-white px-2 py-1 rounded">{{ score[3] }}</span>
-                            <span class="mx-2">-</span>
-                            <span class="match-score-box mx-2 bg-primary text-white px-2 py-1 rounded">{{ score[4] }}</span>
-                        </div>
-                        <figure class="figure text-center">
-                            <img src="{{ score[8] }}" alt="{{ score[2] }} Logo" class="figure-img img-fluid rounded" style="height: 50px;">
-                            <figcaption class="figure-caption"><strong>{{ score[2] }}</strong></figcaption>
-                        </figure>
+                        <a href="{{ url_for('user.profile_match', match_id=score[0]) }}" class="d-flex align-items-center text-dark">
+                            <img src="{{ score[6] }}" alt="{{ score[2] }} Logo" class="team-logo">
+                            <strong class="mx-2">{{ score[2] }}</strong>
+                            <span class="match-score-box mx-2">{{ score[4] }} - {{ score[5] }}</span>
+                            <strong class="mx-2">{{ score[3] }}</strong>
+                            <img src="{{ score[7] }}" alt="{{ score[3] }} Logo" class="team-logo">
+                        </a>
                     </div>
                 </li>
             {% endfor %}

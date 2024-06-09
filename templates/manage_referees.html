@@ -1,71 +1,49 @@
 {% extends "layout.html" %}
-{% block title %}Manage Players - Admin Panel{% endblock %}
+{% block title %}Manage Referees - Admin Panel{% endblock %}
 {% block content %}
 <div class="container mt-4">
-    <h1 class="mb-4">Manage Players</h1>
+    <h1 class="mb-4">Manage Referees</h1>
     <div class="row">
         <div class="col-md-6">
-            <h2 id="form-title">Add Player</h2>
-            <form action="{{ url_for('admin.manage_players') }}" method="POST">
-                <input type="hidden" id="player_id" name="player_id">
-                <div class="form-group">
-                    <label for="team_id">Team:</label>
-                    <select class="form-control" id="team_id" name="team_id" required>
-                        {% for team in teams %}
-                        <option value="{{ team[0] }}">{{ team[1] }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+            <h2 id="form-title">Add Referee</h2>
+            <form action="{{ url_for('admin.manage_referees') }}" method="POST">
+                <input type="hidden" id="referee_id" name="referee_id">
                 <div class="form-group">
                     <label for="name">Name:</label>
                     <input type="text" class="form-control" id="name" name="name" required>
                 </div>
                 <div class="form-group">
-                    <label for="position">Position:</label>
-                    <input type="text" class="form-control" id="position" name="position" required>
-                </div>
-                <div class="form-group">
-                    <label for="date_of_birth">Date of Birth:</label>
-                    <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" required>
-                </div>
-                <div class="form-group">
                     <label for="nationality">Nationality:</label>
                     <input type="text" class="form-control" id="nationality" name="nationality" required>
                 </div>
-                <button type="submit" name="submit" class="btn btn-primary" id="submit-button">Add Player</button>
+                <button type="submit" name="submit" class="btn btn-primary" id="submit-button">Add Referee</button>
             </form>
         </div>
         <div class="col-md-6">
-            <h2>Existing Players</h2>
+            <h2>Existing Referees</h2>
             <table class="table table-striped">
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Team</th>
                         <th>Name</th>
-                        <th>Position</th>
-                        <th>Date of Birth</th>
                         <th>Nationality</th>
                         <th>Edit</th>
                         <th>Delete</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for player in players %}
+                    {% for referee in referees %}
                     <tr>
-                        <td>{{ player[0] }}</td>
-                        <td>{{ player[1] }}</td>
-                        <td>{{ player[2] }}</td>
-                        <td>{{ player[3] }}</td>
-                        <td>{{ player[4] }}</td>
-                        <td>{{ player[5] }}</td>
+                        <td>{{ referee[0] }}</td>
+                        <td>{{ referee[1] }}</td>
+                        <td>{{ referee[2] }}</td>
                         <td>
-                            <button class="btn btn-success btn-sm" onclick="editPlayer('{{ player[0] }}', '{{ player[6] }}', '{{ player[2] }}', '{{ player[3] }}', '{{ player[4] }}', '{{ player[5] }}')">
+                            <button class="btn btn-success btn-sm" onclick="editReferee('{{ referee[0] }}', '{{ referee[1] }}', '{{ referee[2] }}')">
                                 <i class="fa fa-pencil-alt"></i>
                             </button>
                         </td>
                         <td>
-                            <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal" data-id="{{ player[0] }}" data-action="{{ url_for('admin.manage_players') }}">
+                            <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal" data-id="{{ referee[0] }}" data-action="{{ url_for('admin.manage_referees') }}">
                                 <i class="fa fa-minus"></i>
                             </button>
                         </td>
@@ -102,15 +80,12 @@
 </div>
 
 <script>
-    function editPlayer(id, team_id, name, position, date_of_birth, nationality) {
-        document.getElementById('player_id').value = id;
-        document.getElementById('team_id').value = team_id;
+    function editReferee(id, name, nationality) {
+        document.getElementById('referee_id').value = id;
         document.getElementById('name').value = name;
-        document.getElementById('position').value = position;
-        document.getElementById('date_of_birth').value = date_of_birth;
         document.getElementById('nationality').value = nationality;
-        document.getElementById('submit-button').innerText = 'Update Player';
-        document.getElementById('form-title').innerText = 'Edit Player';
+        document.getElementById('submit-button').innerText = 'Update Referee';
+        document.getElementById('form-title').innerText = 'Edit Referee';
     }
 
     $('#deleteModal').on('show.bs.modal', function (event) {

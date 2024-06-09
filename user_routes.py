@@ -1,8 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, session, url_for, flash
 from functools import wraps
 from db import get_db
-import requests
-from config import Config
 
 user_bp = Blueprint('user', __name__)
 
@@ -230,10 +228,11 @@ def profile_team(team_id):
 
     # Get team details along with stadium, coach, league, and crestURL
     cur.execute("""
-        SELECT t.name, t.founded_year, s.name AS stadium_name, c.name AS coach_name, l.name AS league_name, t.crestURL
+        SELECT t.name, t.founded_year, s.name AS stadium_name, c.name AS coach_name, l.name AS league_name, t.crestURL, co.flag_url
         FROM teams t 
         JOIN stadiums s ON t.stadium_id = s.stadium_id 
         JOIN coaches c ON t.coach_id = c.coach_id 
+        JOIN countries co ON c.nationality = co.name
         JOIN leagues l ON t.league_id = l.league_id
         WHERE t.team_id = %s
     """, (team_id,))
@@ -241,28 +240,22 @@ def profile_team(team_id):
 
     # Get players
     cur.execute("""
-        SELECT p.player_id, p.name, p.date_of_birth, p.position 
+        SELECT p.player_id, p.name, p.date_of_birth, p.position, p.nationality, c.flag_url
         FROM players p 
+        JOIN countries c ON p.nationality = c.name
         WHERE p.team_id = %s
     """, (team_id,))
     players = cur.fetchall()
 
-    # Get scores
+    # Get match scores
     cur.execute("""
         SELECT 
-            to_char(m.utc_date, 'Mon, DD YYYY') AS utc_date, 
+            m.match_id,
+            TO_CHAR(m.utc_date, 'Mon, DD YYYY') AS utc_date, 
             t1.name AS home_team_name, 
             t2.name AS away_team_name, 
             s.full_time_home, 
             s.full_time_away,
-            CASE 
-                WHEN m.home_team_id = %s THEN s.full_time_home 
-                ELSE s.full_time_away 
-            END AS team_score,
-            CASE 
-                WHEN m.home_team_id = %s THEN s.full_time_away 
-                ELSE s.full_time_home 
-            END AS opponent_score,
             t1.crestURL AS home_team_logo,
             t2.crestURL AS away_team_logo,
             m.matchday
@@ -271,8 +264,8 @@ def profile_team(team_id):
         JOIN teams t2 ON m.away_team_id = t2.team_id
         LEFT JOIN scores s ON m.match_id = s.match_id
         WHERE m.home_team_id = %s OR m.away_team_id = %s
-        ORDER BY m.utc_date DESC;
-    """, (team_id, team_id, team_id, team_id))
+        ORDER BY m.utc_date DESC
+    """, (team_id, team_id))
     scores = cur.fetchall()
 
     cur.close()
@@ -285,7 +278,8 @@ def profile_team(team_id):
                                logo_url=team[5])
     else:
         flash('Team not found', 'error')
-        return redirect(url_for('user_dashboard'))
+        return redirect(url_for('user.user_dashboard'))
+
 
 
 
@@ -295,20 +289,35 @@ def profile_player(player_id):
     db = get_db()
     cur = db.cursor()
 
+    # Fetch player details
     cur.execute("""
-        SELECT p.name, p.date_of_birth, p.position, t.team_id, t.name AS team_name 
+        SELECT p.name, p.date_of_birth, p.position, t.team_id, t.name AS team_name, c.flag_url, c.name AS nationality
         FROM players p 
         JOIN teams t ON p.team_id = t.team_id 
+        JOIN countries c ON p.nationality = c.name
         WHERE p.player_id = %s
     """, (player_id,))
     player = cur.fetchone()
+
+    # Fetch player statistics if they are in the top scorers list
+    cur.execute("""
+        SELECT sc.goals, sc.assists, sc.penalties
+        FROM scorers sc
+        WHERE sc.player_id = %s
+    """, (player_id,))
+    statistics = cur.fetchone()
+
     cur.close()
 
     if player:
-        return render_template('profile_player.html', player=player)
+        return render_template('profile_player.html', player=player, statistics=statistics)
     else:
         flash('Player not found', 'error')
         return redirect(url_for('user.user_dashboard'))
+
+
+
+
 
 @user_bp.route('/match/<int:match_id>')
 @login_required
@@ -327,12 +336,19 @@ def profile_match(match_id):
                t1.crestURL AS home_team_logo,
                t2.crestURL AS away_team_logo,
                st.name AS stadium_name,
-               st.location AS stadium_location
+               st.location AS stadium_location,
+               r.name AS referee_name,
+               c.flag_url AS referee_flag_url,
+               t1.team_id AS home_team_id,
+               t2.team_id AS away_team_id
         FROM matches m
         JOIN teams t1 ON m.home_team_id = t1.team_id
         JOIN teams t2 ON m.away_team_id = t2.team_id
         LEFT JOIN scores s ON m.match_id = s.match_id
         JOIN stadiums st ON t1.stadium_id = st.stadium_id
+        JOIN match_referees mr ON m.match_id = mr.match_id
+        JOIN referees r ON mr.referee_id = r.referee_id
+        JOIN countries c ON r.nationality = c.name
         WHERE m.match_id = %s
     """, (match_id,))
     match = cur.fetchone()
@@ -351,6 +367,8 @@ def profile_match(match_id):
     else:
         flash('Match not found', 'error')
         return redirect(url_for('user.user_dashboard'))
+
+
 
 
 

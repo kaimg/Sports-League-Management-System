@@ -2,9 +2,63 @@
 {% block title %}{{ player[0] }} - Player Profile{% endblock %}
 {% block content %}
 <div class="container mt-4">
-    <h1>{{ player[0] }}'s Profile</h1>
-    <p><strong>Age:</strong> {{ player[1] }}</p>
-    <p><strong>Position:</strong> {{ player[2] }}</p>
-    <p><strong>Team:</strong> <a href="{{ url_for('user.profile_team', team_id=player[3]) }}">{{ player[4] }}</a></p>
+    <div class="card mb-4">
+        <div class="card-header text-center">
+            <h1>{{ player[0] }}'s Profile</h1>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 text-center">
+                    {% if player[5] %}
+                        <img src="{{ player[5] }}" alt="{{ player[0] }}'s Picture" class="img-fluid rounded mb-3" style="max-height: 200px;">
+                        <img src="/static/images/default_player.png" alt="Default Player Picture" class="img-fluid rounded mb-3" style="max-height: 200px;">
+                    {% endif %}
+                </div>
+                <div class="col-md-8">
+                    <p><strong>Age:</strong> <span id="age"></span></p>
+                    <p><strong>Position:</strong> {{ player[2] }}</p>
+                    <p><strong>Team:</strong> <a href="{{ url_for('user.profile_team', team_id=player[3]) }}">{{ player[4] }}</a></p>
+                    <p><strong>Nationality:</strong> 
+                        {{ player[6] }}
+                    </p>
+                    {% if statistics %}
+                        <h3>Statistics</h3>
+                        <p><strong>Goals:</strong> {{ statistics[0] }}</p>
+                        <p><strong>Assists:</strong> {{ statistics[1] }}</p>
+                        <p><strong>Penalties:</strong> {{ statistics[2] }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+<script>
+    function calculateAge(dateOfBirth) {
+        const birthDate = new Date(dateOfBirth);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDifference = today.getMonth() - birthDate.getMonth();
+
+        if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+
+        return age;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateOfBirth = "{{ player[1] }}";
+        const age = calculateAge(dateOfBirth);
+        document.getElementById('age').innerText = age;
+    });
+</script>
 {% endblock %}
+<style>
+    .card-header {
+        background-color: #007bff;
+        color: white;
+    }
+    .card-body {
+        background-color: #f8f9fa;
+    }
+</style>

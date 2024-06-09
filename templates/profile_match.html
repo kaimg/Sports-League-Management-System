@@ -1,38 +1,75 @@
 {% extends "layout.html" %}
 {% block title %}Match Profile{% endblock %}
 {% block content %}
+<style>
+    .flag-img {
+        width: 40px;
+        height: auto;
+        max-height: 30px;
+        object-fit: cover;
+        border-radius: 5px;
+        margin-right: 10px;
+    }
+    .team-logo {
+        height: 30px;
+        margin-right: 10px;
+    }
+    .match-result-box {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        padding: 10px;
+        border-radius: 5px;
+    }
+    .match-score-box {
+        background-color: #007bff;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-weight: bold;
+    }
+</style>
 <div class="container mt-4">
     <h1>Match Profile</h1>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <p><strong>Date:</strong> {{ match[5] }}</p>
-                        <p><strong>Matchday:</strong> {{ match[6] }}</p>
-                    </div>
-                    <div class="text-right">
-                        <p><strong>Venue:</strong> {{ match[9] }} - {{ match[10] }}</p>
-                    </div>
-                </div>
-
-                <div class="d-flex justify-content-center align-items-center match-result-box p-3 bg-light rounded shadow-sm mb-4">
-                    <img src="{{ match[7] }}" alt="{{ match[1] }} Logo" style="height: 30px; margin-right: 10px;">
-                    <strong class="mx-2">{{ match[1] }}</strong>
-                    <span class="match-score-box mx-2 bg-primary text-white px-2 py-1 rounded">{{ match[3] }} - {{ match[4] }}</span>
-                    <strong class="mx-2">{{ match[2] }}</strong>
-                    <img src="{{ match[8] }}" alt="{{ match[2] }} Logo" style="height: 30px; margin-right: 10px;">
-                </div>
-
-                <h2>Scores</h2>
-                {% if scores %}
-                    <ul class="list-group">
-                        {% for score in scores %}
-                            <li class="list-group-item">
-                                Full Time: {{ score[0] }} - {{ score[1] }}, Half Time: {{ score[2] }} - {{ score[3] }}
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p>No scores found.</p>
+            <p><strong>Matchday:</strong> {{ match[6] }}</p>
+        </div>
+        <div class="text-right">
+            <p><strong>Venue:</strong> {{ match[9] }} - {{ match[10] }}</p>
+            <p><strong>Referee:</strong> {{ match[11] }} 
+                {% if match[12] %}
+                    <img src="{{ match[12] }}" alt="Flag" class="flag-img mr-2">
                 {% endif %}
-            </div>
-            {% endblock %}
+            </p>
+        </div>
+    </div>
 
+    <div class="d-flex justify-content-center align-items-center match-result-box p-3 bg-light rounded shadow-sm mb-4">
+        <a href="{{ url_for('user.profile_team', team_id=match[13]) }}" class="d-flex align-items-center text-dark">
+            <img src="{{ match[7] }}" alt="{{ match[1] }} Logo" class="team-logo">
+            <strong class="mx-2">{{ match[1] }}</strong>
+        </a>
+        <span class="match-score-box mx-2">{{ match[3] }} - {{ match[4] }}</span>
+        <a href="{{ url_for('user.profile_team', team_id=match[14]) }}" class="d-flex align-items-center text-dark">
+            <strong class="mx-2">{{ match[2] }}</strong>
+            <img src="{{ match[8] }}" alt="{{ match[2] }} Logo" class="team-logo">
+        </a>
+    </div>
+
+    <h2>Scores</h2>
+    {% if scores %}
+        <ul class="list-group">
+            {% for score in scores %}
+                <li class="list-group-item">
+                    Full Time: {{ score[0] }} - {{ score[1] }}, Half Time: {{ score[2] }} - {{ score[3] }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No scores found.</p>
+    {% endif %}
+</div>
+{% endblock %}

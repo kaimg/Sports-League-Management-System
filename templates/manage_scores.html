@@ -7,20 +7,32 @@
         <div class="col-md-6">
             <h2 id="form-title">Add Score</h2>
             <form action="{{ url_for('admin.manage_scores') }}" method="POST">
-                <input type="hidden" id="match_id" name="match_id">
+                <input type="hidden" id="score_id" name="score_id">
                 <div class="form-group">
-                    <label for="player_id">Player:</label>
-                    <select class="form-control" id="player_id" name="player_id" required>
-                        {% for player in players %}
-                        <option value="{{ player[0] }}">{{ player[1] }}</option>
+                    <label for="match_id">Match:</label>
+                    <select class="form-control" id="match_id" name="match_id" required>
+                        {% for match in matches %}
+                        <option value="{{ match[0] }}">{{ match[1] }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="score">Score:</label>
-                    <input type="number" class="form-control" id="score" name="score" required>
+                    <label for="full_time_home">Full Time Home:</label>
+                    <input type="number" class="form-control" id="full_time_home" name="full_time_home" required>
                 </div>
-                <button type="submit" name="add" class="btn btn-primary" id="submit-button">Add Score</button>
+                <div class="form-group">
+                    <label for="full_time_away">Full Time Away:</label>
+                    <input type="number" class="form-control" id="full_time_away" name="full_time_away" required>
+                </div>
+                <div class="form-group">
+                    <label for="half_time_home">Half Time Home:</label>
+                    <input type="number" class="form-control" id="half_time_home" name="half_time_home" required>
+                </div>
+                <div class="form-group">
+                    <label for="half_time_away">Half Time Away:</label>
+                    <input type="number" class="form-control" id="half_time_away" name="half_time_away" required>
+                </div>
+                <button type="submit" name="submit" class="btn btn-primary" id="submit-button">Add Score</button>
             </form>
         </div>
         <div class="col-md-6">
@@ -28,9 +40,12 @@
             <table class="table table-striped">
                 <thead>
                     <tr>
-                        <th>Match ID</th>
-                        <th>Player</th>
-                        <th>Score</th>
+                        <th>ID</th>
+                        <th>Match</th>
+                        <th>Full Time Home</th>
+                        <th>Full Time Away</th>
+                        <th>Half Time Home</th>
+                        <th>Half Time Away</th>
                         <th>Edit</th>
                         <th>Delete</th>
                     </tr>
@@ -41,13 +56,16 @@
                         <td>{{ score[0] }}</td>
                         <td>{{ score[1] }}</td>
                         <td>{{ score[2] }}</td>
+                        <td>{{ score[3] }}</td>
+                        <td>{{ score[4] }}</td>
+                        <td>{{ score[5] }}</td>
                         <td>
-                            <button class="btn btn-success btn-sm" onclick="editScore('{{ score[0] }}', '{{ score[1] }}', '{{ score[2] }}')">
+                            <button class="btn btn-success btn-sm" onclick="editScore('{{ score[0] }}', '{{ score[1] }}', '{{ score[2] }}', '{{ score[3] }}', '{{ score[4] }}', '{{ score[5] }}')">
                                 <i class="fa fa-pencil-alt"></i>
                             </button>
                         </td>
                         <td>
-                            <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{ score[0] }},{{ score[1] }}')">
+                            <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal" data-id="{{ score[0] }}" data-action="{{ url_for('admin.manage_scores') }}">
                                 <i class="fa fa-minus"></i>
                             </button>
                         </td>
@@ -59,20 +77,48 @@
     </div>
 </div>
 
-{% include 'delete_modal.html' %}
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="deleteForm" method="POST" action="">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete this item?
+                    <input type="hidden" id="deleteItemId" name="deleteEntityId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" name="delete" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <script>
-    function editScore(match_id, player_id, score) {
+    function editScore(id, match_id, full_time_home, full_time_away, half_time_home, half_time_away) {
+        document.getElementById('score_id').value = id;
         document.getElementById('match_id').value = match_id;
-        document.getElementById('player_id').value = player_id;
-        document.getElementById('score').value = score;
+        document.getElementById('full_time_home').value = full_time_home;
+        document.getElementById('full_time_away').value = full_time_away;
+        document.getElementById('half_time_home').value = half_time_home;
+        document.getElementById('half_time_away').value = half_time_away;
         document.getElementById('submit-button').innerText = 'Update Score';
         document.getElementById('form-title').innerText = 'Edit Score';
     }
 
-    function confirmDelete(id) {
-        document.getElementById('deleteEntityId').value = id;
-        $('#deleteModal').modal('show');
-    }
+    $('#deleteModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var id = button.data('id');
+        var action = button.data('action');
+        document.getElementById('deleteItemId').value = id;
+        document.getElementById('deleteForm').action = action;
+    });
 </script>
 {% endblock %}
