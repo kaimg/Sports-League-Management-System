@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, redirect, session, g, url_for, flash
+from flask import Flask, render_template, request, redirect, session, url_for, flash
 from db import get_db, close_db
 from admin_routes import admin_bp
 from user_routes import user_bp
 from config import Config
+import bcrypt
 
 app = Flask(__name__) 
 app.secret_key = Config.SECRET_KEY
@@ -14,7 +15,6 @@ app.register_blueprint(user_bp)
 def teardown_db(exception):
     close_db()
 
-# Internal server error handling
 @app.errorhandler(500)
 def internal_error(error):
     return render_template('500.html'), 500
@@ -24,7 +24,6 @@ def landing():
     if 'user_id' in session:
         session.clear()
     return render_template('landing.html')
-
 
 @app.route('/home')
 def home():
@@ -48,7 +47,7 @@ def login():
             (username, ))
         user = cur.fetchone()
         cur.close()
-        if user and user[2] == password:
+        if user and bcrypt.checkpw(password.encode('utf-8'), user[2].encode('utf-8')):
             session['user_id'] = user[0]
             session['username'] = user[1]
             session['is_admin'] = user[3]
@@ -84,9 +83,12 @@ def register():
                 flash('Email already registered', 'error')
                 return redirect(url_for('register'))
 
+            # Hash the password
+            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
             cur.execute(
                 'INSERT INTO users (username, password, email, is_admin) VALUES (%s, %s, %s, %s)',
-                (username, password, email, False))
+                (username, hashed_password, email, False))
             db.commit()
             cur.close()
             flash('Registration successful', 'success')
@@ -154,13 +156,11 @@ def search():
 
     return render_template('search.html', results=results, query=query)
 
-
 @app.route('/admin')
 def admin():
     if 'user_id' not in session or not session.get('is_admin'):
         return redirect(url_for('login'))
     return render_template('admin.html')
-
 
 @app.route('/user')
 def user():
@@ -173,7 +173,6 @@ def user():
     cur.close()
     return render_template('user.html', users=users)
 
-
 @app.route('/add_user', methods=['GET', 'POST'])
 def add_user():
     if 'user_id' not in session:
@@ -185,9 +184,13 @@ def add_user():
             username = request.form['username']
             password = request.form['password']
             email = request.form['email']
+
+            # Hash the password
+            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
             cur.execute(
                 'INSERT INTO users (username, password, email) VALUES (%s, %s, %s)',
-                (username, password, email))
+                (username, hashed_password, email))
             db.commit()
             cur.close()
             flash('User added successfully', 'success')
@@ -230,9 +233,12 @@ def profile():
             flash('Email already registered', 'error')
             return redirect(url_for('profile'))
 
+        # Hash the password if it is updated
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
         cur.execute(
             'UPDATE users SET username = %s, email = %s, password = %s WHERE user_id = %s',
-            (username, email, password, user_id))
+            (username, email, hashed_password, user_id))
         db.commit()
         flash('Profile updated successfully', 'success')
         return redirect(url_for('profile'))

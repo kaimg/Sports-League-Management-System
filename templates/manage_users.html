@@ -1,0 +1,73 @@
+{% extends "layout.html" %}
+{% block title %}Manage Users - Admin Panel{% endblock %}
+{% block content %}
+<style>
+    .badge-user {
+        background-color: #007bff;
+        color: white;
+    }
+    .badge-admin {
+        background-color: #28a745;
+        color: white;
+    }
+</style>
+<div class="container mt-4">
+    <h1 class="mb-4">Manage Users</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <h2 id="form-title">Edit User Privileges</h2>
+            <form action="{{ url_for('admin.manage_users') }}" method="POST">
+                <input type="hidden" id="user_id" name="user_id">
+                <div class="form-group">
+                    <label for="is_admin">Privilege:</label>
+                    <select class="form-control" id="is_admin" name="is_admin" required>
+                        <option value="false">User</option>
+                        <option value="true">Admin</option>
+                    </select>
+                </div>
+                <button type="submit" name="submit" class="btn btn-primary" id="submit-button">Update Privilege</button>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <h2>Existing Users</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Privilege</th>
+                        <th>Edit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user[0] }}</td>
+                        <td>{{ user[1] }}</td>
+                        <td>
+                            <span class="badge {% if user[2] %}badge-admin{% else %}badge-user{% endif %}">
+                                {% if user[2] %}Admin{% else %}User{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-success btn-sm" onclick="editUser('{{ user[0] }}', '{{ user[2] }}')">
+                                <i class="fa fa-pencil-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function editUser(id, isAdmin) {
+        document.getElementById('user_id').value = id;
+        document.getElementById('is_admin').value = isAdmin ? 'true' : 'false';
+        document.getElementById('submit-button').innerText = 'Update Privilege';
+        document.getElementById('form-title').innerText = 'Edit User Privilege';
+    }
+</script>
+{% endblock %}

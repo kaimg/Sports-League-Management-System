@@ -568,5 +568,29 @@ def manage_standings():
     cur.close()
     return render_template('manage_standings.html', standings=standings, teams=teams)
 
+@admin_bp.route('/manage_users', methods=['GET', 'POST'])
+@admin_required
+def manage_users():
+    db = get_db()
+    cur = db.cursor()
 
+    if request.method == 'POST':
+        try:
+            user_id = request.form.get('user_id')
+            is_admin = request.form.get('is_admin') == 'true'
 
+            cur.execute('UPDATE users SET is_admin = %s WHERE user_id = %s', (is_admin, user_id))
+            db.commit()
+            flash('User privilege updated successfully', 'success')
+        except Exception as e:
+            db.rollback()
+            flash('An error occurred: ' + str(e), 'error')
+        finally:
+            cur.close()
+        return redirect(url_for('admin.manage_users'))
+
+    cur.execute('SELECT user_id, username, is_admin FROM users')
+    users = cur.fetchall()
+    cur.close()
+
+    return render_template('manage_users.html', users=users)

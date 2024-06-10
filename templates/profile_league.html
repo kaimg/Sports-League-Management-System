@@ -1,7 +1,6 @@
 {% extends "layout.html" %}
 
 {% block title %}{{ league[0] }} - League Profile{% endblock %}
-
 {% block content %}
 <div class="container mt-4">
     <div class="row">
@@ -100,6 +99,7 @@
                 <ul class="list-group">
                     {% for team in teams %}
                         <li class="list-group-item">
+                            <img src="{{ team[2] }}" alt="{{ team[1] }} Logo" style="height: 20px; width: 20px; margin-right: 5px;">
                             <a href="{{ url_for('user.profile_team', team_id=team[0]) }}">{{ team[1] }}</a>
                         </li>
                     {% endfor %}

@@ -386,7 +386,7 @@ def profile_league(league_id):
     """, (league_id,))
     league = cur.fetchone()
 
-    cur.execute('SELECT team_id, name FROM teams WHERE league_id = %s', (league_id,))
+    cur.execute('SELECT team_id, name, cresturl FROM teams WHERE league_id = %s', (league_id,))
     teams = cur.fetchall()
 
     cur.execute("""
