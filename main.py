@@ -3,6 +3,7 @@ from db import get_db_connection
 import os
 from admin_routes import admin_bp
 from player_routes import player_bp
+from auth_utils import hash_password, verify_password
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'dev')
@@ -20,7 +21,7 @@ def index():
 def register():
     if request.method == 'POST':
         username = request.form['username']
-        password = request.form['password']
+        password = hash_password(request.form['password'])
         role = 'player'
         conn = get_db_connection()
         cur = conn.cursor()
@@ -36,34 +37,43 @@ def register():
         conn.close()
     return render_template('register.html')
 
+from auth_utils import verify_password
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM users WHERE username = %s AND password = %s", (username, password))
+        cur.execute("SELECT * FROM users WHERE username = %s", (username,))
         user = cur.fetchone()
         cur.close()
         conn.close()
-        if user:
+
+        # ✅ Verify hashed password
+        if user and verify_password(password, user[2]):  # assuming user[2] is the hashed password
             session['user_id'] = user[0]
             session['username'] = user[1]
             session['role'] = user[3]
-            # Fetch and store player's ID if they're a player
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute("SELECT id FROM players WHERE user_id = %s", (user[0],))
-            player = cur.fetchone()
-            if player:
-                session['player_id'] = player[0]
-            cur.close()
-            conn.close()
+
+            if user[3] == 'player':
+                conn = get_db_connection()
+                cur = conn.cursor()
+                cur.execute("SELECT id FROM players WHERE user_id = %s", (user[0],))
+                player = cur.fetchone()
+                if player:
+                    session['player_id'] = player[0]
+                cur.close()
+                conn.close()
+
             return redirect(url_for('player.dashboard'))
         else:
             flash('Invalid credentials', 'danger')
+
     return render_template('login.html')
+
 
 @app.route('/logout')
 def logout():
