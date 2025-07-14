@@ -39,7 +39,6 @@
 <table class="table table-hover table-bordered text-center">
   <thead class="table-dark">
     <tr>
-      <th>ID</th>
       <th>Player 1</th>
       <th>Player 2</th>
       <th>Week Commencing</th>
@@ -51,11 +50,16 @@
   <tbody>
     {% for match in matches %}
     <tr>
-      <td>{{ match[0] }}</td>
-      <td>{{ match[1] }}</td>
-      <td>{{ match[2] }}</td>
-      <td>{{ match[3] }}</td>
-      <td>{{ match[4] or 'TBD' }}</td>
+      <td>{{ match[1] }}</td>  {# player1 #}
+      <td>{{ match[2] }}</td>  {# player2 #}
+      <td>{{ match[3] }}</td>  {# week_commencing #}
+      <td>
+        {% if match[4] %}
+          {{ match[4] }}
+        {% else %}
+          <span class="text-danger">Not Scheduled</span>
+        {% endif %}
+      </td>
       <td>
         {% if match[5] is not none and match[6] is not none %}
           {{ match[5] }} - {{ match[6] }}
@@ -64,7 +68,12 @@
         {% endif %}
       </td>
       <td>
-        {% if not match[5] and not match[6] %}
+        {% if not match[4] %}
+          <form method="POST" action="{{ url_for('player.schedule_match_inline', match_id=match[0]) }}">
+            <input type="datetime-local" name="scheduled_at" class="form-control form-control-sm mb-2" required>
+            <button type="submit" class="btn btn-sm btn-primary">Schedule</button>
+          </form>
+        {% elif not match[5] and not match[6] %}
           <a href="{{ url_for('player.enter_score', match_id=match[0]) }}" class="btn btn-sm btn-outline-success">Enter Score</a>
         {% else %}
           <span class="text-muted">Scored</span>
