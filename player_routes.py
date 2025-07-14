@@ -84,10 +84,19 @@ def matches():
     cur.execute(query, filters)
     matches = cur.fetchall()
 
-    from datetime import date
+    from datetime import date, timedelta
     enriched_matches = []
     today = date.today()
+
     for match in matches:
+        week_start = match[3]
+        week_end = week_start + timedelta(days=6)
+
+        is_completed = match[5] is not None and match[6] is not None
+        is_overdue = not is_completed and match[4] is None and today > week_end
+        is_needs_scheduling = not is_completed and match[4] is None and week_start <= today <= week_end
+        is_upcoming = not is_completed and match[4] is None and today < week_start
+
         match_dict = {
             'id': match[0],
             'player1': match[1],
@@ -98,11 +107,13 @@ def matches():
             'score_player2': match[6],
             'player1_id': match[7],
             'player2_id': match[8],
-            'completed': match[5] is not None and match[6] is not None,
-            'overdue': match[3] < today and (match[5] is None or match[6] is None),
-            'upcoming': match[3] >= today and match[4] is None,
+            'completed': is_completed,
+            'overdue': is_overdue,
+            'upcoming': is_upcoming,
+            'needs_scheduling': is_needs_scheduling,
         }
         enriched_matches.append(match_dict)
+
     matches = enriched_matches
 
     cur.execute("SELECT DISTINCT week_commencing FROM matches ORDER BY week_commencing DESC")
@@ -122,6 +133,8 @@ def matches():
         datetime=datetime,
         timedelta=timedelta
     )
+
+
 
 
 
