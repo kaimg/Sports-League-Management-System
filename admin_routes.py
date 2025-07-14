@@ -5,6 +5,7 @@ from db import get_db_connection
 from auth_utils import admin_required
 import csv
 from io import TextIOWrapper
+from auth_utils import hash_password
 
 admin_bp = Blueprint('admin', __name__)
 
