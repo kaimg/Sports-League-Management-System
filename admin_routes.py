@@ -153,6 +153,7 @@ def reset_password(user_id):
         if password != confirm_password:
             flash("Passwords do not match.", "danger")
         else:
+            password = hash_password(password)
             cur.execute("UPDATE users SET password = %s WHERE id = %s", (password, user_id))
             conn.commit()
             flash(f"Password for {username} has been reset.", "success")
@@ -270,6 +271,7 @@ def reset_user_password_form(user_id):
             flash("Password cannot be empty.", "danger")
         else:
             try:
+                new_password = hash_password(new_password)
                 cur.execute("UPDATE users SET password = %s WHERE id = %s", (new_password, user_id))
                 db.commit()
                 flash("Password reset successfully.", "success")

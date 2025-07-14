@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, session, url_fo
 from auth_utils import login_required
 from db import get_db_connection
 from datetime import datetime, timedelta
+from auth_utils import hash_password
 
 player_bp = Blueprint('player', __name__)
 
@@ -304,7 +305,6 @@ def create_profile():
     conn.close()
     return render_template('create_profile.html')
 
-
 @player_bp.route('/profile/change_password', methods=['GET', 'POST'])
 @login_required
 def change_password():
@@ -316,10 +316,13 @@ def change_password():
             flash("Passwords do not match.", "danger")
             return redirect(url_for('player.change_password'))
 
+        # ✅ Hash AFTER confirming passwords match
+        hashed_password = hash_password(new_password)
+
         conn = get_db_connection()
         cur = conn.cursor()
         try:
-            cur.execute("UPDATE users SET password = %s WHERE id = %s", (new_password, session['user_id']))
+            cur.execute("UPDATE users SET password = %s WHERE id = %s", (hashed_password, session['user_id']))
             conn.commit()
             flash("Password updated successfully.", "success")
         except Exception as e:
@@ -331,3 +334,4 @@ def change_password():
         return redirect(url_for('player.dashboard'))
 
     return render_template('change_password.html')
+
