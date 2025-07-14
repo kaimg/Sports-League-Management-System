@@ -4,7 +4,7 @@
 {% block content %}
   <div class="text-center mt-5">
     <h1 class="display-5 mb-3">Welcome, {{ session.username }}! 👋</h1>
-    <p class="lead text-muted">Manage your matches, track your progress, and climb the leaderboard.</p>
+    <p class="lead text-muted">Welcome to the Snooker Club Singles Pool League Homepage!</p>
 
     <div class="row mt-4 mb-5">
       <div class="col-md-4 mb-3">
@@ -25,7 +25,7 @@
     </div>
 
     {% if overdue_matches %}
-      <h3 class="text-danger text-start mb-3">Overdue Matches</h3>
+      <h3 class="text-danger text-start mb-3">Overdue Matches, Chop Chop!</h3>
       <div class="table-responsive">
         <table class="table table-hover table-bordered text-center shadow-sm">
           <thead class="table-dark">
