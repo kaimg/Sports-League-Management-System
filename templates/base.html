@@ -3,38 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <title>{% block title %}Pool League{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
-  <nav>
-    {% if session.get('user_id') %}
-      <a href="{{ url_for('player.dashboard') }}">Dashboard</a>
-      <a href="{{ url_for('player.matches') }}">Matches</a>
-      {% if session['role'] == 'admin' %}
-        <a href="{{ url_for('admin.new_match') }}">Schedule Match</a>
-      {% endif %}
-      <a href="{{ url_for('player.leaderboard') }}">Leaderboard</a>
-      {% if session['role'] == 'admin' %}
-        <a href="{{ url_for('admin.manage_players') }}">Manage Players</a>
-      {% endif %}
-      <a href="{{ url_for('player.change_password') }}">Change Password</a>
-      <a href="{{ url_for('logout') }}">Logout</a>
-    {% else %}
-      <a href="{{ url_for('login') }}">Login</a>
-      <a href="{{ url_for('register') }}">Register</a>
-    {% endif %}
+<body class="bg-light">
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container">
+      <a class="navbar-brand" href="{{ url_for('player.dashboard') }}">🏆 Pool League</a>
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          {% if session.get('user_id') %}
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('player.dashboard') }}">Dashboard</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('player.matches') }}">Matches</a></li>
+            {% if session['role'] == 'admin' %}
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.new_match') }}">Schedule Match</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_players') }}">Manage Players</a></li>
+            {% endif %}
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('player.leaderboard') }}">Leaderboard</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('player.change_password') }}">Change Password</a></li>
+            <li class="nav-item"><a class="nav-link text-warning" href="{{ url_for('logout') }}">Logout</a></li>
+          {% else %}
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}">Login</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('register') }}">Register</a></li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
   </nav>
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <ul class="flashes">
+  <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
         {% for category, message in messages %}
-          <li class="{{ category }}">{{ message }}</li>
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
         {% endfor %}
-      </ul>
-    {% endif %}
-  {% endwith %}
+      {% endif %}
+    {% endwith %}
 
-  {% block content %}{% endblock %}
+    {% block content %}{% endblock %}
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
