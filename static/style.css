@@ -150,38 +150,3 @@ tr:nth-child(even) {
   }
 }
 
-body.dark-mode {
-  background-color: #121212;
-  color: #f5f5f5;
-}
-
-body.dark-mode .navbar {
-  background-color: #1f1f1f !important;
-}
-
-body.dark-mode .card,
-body.dark-mode .alert,
-body.dark-mode .form-control,
-body.dark-mode .btn {
-  background-color: #2c2c2c;
-  color: #f5f5f5;
-  border-color: #444;
-}
-
-body.dark-mode .nav-link {
-  color: #ccc !important;
-}
-
-body.dark-mode .nav-link:hover {
-  color: #fff !important;
-}
-
-body.dark-mode .nav-link.text-warning {
-  color: #f0ad4e !important;
-}
-
-body.dark-mode .alert-success {
-  background-color: #204d20;
-  border-color: #2f6b2f;
-  color: #c5ecc5;
-}
