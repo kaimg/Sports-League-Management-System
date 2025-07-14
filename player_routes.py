@@ -65,7 +65,7 @@ def matches():
     filters = []
 
     if status == 'upcoming':
-        query += " AND m.is_completed = FALSE AND m.week_commencing >= CURRENT_DATE"
+        query += " AND m.is_completed = FALSE"
     elif status == 'overdue':
         query += " AND m.is_completed = FALSE AND m.week_commencing < CURRENT_DATE"
     elif status == 'completed':
@@ -84,6 +84,27 @@ def matches():
     cur.execute(query, filters)
     matches = cur.fetchall()
 
+    from datetime import date
+    enriched_matches = []
+    today = date.today()
+    for match in matches:
+        match_dict = {
+            'id': match[0],
+            'player1': match[1],
+            'player2': match[2],
+            'week_commencing': match[3],
+            'scheduled_at': match[4],
+            'score_player1': match[5],
+            'score_player2': match[6],
+            'player1_id': match[7],
+            'player2_id': match[8],
+            'completed': match[5] is not None and match[6] is not None,
+            'overdue': match[3] < today and (match[5] is None or match[6] is None),
+            'upcoming': match[3] >= today and match[4] is None,
+        }
+        enriched_matches.append(match_dict)
+    matches = enriched_matches
+
     cur.execute("SELECT DISTINCT week_commencing FROM matches ORDER BY week_commencing DESC")
     weeks = [row[0].strftime('%Y-%m-%d') for row in cur.fetchall()]
 
@@ -101,6 +122,7 @@ def matches():
         datetime=datetime,
         timedelta=timedelta
     )
+
 
 
 @player_bp.route('/matches/<int:match_id>/schedule', methods=['POST'])
