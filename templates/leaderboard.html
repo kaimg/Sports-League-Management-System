@@ -2,9 +2,10 @@
 {% block title %}Leaderboard{% endblock %}
 
 {% block content %}
-  <h1>Leaderboard</h1>
-  <table>
-    <thead>
+  <h1 class="mb-4">🏅 Player Leaderboard</h1>
+
+  <table class="table table-striped table-hover text-center shadow-sm">
+    <thead class="table-dark">
       <tr>
         <th>Player</th>
         <th>Games Played</th>
@@ -22,7 +23,7 @@
           <td>{{ row[3] }}</td>  {# wins #}
           <td>{{ row[4] }}</td>  {# draws #}
           <td>{{ row[5] }}</td>  {# losses #}
-          <td>{{ row[2] }}</td>  {# points #}
+          <td class="fw-bold text-primary">{{ row[2] }}</td>  {# points #}
         </tr>
       {% endfor %}
     </tbody>

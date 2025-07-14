@@ -1,6 +1,27 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
+
 {% block content %}
-  <h1>Welcome, {{ session.username }}!</h1>
-  <p>Use the navigation above to access features.</p>
+  <div class="text-center mt-5">
+    <h1 class="display-5 mb-3">Welcome, {{ session.username }}! 👋</h1>
+    <p class="lead text-muted">Manage your matches, track your progress, and climb the leaderboard.</p>
+
+    <div class="row mt-5">
+      <div class="col-md-4 mb-3">
+        <a href="{{ url_for('player.matches') }}" class="btn btn-outline-primary w-100 py-3 shadow-sm">
+          View Matches
+        </a>
+      </div>
+      <div class="col-md-4 mb-3">
+        <a href="{{ url_for('player.leaderboard') }}" class="btn btn-outline-success w-100 py-3 shadow-sm">
+          View Leaderboard
+        </a>
+      </div>
+      <div class="col-md-4 mb-3">
+        <a href="{{ url_for('player.change_password') }}" class="btn btn-outline-warning w-100 py-3 shadow-sm">
+          Change Password
+        </a>
+      </div>
+    </div>
+  </div>
 {% endblock %}
