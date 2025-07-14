@@ -10,8 +10,10 @@
       <select name="status" id="status" class="form-select" onchange="this.form.submit()">
         <option value="">All</option>
         <option value="upcoming" {% if request.args.get('status') == 'upcoming' %}selected{% endif %}>Upcoming</option>
+        <option value="scheduled" {% if request.args.get('status') == 'scheduled' %}selected{% endif %}>Scheduled</option>
+        <option value="needs_scheduling" {% if request.args.get('status') == 'needs_scheduling' %}selected{% endif %}>Needs Scheduling</option>
+        <option value="overdue" {% if request.args.get('status') == 'overdue' %}selected{% endif %}>Overdue</option>
         <option value="completed" {% if request.args.get('status') == 'completed' %}selected{% endif %}>Completed</option>
-        <option value="overdue" {% if request.args.get('status') == 'overdue' %}selected{% endif %}>Overdue!</option>
       </select>
     </div>
 

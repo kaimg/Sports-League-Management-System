@@ -64,12 +64,17 @@ def matches():
     """
     filters = []
 
-    if status == 'upcoming':
-        query += " AND m.is_completed = FALSE"
-    elif status == 'overdue':
-        query += " AND m.is_completed = FALSE AND m.week_commencing < CURRENT_DATE"
-    elif status == 'completed':
+    if status == 'completed':
         query += " AND m.is_completed = TRUE"
+    elif status == 'overdue':
+        query += " AND m.is_completed = FALSE AND m.week_commencing + INTERVAL '6 days' < CURRENT_DATE"
+    elif status == 'needs_scheduling':
+        query += " AND m.is_completed = FALSE AND m.scheduled_at IS NULL AND m.week_commencing <= CURRENT_DATE AND m.week_commencing + INTERVAL '6 days' >= CURRENT_DATE"
+    elif status == 'scheduled':
+        query += " AND m.is_completed = FALSE AND m.scheduled_at IS NOT NULL AND m.week_commencing + INTERVAL '6 days' >= CURRENT_DATE"
+    elif status == 'upcoming':
+        query += " AND m.is_completed = FALSE AND m.scheduled_at IS NULL AND m.week_commencing > CURRENT_DATE"
+
 
     if player:
         query += " AND (p1.name ILIKE %s OR p2.name ILIKE %s)"
