@@ -28,7 +28,7 @@
         </div>
 
         <div class="col-12">
-          <button type="submit" name="submit" class="btn btn-success">Save Player</button>
+          <button type="submit" name="submit" class="btn btn-success btn-sm">Save Player</button>
         </div>
       </form>
     </div>
@@ -48,21 +48,21 @@
       <tbody>
         {% for player in players %}
         <tr>
-          <td class="py-1">{{ player[1] }}</td>
-          <td class="py-1">
+          <td>{{ player[1] }}</td>
+          <td>
             {% for user in users %}
               {% if user[0] == player[2] %}
                 {{ user[1] }}
               {% endif %}
             {% endfor %}
           </td>
-          <td class="py-1">
+          <td>
             <div class="d-flex align-items-center gap-2">
               <button onclick="populateForm('{{ player[0] }}', '{{ player[1] }}', '{{ player[2] }}')" class="btn btn-sm btn-primary">Edit</button>
 
-              <form method="POST" action="{{ url_for('admin.manage_players') }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this player and all their matches?');">
+              <form method="POST" action="{{ url_for('admin.manage_players') }}" onsubmit="return confirm('Are you sure you want to delete this player and all their matches?');">
                 <input type="hidden" name="deleteEntityId" value="{{ player[0] }}">
-                <button type="submit" name="delete" class="btn btn-sm btn-danger border-0">Delete</button>
+                <button type="submit" name="delete" class="btn btn-sm btn-danger border-0 shadow-none">Delete</button>
               </form>
             </div>
           </td>
@@ -80,12 +80,12 @@
         <input type="hidden" name="user_id" id="edit_user_id">
 
         <div class="col-md-6">
-          <label for="username" class="form-label">Username</label>
+          <label for="edit_username" class="form-label">Username</label>
           <input type="text" name="username" id="edit_username" required class="form-control">
         </div>
 
         <div class="col-12">
-          <button type="submit" name="update_user" class="btn btn-success">Update Username</button>
+          <button type="submit" name="update_user" class="btn btn-success btn-sm">Update Username</button>
         </div>
       </form>
     </div>
@@ -106,16 +106,16 @@
       <tbody>
         {% for user in users %}
         <tr>
-          <td class="py-1">{{ user[0] }}</td>
-          <td class="py-1">{{ user[1] }}</td>
-          <td class="py-1">{{ user[2] }}</td>
-          <td class="py-1">
+          <td>{{ user[0] }}</td>
+          <td>{{ user[1] }}</td>
+          <td>{{ user[2] }}</td>
+          <td>
             <div class="d-flex align-items-center gap-2 flex-wrap">
               <button onclick="editUser('{{ user[0] }}', '{{ user[1] }}')" class="btn btn-sm btn-primary">Edit</button>
 
-              <form method="POST" action="{{ url_for('admin.manage_users') }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this user?');">
+              <form method="POST" action="{{ url_for('admin.manage_users') }}" onsubmit="return confirm('Are you sure you want to delete this user?');">
                 <input type="hidden" name="delete_user_id" value="{{ user[0] }}">
-                <button type="submit" name="delete_user" class="btn btn-sm btn-danger border-0">Delete</button>
+                <button type="submit" name="delete_user" class="btn btn-sm btn-danger border-0 shadow-none">Delete</button>
               </form>
 
               <a href="{{ url_for('admin.reset_user_password_form', user_id=user[0]) }}" class="btn btn-sm btn-warning text-dark">Reset Password</a>
@@ -128,6 +128,20 @@
   </div>
 </div>
 
+<!-- Style Tweaks -->
+<style>
+  .table td, .table th {
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
+    vertical-align: middle;
+  }
+
+  .btn {
+    box-shadow: none !important;
+  }
+</style>
+
+<!-- JS Helpers -->
 <script>
   function populateForm(id, name, userId) {
     document.getElementById('player_id').value = id;
