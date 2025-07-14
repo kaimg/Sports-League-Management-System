@@ -7,22 +7,22 @@
     <thead>
       <tr>
         <th>Player</th>
-        <th>Points</th>
+        <th>Games Played</th>
         <th>Wins</th>
         <th>Draws</th>
         <th>Losses</th>
-        <th>Games Played</th>
+        <th>Points</th>
       </tr>
     </thead>
     <tbody>
       {% for row in leaderboard %}
         <tr>
           <td>{{ row[0] }}</td>  {# name #}
-          <td>{{ row[2] }}</td>  {# points #}
+          <td>{{ row[1] }}</td>  {# games_played #}
           <td>{{ row[3] }}</td>  {# wins #}
           <td>{{ row[4] }}</td>  {# draws #}
           <td>{{ row[5] }}</td>  {# losses #}
-          <td>{{ row[1] }}</td>  {# games_played #}
+          <td>{{ row[2] }}</td>  {# points #}
         </tr>
       {% endfor %}
     </tbody>
