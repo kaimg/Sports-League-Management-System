@@ -4,45 +4,43 @@
 {% block content %}
   <h1 class="mb-4">All Matches</h1>
 
-  <div class="container-fluid px-0">
-    <form method="get" action="{{ url_for(request.endpoint) }}" class="row g-3 mb-4">
-      <div class="col-lg-3 col-md-6">
-        <label for="status" class="form-label">Status</label>
-        <select name="status" id="status" class="form-select" onchange="this.form.submit()">
-          <option value="">All</option>
-          <option value="upcoming" {% if request.args.get('status') == 'upcoming' %}selected{% endif %}>Upcoming</option>
-          <option value="scheduled" {% if request.args.get('status') == 'scheduled' %}selected{% endif %}>Scheduled</option>
-          <option value="needs_scheduling" {% if request.args.get('status') == 'needs_scheduling' %}selected{% endif %}>Needs Scheduling</option>
-          <option value="overdue" {% if request.args.get('status') == 'overdue' %}selected{% endif %}>Overdue</option>
-          <option value="completed" {% if request.args.get('status') == 'completed' %}selected{% endif %}>Completed</option>
-        </select>
-      </div>
+  <form method="get" action="{{ url_for(request.endpoint) }}" class="row g-3 mb-4 container-fluid">
+    <div class="col-lg-3 col-md-6">
+      <label for="status" class="form-label">Status</label>
+      <select name="status" id="status" class="form-select" onchange="this.form.submit()">
+        <option value="">All</option>
+        <option value="upcoming" {% if request.args.get('status') == 'upcoming' %}selected{% endif %}>Upcoming</option>
+        <option value="scheduled" {% if request.args.get('status') == 'scheduled' %}selected{% endif %}>Scheduled</option>
+        <option value="needs_scheduling" {% if request.args.get('status') == 'needs_scheduling' %}selected{% endif %}>Needs Scheduling</option>
+        <option value="overdue" {% if request.args.get('status') == 'overdue' %}selected{% endif %}>Overdue</option>
+        <option value="completed" {% if request.args.get('status') == 'completed' %}selected{% endif %}>Completed</option>
+      </select>
+    </div>
 
-      <div class="col-lg-3 col-md-6">
-        <label for="player" class="form-label">Player</label>
-        <select name="player" id="player" class="form-select" onchange="this.form.submit()">
-          <option value="">All</option>
-          {% for player in all_players %}
-            <option value="{{ player[1] }}" {% if request.args.get('player') == player[1] %}selected{% endif %}>{{ player[1] }}</option>
-          {% endfor %}
-        </select>
-      </div>
+    <div class="col-lg-3 col-md-6">
+      <label for="player" class="form-label">Player</label>
+      <select name="player" id="player" class="form-select" onchange="this.form.submit()">
+        <option value="">All</option>
+        {% for player in all_players %}
+          <option value="{{ player[1] }}" {% if request.args.get('player') == player[1] %}selected{% endif %}>{{ player[1] }}</option>
+        {% endfor %}
+      </select>
+    </div>
 
-      <div class="col-lg-3 col-md-6">
-        <label for="week" class="form-label">Week</label>
-        <select name="week" id="week" class="form-select" onchange="this.form.submit()">
-          <option value="">All Weeks</option>
-          {% for week in weeks %}
-            <option value="{{ week }}" {% if request.args.get('week') == week %}selected{% endif %}>{{ week }}</option>
-          {% endfor %}
-        </select>
-      </div>
+    <div class="col-lg-3 col-md-6">
+      <label for="week" class="form-label">Week</label>
+      <select name="week" id="week" class="form-select" onchange="this.form.submit()">
+        <option value="">All Weeks</option>
+        {% for week in weeks %}
+          <option value="{{ week }}" {% if request.args.get('week') == week %}selected{% endif %}>{{ week }}</option>
+        {% endfor %}
+      </select>
+    </div>
 
-      <div class="col-lg-3 col-md-6 align-self-end">
-        <button type="submit" class="btn btn-primary w-100">Filter</button>
-      </div>
-    </form>
-  </div>
+    <div class="col-lg-3 col-md-6 align-self-end">
+      <button type="submit" class="btn btn-primary w-100">Filter</button>
+    </div>
+  </form>
 
   <div class="table-responsive">
     <table class="table table-hover table-bordered align-middle text-center shadow-sm">
