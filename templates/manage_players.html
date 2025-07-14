@@ -2,79 +2,68 @@
 {% block title %}Manage Players{% endblock %}
 
 {% block content %}
-  <div class="container mt-4">
-    <h1 class="mb-4">Manage Players</h1>
+  <h1>Manage Players</h1>
 
-    <div class="card mb-5 shadow-sm">
-      <div class="card-header bg-primary text-white">
-        Add / Edit Player
-      </div>
-      <div class="card-body">
-        <form method="POST" action="{{ url_for('admin.manage_players') }}" class="row g-3">
-          <input type="hidden" name="player_id" id="player_id">
+  <h2>Add / Edit Player</h2>
+  <form method="POST" action="{{ url_for('admin.manage_players') }}">
+    <input type="hidden" name="player_id" id="player_id">
 
-          <div class="col-md-6">
-            <label for="name" class="form-label">Player Name</label>
-            <input type="text" name="name" id="name" class="form-control" required>
-          </div>
+    <label for="name">Name:</label>
+    <input type="text" name="name" id="name" required>
 
-          <div class="col-md-6">
-            <label for="user_id" class="form-label">Linked User</label>
-            <select name="user_id" id="user_id" class="form-select" required>
-              <option value="">-- Select User --</option>
-              {% for user in users %}
-                <option value="{{ user[0] }}">{{ user[1] }}</option>
-              {% endfor %}
-            </select>
-          </div>
+    <label for="user_id">User:</label>
+    <select name="user_id" id="user_id" required>
+      <option value="">-- Select User --</option>
+      {% for user in users %}
+        <option value="{{ user[0] }}">{{ user[1] }}</option>
+      {% endfor %}
+    </select>
 
-          <div class="col-12">
-            <button type="submit" name="submit" class="btn btn-success">Save Player</button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <button type="submit" name="submit">Save</button>
+  </form>
 
-    <h2 class="mb-3">Existing Players</h2>
-    <div class="table-responsive">
-      <table class="table table-bordered table-hover align-middle text-center shadow-sm">
-        <thead class="table-dark">
-          <tr>
-            <th>Name</th>
-            <th>User</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for player in players %}
-            <tr>
-              <td>{{ player[1] }}</td>
-              <td>
-                {% for user in users %}
-                  {% if user[0] == player[2] %}
-                    {{ user[1] }}
-                  {% endif %}
-                {% endfor %}
-              </td>
-              <td>
-                <form method="POST" action="{{ url_for('admin.delete_player', player_id=player[0]) }}" class="d-inline">
-                  <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this player?')">Delete</button>
-                </form>
-                <button type="button" class="btn btn-sm btn-secondary" onclick="populateForm('{{ player[0] }}', '{{ player[1] }}', '{{ player[2] }}')">Edit</button>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
+  <h2>Existing Players</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>User</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for player in players %}
+        <tr>
+          <td>{{ player[1] }}</td>
+          <td>
+            {% for user in users %}
+              {% if user[0] == player[2] %}
+                {{ user[1] }}
+              {% endif %}
+            {% endfor %}
+          </td>
+          <td>
+            <!-- Edit Button -->
+            <button onclick="populateForm('{{ player[0] }}', '{{ player[1] }}', '{{ player[2] }}')">Edit</button>
+
+            <!-- Delete Form -->
+            <form method="POST" action="{{ url_for('admin.manage_players') }}" style="display:inline;">
+              <input type="hidden" name="deleteEntityId" value="{{ player[0] }}">
+              <button type="submit" name="delete" onclick="return confirm('Are you sure you want to delete this player and all their matches?');">
+                Delete
+              </button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 
   <script>
-    function populateForm(playerId, name, userId) {
-      document.getElementById('player_id').value = playerId;
+    function populateForm(id, name, userId) {
+      document.getElementById('player_id').value = id;
       document.getElementById('name').value = name;
       document.getElementById('user_id').value = userId;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   </script>
 {% endblock %}

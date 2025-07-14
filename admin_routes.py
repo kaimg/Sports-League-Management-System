@@ -24,12 +24,18 @@ def manage_players():
 
     if request.method == 'POST':
         try:
+            # ✅ Handle DELETE
             if 'delete' in request.form and 'deleteEntityId' in request.form:
                 player_id = request.form['deleteEntityId']
+
+                # Delete all matches where player is involved
                 cur.execute('DELETE FROM matches WHERE player1_id = %s OR player2_id = %s', (player_id, player_id))
+
+                # Then delete the player
                 cur.execute('DELETE FROM players WHERE id = %s', (player_id,))
                 flash('Player and related matches deleted successfully', 'success')
 
+            # ✅ Handle ADD / UPDATE
             elif 'submit' in request.form:
                 player_id = request.form.get('player_id')
                 name = request.form['name']
@@ -48,19 +54,23 @@ def manage_players():
 
         except Exception as e:
             db.rollback()
-            flash(f'Error: {str(e)}', 'danger')
+            flash('An error occurred: ' + str(e), 'danger')
 
-    # ✅ Always fetch data for display
-    cur.execute('SELECT id, name, user_id FROM players ORDER BY name')
+        finally:
+            cur.close()
+
+        return redirect(url_for('admin.manage_players'))
+
+    # ✅ GET: Show all players and users
+    cur.execute('SELECT id, name, user_id FROM players')
     players = cur.fetchall()
 
-    cur.execute('SELECT id, username FROM users ORDER BY username')
+    cur.execute('SELECT id, username FROM users WHERE role = %s', ('player',))
     users = cur.fetchall()
 
     cur.close()
-    db.close()
-
     return render_template('manage_players.html', players=players, users=users)
+
 
 
 @admin_bp.route('/admin/matches/<int:match_id>/reset', methods=['POST'])
