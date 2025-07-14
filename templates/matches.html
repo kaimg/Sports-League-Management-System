@@ -63,10 +63,14 @@
               {% if match[4] %}
                 {{ match[4] }}
               {% elif session['role'] == 'admin' or session.get('player_id') == match[7] or session.get('player_id') == match[8] %}
-                <form method="POST" action="{{ url_for('player.schedule_match_inline', match_id=match[0]) }}" class="d-flex flex-column gap-2">
-                  <input type="datetime-local" name="scheduled_at" required class="form-control form-control-sm">
-                  <button type="submit" class="btn btn-sm btn-primary">Schedule</button>
-                </form>
+                {% if match[5] is none and match[6] is none %}
+                  <form method="POST" action="{{ url_for('player.schedule_match_inline', match_id=match[0]) }}" class="d-flex flex-column gap-2">
+                    <input type="datetime-local" name="scheduled_at" required class="form-control form-control-sm">
+                    <button type="submit" class="btn btn-sm btn-primary">Schedule</button>
+                  </form>
+                {% else %}
+                  <span class="text-muted">Already Played</span>
+                {% endif %}
               {% else %}
                 <span class="text-muted">Not Scheduled</span>
               {% endif %}
