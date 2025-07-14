@@ -257,3 +257,33 @@ def manage_users():
             flash(f"Failed to delete user: {e}", "danger")
 
     return redirect(url_for('admin.manage_players'))
+
+@admin_bp.route('/reset_user_password/<int:user_id>', methods=['GET', 'POST'])
+@admin_required
+def reset_user_password_form(user_id):
+    db = get_db()
+    cur = db.cursor()
+
+    if request.method == 'POST':
+        new_password = request.form['new_password']
+        if not new_password:
+            flash("Password cannot be empty.", "danger")
+        else:
+            try:
+                cur.execute("UPDATE users SET password = %s WHERE id = %s", (new_password, user_id))
+                db.commit()
+                flash("Password reset successfully.", "success")
+                return redirect(url_for('admin.manage_players'))
+            except Exception as e:
+                db.rollback()
+                flash(f"Error resetting password: {e}", "danger")
+
+    # Get username for display
+    cur.execute("SELECT username FROM users WHERE id = %s", (user_id,))
+    user = cur.fetchone()
+
+    if not user:
+        flash("User not found.", "danger")
+        return redirect(url_for('admin.manage_players'))
+
+    return render_template("reset_user_password.html", user_id=user_id, username=user[0])
