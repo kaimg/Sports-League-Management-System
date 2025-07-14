@@ -93,9 +93,10 @@ def matches():
         week_end = week_start + timedelta(days=6)
 
         is_completed = match[5] is not None and match[6] is not None
-        is_overdue = not is_completed and match[4] is None and today > week_end
+        is_overdue = not is_completed and today > week_end
         is_needs_scheduling = not is_completed and match[4] is None and week_start <= today <= week_end
         is_upcoming = not is_completed and match[4] is None and today < week_start
+        is_scheduled = not is_completed and match[4] is not None and not is_overdue
 
         match_dict = {
             'id': match[0],
@@ -109,6 +110,7 @@ def matches():
             'player2_id': match[8],
             'completed': is_completed,
             'overdue': is_overdue,
+            'scheduled': is_scheduled,
             'upcoming': is_upcoming,
             'needs_scheduling': is_needs_scheduling,
         }
@@ -133,8 +135,6 @@ def matches():
         datetime=datetime,
         timedelta=timedelta
     )
-
-
 
 
 

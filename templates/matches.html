@@ -85,10 +85,10 @@
             <td>
               {% if match.completed %}
                 <span class="badge bg-success">Completed</span>
-              {% elif match.scheduled %}
-                <span class="badge bg-primary">Scheduled</span>
               {% elif match.overdue %}
                 <span class="badge bg-danger">Overdue!</span>
+              {% elif match.scheduled %}
+                <span class="badge bg-primary">Scheduled</span>
               {% elif match.needs_scheduling %}
                 <span class="badge bg-warning text-dark">Needs Scheduling</span>
               {% elif match.upcoming %}
