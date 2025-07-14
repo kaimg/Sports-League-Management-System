@@ -220,3 +220,40 @@ def upload_matches():
     cur.close()
     conn.close()
     return render_template('upload_matches.html')
+
+
+@admin_bp.route('/manage_users', methods=['POST'])
+@admin_required
+def manage_users():
+    db = get_db()
+    cur = db.cursor()
+
+    # Update username
+    if 'update_user' in request.form:
+        user_id = request.form['user_id']
+        new_username = request.form['username']
+
+        try:
+            cur.execute("UPDATE users SET username = %s WHERE id = %s", (new_username, user_id))
+            db.commit()
+            flash("Username updated successfully.", "success")
+        except Exception as e:
+            db.rollback()
+            flash(f"Failed to update username: {e}", "danger")
+
+    # Delete user
+    elif 'delete_user' in request.form:
+        user_id = request.form['delete_user_id']
+
+        try:
+            # First delete player if they exist (cascading might not be set up)
+            cur.execute("DELETE FROM players WHERE user_id = %s", (user_id,))
+            # Then delete the user
+            cur.execute("DELETE FROM users WHERE id = %s", (user_id,))
+            db.commit()
+            flash("User deleted successfully.", "success")
+        except Exception as e:
+            db.rollback()
+            flash(f"Failed to delete user: {e}", "danger")
+
+    return redirect(url_for('admin.manage_players'))

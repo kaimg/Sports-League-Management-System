@@ -59,11 +59,55 @@
     </tbody>
   </table>
 
+  <h2>Manage Users</h2>
+  <form method="POST" action="{{ url_for('admin.manage_users') }}">
+    <input type="hidden" name="user_id" id="edit_user_id">
+
+    <label for="username">Edit Username:</label>
+    <input type="text" name="username" id="edit_username" required>
+
+    <button type="submit" name="update_user">Update Username</button>
+  </form>
+
+  <h3>All Users</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Username</th>
+        <th>Role</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+        <tr>
+          <td>{{ user[0] }}</td>
+          <td>{{ user[1] }}</td>
+          <td>{{ user[2] }}</td>
+          <td>
+            <button onclick="editUser('{{ user[0] }}', '{{ user[1] }}')">Edit</button>
+
+            <form method="POST" action="{{ url_for('admin.manage_users') }}" style="display:inline;">
+              <input type="hidden" name="delete_user_id" value="{{ user[0] }}">
+              <button type="submit" name="delete_user" onclick="return confirm('Are you sure you want to delete this user?');">Delete</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
   <script>
     function populateForm(id, name, userId) {
       document.getElementById('player_id').value = id;
       document.getElementById('name').value = name;
       document.getElementById('user_id').value = userId;
+    }
+
+    function editUser(id, username) {
+      document.getElementById('edit_user_id').value = id;
+      document.getElementById('edit_username').value = username;
     }
   </script>
 {% endblock %}
