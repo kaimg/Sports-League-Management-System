@@ -130,39 +130,6 @@ def new_match():
     return render_template('new_match.html', players=players)
 
 
-
-@admin_bp.route('/admin/reset_password/<int:user_id>', methods=['GET', 'POST'])
-@admin_required
-def reset_password(user_id):
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    cur.execute("SELECT username FROM users WHERE id = %s", (user_id,))
-    user = cur.fetchone()
-
-    if not user:
-        flash("User not found.", "danger")
-        return redirect(url_for('admin.manage_players'))
-
-    username = user[0]
-
-    if request.method == 'POST':
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
-
-        if password != confirm_password:
-            flash("Passwords do not match.", "danger")
-        else:
-            password = hash_password(password)
-            cur.execute("UPDATE users SET password = %s WHERE id = %s", (password, user_id))
-            conn.commit()
-            flash(f"Password for {username} has been reset.", "success")
-            return redirect(url_for('admin.manage_players'))
-
-    cur.close()
-    conn.close()
-    return render_template('reset_password.html', username=username, user_id=user_id)
-
 @admin_bp.route('/matches/upload', methods=['GET', 'POST'])
 @admin_required
 def upload_matches():
@@ -267,12 +234,16 @@ def reset_user_password_form(user_id):
 
     if request.method == 'POST':
         new_password = request.form['new_password']
-        if not new_password:
-            flash("Password cannot be empty.", "danger")
+        confirm_password = request.form['confirm_password']
+
+        if not new_password or not confirm_password:
+            flash("Both password fields are required.", "danger")
+        elif new_password != confirm_password:
+            flash("Passwords do not match.", "danger")
         else:
             try:
-                new_password = hash_password(new_password)
-                cur.execute("UPDATE users SET password = %s WHERE id = %s", (new_password, user_id))
+                hashed_password = hash_password(new_password)
+                cur.execute("UPDATE users SET password = %s WHERE id = %s", (hashed_password, user_id))
                 db.commit()
                 flash("Password reset successfully.", "success")
                 return redirect(url_for('admin.manage_players'))
@@ -289,3 +260,4 @@ def reset_user_password_form(user_id):
         return redirect(url_for('admin.manage_players'))
 
     return render_template("reset_user_password.html", user_id=user_id, username=user[0])
+
