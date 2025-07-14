@@ -8,7 +8,40 @@ player_bp = Blueprint('player', __name__)
 @player_bp.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html')
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    role = session.get('role')
+    player_id = session.get('player_id')
+
+    if role == 'admin':
+        cur.execute("""
+            SELECT m.id, p1.name, p2.name, m.week_commencing, m.scheduled_at,
+                   m.score_player1, m.score_player2
+            FROM matches m
+            JOIN players p1 ON m.player1_id = p1.id
+            JOIN players p2 ON m.player2_id = p2.id
+            WHERE m.is_completed = FALSE
+              AND m.week_commencing + INTERVAL '6 days' < CURRENT_DATE
+        """)
+    else:
+        cur.execute("""
+            SELECT m.id, p1.name, p2.name, m.week_commencing, m.scheduled_at,
+                   m.score_player1, m.score_player2
+            FROM matches m
+            JOIN players p1 ON m.player1_id = p1.id
+            JOIN players p2 ON m.player2_id = p2.id
+            WHERE m.is_completed = FALSE
+              AND m.week_commencing + INTERVAL '6 days' < CURRENT_DATE
+              AND (m.player1_id = %s OR m.player2_id = %s)
+        """, (player_id, player_id))
+
+    overdue_matches = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    return render_template("dashboard.html", overdue_matches=overdue_matches)
+
 
 
 @player_bp.route('/matches')
