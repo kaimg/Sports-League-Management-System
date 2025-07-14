@@ -111,19 +111,13 @@
                 {% if match[5] is not none and match[6] is not none %}
                   <a href="#" onclick="event.preventDefault(); if(confirm('Reset this match?')) { document.getElementById('reset-form-{{ match[0] }}').submit(); }" class="text-danger">Reset</a>
                   <form id="reset-form-{{ match[0] }}" method="POST" action="{{ url_for('admin.reset_match', match_id=match[0]) }}" style="display:none;"></form>
-                {% else %}
-                  —
                 {% endif %}
               {% endif %}
 
               {% if session['role'] == 'admin' or player_id == match[7] or player_id == match[8] %}
                 {% if match[5] is none or match[6] is none %}
                   <a href="{{ url_for('player.enter_score', match_id=match[0]) }}" class="btn btn-sm btn-outline-success">Enter Score</a>
-                {% else %}
-                  —
                 {% endif %}
-              {% else %}
-                —
               {% endif %}
             </td>
           </tr>
