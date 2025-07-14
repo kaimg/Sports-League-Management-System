@@ -121,3 +121,31 @@ tr:nth-child(even) {
     margin: 0.5em 0;
   }
 }
+
+@media (max-width: 768px) {
+  nav a {
+    display: block;
+    margin: 0.5em 0;
+  }
+
+  form, table {
+    width: 100% !important;
+    margin: 1em;
+    padding: 1em;
+  }
+
+  input, select, button {
+    font-size: 1.1em;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  th, td {
+    padding: 0.5em;
+    font-size: 0.95em;
+  }
+}
