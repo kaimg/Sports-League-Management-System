@@ -33,6 +33,8 @@ def matches():
 
     if status == 'upcoming':
         query += " AND m.is_completed = FALSE"
+    elif status == 'overdue':
+        query += " AND m.is_completed = FALSE AND m.week_commencing < CURRENT_DATE"
     elif status == 'completed':
         query += " AND m.is_completed = TRUE"
 
