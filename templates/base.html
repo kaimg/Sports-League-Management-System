@@ -24,7 +24,7 @@
           {% if session.get('user_id') %}
             <li class="nav-item"><a class="nav-link" href="{{ url_for('player.dashboard') }}">Dashboard</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('player.matches') }}">Matches</a></li>
-            {% if session['role'] == 'admin' %}
+            {% if session.get('role') == 'admin' %}
               <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.new_match') }}">Schedule Match</a></li>
               <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_players') }}">Manage Players</a></li>
             {% endif %}
