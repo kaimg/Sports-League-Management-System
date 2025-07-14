@@ -2,85 +2,129 @@
 {% block title %}Matches{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">All Matches</h1>
+  <h1 class="mb-4">All Matches</h1>
 
-<form method="get" action="{{ url_for(request.endpoint) }}" class="row g-3 mb-4">
-  <div class="col-md-3">
-    <label for="status" class="form-label">Status</label>
-    <select name="status" id="status" class="form-select" onchange="this.form.submit()">
-      <option value="">All</option>
-      <option value="upcoming" {% if request.args.get('status') == 'upcoming' %}selected{% endif %}>Upcoming</option>
-      <option value="completed" {% if request.args.get('status') == 'completed' %}selected{% endif %}>Completed</option>
-      <option value="overdue" {% if request.args.get('status') == 'overdue' %}selected{% endif %}>Overdue!</option>
-    </select>
+  <form method="get" action="{{ url_for(request.endpoint) }}" class="row g-3 mb-4">
+    <div class="col-md-3">
+      <label for="status" class="form-label">Status</label>
+      <select name="status" id="status" class="form-select" onchange="this.form.submit()">
+        <option value="">All</option>
+        <option value="upcoming" {% if request.args.get('status') == 'upcoming' %}selected{% endif %}>Upcoming</option>
+        <option value="completed" {% if request.args.get('status') == 'completed' %}selected{% endif %}>Completed</option>
+        <option value="overdue" {% if request.args.get('status') == 'overdue' %}selected{% endif %}>Overdue!</option>
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label for="player" class="form-label">Player</label>
+      <select name="player" id="player" class="form-select" onchange="this.form.submit()">
+        <option value="">All</option>
+        {% for player in all_players %}
+          <option value="{{ player[1] }}" {% if request.args.get('player') == player[1] %}selected{% endif %}>{{ player[1] }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label for="week" class="form-label">Week</label>
+      <select name="week" id="week" class="form-select" onchange="this.form.submit()">
+        <option value="">All Weeks</option>
+        {% for week in weeks %}
+          <option value="{{ week }}" {% if request.args.get('week') == week %}selected{% endif %}>{{ week }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-3 align-self-end">
+      <button type="submit" class="btn btn-primary w-100">Filter</button>
+    </div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table table-hover table-bordered align-middle text-center shadow-sm">
+      <thead class="table-dark">
+        <tr>
+          <th>Player 1</th>
+          <th>Player 2</th>
+          <th>Week Commencing</th>
+          <th>Scheduled At</th>
+          <th>Score</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for match in matches %}
+          <tr>
+            <td>{{ match[1] }}</td>
+            <td>{{ match[2] }}</td>
+            <td>{{ match[3] }}</td>
+            <td>
+              {% if match[4] %}
+                {{ match[4] }}
+              {% elif session['role'] == 'admin' or session.get('player_id') == match[7] or session.get('player_id') == match[8] %}
+                <form method="POST" action="{{ url_for('player.schedule_match_inline', match_id=match[0]) }}" class="d-flex flex-column gap-2">
+                  <input type="datetime-local" name="scheduled_at" required class="form-control form-control-sm">
+                  <button type="submit" class="btn btn-sm btn-primary">Schedule</button>
+                </form>
+              {% else %}
+                <span class="text-muted">Not Scheduled</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if match[5] is not none and match[6] is not none %}
+                {{ match[5] }} - {{ match[6] }}
+              {% else %}
+                TBD
+              {% endif %}
+            </td>
+            <td>
+              {% set week_start = match[3] %}
+              {% set scheduled = match[4] %}
+              {% set score1 = match[5] %}
+              {% set score2 = match[6] %}
+              {% set overdue = false %}
+              {% if week_start %}
+                {% set sunday = week_start + timedelta(days=6) %}
+                {% if score1 is none and score2 is none and datetime.utcnow().date() > sunday %}
+                  {% set overdue = true %}
+                {% endif %}
+              {% endif %}
+
+              {% if score1 is not none and score2 is not none %}
+                <span class="badge bg-success">Completed</span>
+              {% elif overdue %}
+                <span class="badge bg-danger">Overdue!</span>
+              {% elif scheduled %}
+                <span class="badge bg-warning text-dark">Upcoming</span>
+              {% else %}
+                <span class="badge bg-secondary">Not Scheduled</span>
+              {% endif %}
+            </td>
+            <td>
+              {% set player_id = session.get('player_id') %}
+              {% if session['role'] == 'admin' %}
+                {% if match[5] is not none and match[6] is not none %}
+                  <a href="#" onclick="event.preventDefault(); if(confirm('Reset this match?')) { document.getElementById('reset-form-{{ match[0] }}').submit(); }" class="text-danger">Reset</a>
+                  <form id="reset-form-{{ match[0] }}" method="POST" action="{{ url_for('admin.reset_match', match_id=match[0]) }}" style="display:none;"></form>
+                {% else %}
+                  —
+                {% endif %}
+              {% endif %}
+
+              {% if session['role'] == 'admin' or player_id == match[7] or player_id == match[8] %}
+                {% if match[5] is none or match[6] is none %}
+                  <a href="{{ url_for('player.enter_score', match_id=match[0]) }}" class="btn btn-sm btn-outline-success">Enter Score</a>
+                {% else %}
+                  —
+                {% endif %}
+              {% else %}
+                —
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
-
-  <div class="col-md-3">
-    <label for="player" class="form-label">Player</label>
-    <select name="player" id="player" class="form-select" onchange="this.form.submit()">
-      <option value="">All</option>
-      {% for player in all_players %}
-        <option value="{{ player[1] }}" {% if request.args.get('player') == player[1] %}selected{% endif %}>{{ player[1] }}</option>
-      {% endfor %}
-    </select>
-  </div>
-
-  <div class="col-md-3">
-    <label for="week" class="form-label">Week</label>
-    <select name="week" id="week" class="form-select" onchange="this.form.submit()">
-      <option value="">All</option>
-      {% for w in weeks %}
-        <option value="{{ w }}" {% if request.args.get('week') == w %}selected{% endif %}>{{ w }}</option>
-      {% endfor %}
-    </select>
-  </div>
-</form>
-
-<table class="table table-hover table-bordered text-center">
-  <thead class="table-dark">
-    <tr>
-      <th>Player 1</th>
-      <th>Player 2</th>
-      <th>Week Commencing</th>
-      <th>Scheduled At</th>
-      <th>Score</th>
-      <th>Action</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for match in matches %}
-    <tr>
-      <td>{{ match[1] }}</td>  {# player1 #}
-      <td>{{ match[2] }}</td>  {# player2 #}
-      <td>{{ match[3] }}</td>  {# week_commencing #}
-      <td>
-        {% if match[4] %}
-          {{ match[4] }}
-        {% else %}
-          <span class="text-danger">Not Scheduled</span>
-        {% endif %}
-      </td>
-      <td>
-        {% if match[5] is not none and match[6] is not none %}
-          {{ match[5] }} - {{ match[6] }}
-        {% else %}
-          TBD
-        {% endif %}
-      </td>
-      <td>
-        {% if not match[4] %}
-          <form method="POST" action="{{ url_for('player.schedule_match_inline', match_id=match[0]) }}">
-            <input type="datetime-local" name="scheduled_at" class="form-control form-control-sm mb-2" required>
-            <button type="submit" class="btn btn-sm btn-primary">Schedule</button>
-          </form>
-        {% elif not match[5] and not match[6] %}
-          <a href="{{ url_for('player.enter_score', match_id=match[0]) }}" class="btn btn-sm btn-outline-success">Enter Score</a>
-        {% else %}
-          <span class="text-muted">Scored</span>
-        {% endif %}
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
 {% endblock %}
