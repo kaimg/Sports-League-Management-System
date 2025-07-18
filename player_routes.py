@@ -67,15 +67,17 @@ def matches():
 
     if status == 'completed':
         query += " AND m.is_completed = TRUE"
-    elif status == 'overdue':
-        query += " AND m.is_completed = FALSE AND m.week_commencing + INTERVAL '6 days' < CURRENT_DATE"
-    elif status == 'needs_scheduling':
-        query += " AND m.is_completed = FALSE AND m.scheduled_at IS NULL AND m.week_commencing <= CURRENT_DATE AND m.week_commencing + INTERVAL '6 days' >= CURRENT_DATE"
-    elif status == 'scheduled':
-        query += " AND m.is_completed = FALSE AND m.scheduled_at IS NOT NULL AND m.week_commencing + INTERVAL '6 days' >= CURRENT_DATE"
-    elif status == 'upcoming':
-        query += " AND m.is_completed = FALSE AND m.scheduled_at IS NULL AND m.week_commencing > CURRENT_DATE"
-
+    elif status in ['overdue', 'needs_scheduling', 'scheduled', 'upcoming']:
+        query += " AND m.is_completed = FALSE"
+        if status == 'overdue':
+            query += " AND m.week_commencing + INTERVAL '6 days' < CURRENT_DATE"
+        elif status == 'needs_scheduling':
+            query += " AND m.scheduled_at IS NULL AND m.week_commencing <= CURRENT_DATE AND m.week_commencing + INTERVAL '6 days' >= CURRENT_DATE"
+        elif status == 'scheduled':
+            query += " AND m.scheduled_at IS NOT NULL AND m.week_commencing + INTERVAL '6 days' >= CURRENT_DATE"
+        elif status == 'upcoming':
+            query += " AND m.scheduled_at IS NULL AND m.week_commencing > CURRENT_DATE"
+    # No filtering on is_completed if status is not specified
 
     if player:
         query += " AND (p1.name ILIKE %s OR p2.name ILIKE %s)"
@@ -100,7 +102,6 @@ def matches():
 
         is_completed = match[5] is not None and match[6] is not None
 
-        # Only calculate other statuses if NOT completed
         if not is_completed:
             is_overdue = today > week_end
             is_needs_scheduling = match[4] is None and week_start <= today <= week_end
@@ -111,7 +112,6 @@ def matches():
             is_needs_scheduling = False
             is_upcoming = False
             is_scheduled = False
-
 
         match_dict = {
             'id': match[0],
@@ -150,6 +150,7 @@ def matches():
         datetime=datetime,
         timedelta=timedelta
     )
+
 
 
 
