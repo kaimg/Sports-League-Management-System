@@ -5,12 +5,9 @@ services:
     build: .
     working_dir: /app
     ports:
-      - "5000:5000"
+      - "8888:5000"  # Changed from 5000 to avoid macOS/AirPlay conflicts
     volumes:
       - .:/app
-      - ./static:/app/static
-      - ./templates:/app/templates
-      - ./img:/app/img
     env_file:
       - .env
     environment:
@@ -31,9 +28,11 @@ services:
     image: postgres:16.2
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+      # Optional init scripts (safe to keep, won't rerun unless volume is reset)
       - ./0-schema.sql:/docker-entrypoint-initdb.d/0-schema.sql
       - ./1-init-admin.sh:/docker-entrypoint-initdb.d/1-init-admin.sh
-      - ./2-seed-test-data.sql:/docker-entrypoint-initdb.d/2-seed-test-data.sql
+
     env_file:
       - .env
     environment:
@@ -56,3 +55,4 @@ volumes:
 networks:
   sports_network:
     driver: bridge
+
