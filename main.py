@@ -4,6 +4,10 @@ import os
 from admin_routes import admin_bp
 from player_routes import player_bp
 from auth_utils import hash_password, verify_password
+from flask import jsonify, send_from_directory
+from auth_utils import admin_required, login_required  # you already import hash/verify
+from notification import WebPushClient, build_payload
+
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'dev')
@@ -37,7 +41,6 @@ def register():
         conn.close()
     return render_template('register.html')
 
-from auth_utils import verify_password
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -79,6 +82,46 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for('login'))
+
+# --- PWA / Web Push helpers ---
+
+@app.route('/admin/test')
+@admin_required
+def admin_test():
+    # Admin-only utilities page (contains the Web Push test module)
+    return render_template('test.html')
+
+@app.route('/vapid_public_key')
+@admin_required   # keep this admin-only for now since it's just for the test page
+def vapid_public_key():
+    # Return your Base64URL VAPID public key for PushManager.subscribe()
+    key = os.getenv("VAPID_PUBLIC_KEY", "")
+    return jsonify({"key": key})
+
+@app.route('/push_test_now', methods=['POST'])
+@admin_required   # test endpoint; later we’ll add proper save/broadcast flows
+def push_test_now():
+    sub = request.get_json(silent=True) or {}
+    if not sub or "endpoint" not in sub:
+        return jsonify({"ok": False, "error": "Invalid subscription"}), 400
+
+    client = WebPushClient()
+    # Build a simple payload the service worker expects
+    data_json = build_payload(
+        title="🎱 Pool League",
+        body="This is a web push test. It worked!",
+        url="/",
+        icon="/static/icons/icon-192.png"
+    )
+
+    ok = client.send_to_subscription(sub, data_json, ttl=60)
+    return jsonify({"ok": ok})
+
+@app.route('/sw.js')
+def service_worker():
+    # Register service worker at the site root: navigator.serviceWorker.register('/sw.js')
+    return send_from_directory('static', 'sw.js', mimetype='application/javascript')
+
 
 if __name__ == '__main__':
     app.run(debug=True)

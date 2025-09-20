@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Admin — Test Area{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 900px; margin: 2rem auto;">
+  <h1 class="mb-3">Admin — Test Area</h1>
+  <p class="text-muted">A safe space to run admin-only checks and experiments. Add or remove test modules below.</p>
+
+  <!-- ========= Test Modules ========= -->
+  <div class="accordion" id="testModules">
+    <!-- Example placeholder module (keep for future tests) -->
+    <div class="card mb-3">
+      <div class="card-header" id="heading-generic">
+        <h2 class="mb-0">
+          <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-generic">
+            Example Placeholder Module
+          </button>
+        </h2>
+      </div>
+      <div id="collapse-generic" class="collapse show" data-bs-parent="#testModules">
+        <div class="card-body">
+          <p>This is a placeholder. Duplicate this block to add future tests (forms, API calls, UI checks, etc.).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ Web Push Test Module (removable later) -->
+    <div class="card mb-3">
+      <div class="card-header" id="heading-webpush">
+        <h2 class="mb-0">
+          <button class="btn btn-link collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-webpush">
+            Web Push — Subscribe & Send Test
+          </button>
+        </h2>
+      </div>
+      <div id="collapse-webpush" class="collapse" data-bs-parent="#testModules">
+        <div class="card-body">
+          <div id="wp-env" class="text-muted mb-2">Checking support…</div>
+
+          <div class="d-flex gap-2 flex-wrap mb-3">
+            <button id="wp-btn-enable" class="btn btn-primary">Enable notifications</button>
+            <button id="wp-btn-test" class="btn btn-secondary" disabled>Send test notification</button>
+            <button id="wp-btn-unsub" class="btn btn-outline-danger" disabled>Unsubscribe</button>
+          </div>
+
+          <pre id="wp-log" class="text-muted" style="white-space:pre-wrap; background:#f8f9fa; padding:12px; border-radius:8px;"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ========= /Test Modules ========= -->
+</div>
+
+<script>
+/* ===== Utilities ===== */
+async function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  const out = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; ++i) out[i] = raw.charCodeAt(i);
+  return out;
+}
+
+/* ===== Web Push Test Module ===== */
+const envEl = document.getElementById('wp-env');
+const logEl = document.getElementById('wp-log');
+const btnEnable = document.getElementById('wp-btn-enable');
+const btnTest = document.getElementById('wp-btn-test');
+const btnUnsub = document.getElementById('wp-btn-unsub');
+
+function log(msg) { logEl.textContent += msg + "\\n"; }
+
+(async function initPush() {
+  if (!envEl) return; // module removed
+  const supported = ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window);
+  envEl.innerHTML = supported
+    ? '<span class="text-success">Web Push supported ✔</span>'
+    : '<span class="text-warning">Web Push not supported ✖</span>';
+  if (!supported) {
+    btnEnable.disabled = btnTest.disabled = btnUnsub.disabled = true;
+    return;
+  }
+  const resp = await fetch("{{ url_for('vapid_public_key') }}");
+  const { key } = await resp.json();
+  window.__VAPID = key || '';
+  if (!window.__VAPID) log('Warning: VAPID_PUBLIC_KEY is empty.');
+})();
+
+btnEnable?.addEventListener('click', async () => {
+  try {
+    const reg = await navigator.serviceWorker.register('/sw.js');
+    log('Service worker registered.');
+
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') { log('Permission denied.'); return; }
+
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: await urlBase64ToUint8Array(window.__VAPID)
+    });
+    window.__SUB = sub;
+    btnTest.disabled = false;
+    btnUnsub.disabled = false;
+    log('Subscribed to push.');
+  } catch (e) {
+    log('Enable failed: ' + (e?.message || e));
+  }
+});
+
+btnTest?.addEventListener('click', async () => {
+  try {
+    if (!window.__SUB) { log('Not subscribed.'); return; }
+    const r = await fetch("{{ url_for('push_test_now') }}", {
+      method: 'POST',
+      headers: {'content-type':'application/json'},
+      body: JSON.stringify(window.__SUB)
+    });
+    const j = await r.json();
+    log('Test sent: ' + JSON.stringify(j));
+  } catch (e) {
+    log('Send failed: ' + (e?.message || e));
+  }
+});
+
+btnUnsub?.addEventListener('click', async () => {
+  const reg = await navigator.serviceWorker.getRegistration();
+  const sub = reg && await reg.pushManager.getSubscription();
+  if (sub) { await sub.unsubscribe(); log('Unsubscribed.'); }
+  btnTest.disabled = true;
+  btnUnsub.disabled = true;
+});
+</script>
+{% endblock %}

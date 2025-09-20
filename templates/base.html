@@ -53,6 +53,7 @@
             {% if session.get('role') == 'admin' %}
               <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.new_match') }}">Schedule Match</a></li>
               <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_players') }}">Manage Players</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_test_page') }}">Test</a></li>
             {% endif %}
             <li class="nav-item"><a class="nav-link" href="{{ url_for('player.leaderboard') }}">Leaderboard</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('player.change_password') }}">Change Password</a></li>
