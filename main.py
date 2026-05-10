@@ -61,6 +61,7 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        db = None
         try:
             db = get_db()
             cur = db.cursor()
@@ -94,7 +95,8 @@ def register():
             flash('Registration successful', 'success')
             return redirect(url_for('login'))
         except Exception as e:
-            db.rollback()
+            if db:
+                db.rollback()
             print("Error: ", str(e))
             flash('Registration failed', 'error')
             return redirect(url_for('register'))
@@ -178,6 +180,7 @@ def add_user():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     if request.method == 'POST':
+        db = None
         try:
             db = get_db()
             cur = db.cursor()
@@ -196,7 +199,8 @@ def add_user():
             flash('User added successfully', 'success')
             return redirect(url_for('user'))
         except Exception as e:
-            db.rollback()
+            if db:
+                db.rollback()
             print("Error: ", str(e))
             flash('Failed to add user', 'error')
             return redirect(url_for('add_user'))
