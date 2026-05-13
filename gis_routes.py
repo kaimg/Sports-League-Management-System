@@ -17,18 +17,21 @@ def api_stadiums():
 
     query = """
         SELECT DISTINCT
-            s.stadium_id,
-            s.name,
-            s.location,
-            s.capacity,
-            s.city,
-            s.country,
-            s.latitude,
-            s.longitude
-        FROM stadiums s
-        LEFT JOIN teams t ON t.stadium_id = s.stadium_id
-        WHERE s.latitude IS NOT NULL
-          AND s.longitude IS NOT NULL
+    s.stadium_id,
+    s.name,
+    s.location,
+    s.capacity,
+    s.city,
+    s.country,
+    s.latitude,
+    s.longitude,
+    t.name AS team_name,
+    l.name AS league_name
+FROM stadiums s
+LEFT JOIN teams t ON t.stadium_id = s.stadium_id
+LEFT JOIN leagues l ON t.league_id = l.league_id
+WHERE s.latitude IS NOT NULL
+AND s.longitude IS NOT NULL
     """
 
     params = []
@@ -54,15 +57,17 @@ def api_stadiums():
 
     for stadium in stadiums:
         data.append({
-            "id": stadium[0],
-            "name": stadium[1],
-            "location": stadium[2],
-            "capacity": stadium[3],
-            "city": stadium[4],
-            "country": stadium[5],
-            "latitude": float(stadium[6]),
-            "longitude": float(stadium[7])
-        })
+    "id": stadium[0],
+    "name": stadium[1],
+    "location": stadium[2],
+    "capacity": stadium[3],
+    "city": stadium[4],
+    "country": stadium[5],
+    "latitude": float(stadium[6]),
+    "longitude": float(stadium[7]),
+    "team_name": stadium[8],
+    "league_name": stadium[9]
+})
 
     return jsonify(data)
 

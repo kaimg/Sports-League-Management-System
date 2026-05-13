@@ -42,42 +42,126 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css">
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
+<style>
+    .league-marker {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+    }
+
+    .league-premier {
+        background-color: #007bff;
+    }
+
+    .league-laliga {
+        background-color: #dc3545;
+    }
+
+    .league-bundesliga {
+        background-color: #ffc107;
+    }
+
+    .league-seriea {
+        background-color: #28a745;
+    }
+
+    .league-ligue1 {
+        background-color: #6f42c1;
+    }
+
+    .league-default {
+        background-color: #343a40;
+    }
+</style>
 <script>
+    
+    
+
     const map = L.map('map').setView([20, 0], 2);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    let markers = [];
-    let radiusCircle = null;
+    let markers = L.markerClusterGroup();
+map.addLayer(markers);
+let radiusCircle = null;
 
     function clearMap() {
-        markers.forEach(marker => map.removeLayer(marker));
-        markers = [];
+    markers.clearLayers();
 
-        if (radiusCircle) {
-            map.removeLayer(radiusCircle);
-            radiusCircle = null;
-        }
+    if (radiusCircle) {
+        map.removeLayer(radiusCircle);
+        radiusCircle = null;
     }
+}
+
+function getLeagueClass(leagueName) {
+    if (!leagueName) {
+        return 'league-default';
+    }
+
+    const league = leagueName.toLowerCase();
+
+    if (league.includes('premier')) {
+        return 'league-premier';
+    }
+
+    if (league.includes('liga')) {
+        return 'league-laliga';
+    }
+
+    if (league.includes('bundesliga')) {
+        return 'league-bundesliga';
+    }
+
+    if (league.includes('serie')) {
+        return 'league-seriea';
+    }
+
+    if (league.includes('ligue')) {
+        return 'league-ligue1';
+    }
+
+    return 'league-default';
+}
+
+function createLeagueIcon(leagueName) {
+    return L.divIcon({
+        className: '',
+        html: `<div class="league-marker ${getLeagueClass(leagueName)}"></div>`,
+        iconSize: [18, 18],
+        iconAnchor: [9, 9],
+        popupAnchor: [0, -9]
+    });
+}
 
     function addStadiumMarkers(stadiums) {
         const bounds = [];
 
         stadiums.forEach(stadium => {
-            const marker = L.marker([stadium.latitude, stadium.longitude])
+            const marker = L.marker([stadium.latitude, stadium.longitude], {
+    icon: createLeagueIcon(stadium.league_name)
+})
                 .addTo(map)
                 .bindPopup(`
-                    <strong>${stadium.name}</strong><br>
-                    ${stadium.city || 'N/A'}, ${stadium.country || 'N/A'}<br>
-                    Location: ${stadium.location || 'N/A'}<br>
-                    Capacity: ${stadium.capacity || 'N/A'}<br>
-                    Lat: ${stadium.latitude}<br>
-                    Lon: ${stadium.longitude}
-                `);
+    <strong>${stadium.name}</strong><br>
+    Team: ${stadium.team_name || 'N/A'}<br>
+    League: ${stadium.league_name || 'N/A'}<br>
+    ${stadium.city || 'N/A'}, ${stadium.country || 'N/A'}<br>
+    Location: ${stadium.location || 'N/A'}<br>
+    Capacity: ${stadium.capacity || 'N/A'}<br>
+    Lat: ${stadium.latitude}<br>
+    Lon: ${stadium.longitude}
+`);
 
-            markers.push(marker);
+            markers.addLayer(marker);
             bounds.push([stadium.latitude, stadium.longitude]);
         });
 
