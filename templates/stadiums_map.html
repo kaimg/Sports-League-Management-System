@@ -46,6 +46,8 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css">
 <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
 
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+
 <style>
     .league-marker {
         width: 18px;
@@ -92,6 +94,7 @@
     let markers = L.markerClusterGroup();
 map.addLayer(markers);
 let radiusCircle = null;
+let heatLayer;
 
     function clearMap() {
     markers.clearLayers();
@@ -99,6 +102,11 @@ let radiusCircle = null;
     if (radiusCircle) {
         map.removeLayer(radiusCircle);
         radiusCircle = null;
+    }
+
+    if (heatLayer) {
+        map.removeLayer(heatLayer);
+        heatLayer = null;
     }
 }
 
@@ -143,32 +151,45 @@ function createLeagueIcon(leagueName) {
 }
 
     function addStadiumMarkers(stadiums) {
-        const bounds = [];
+    const bounds = [];
+    const heatPoints = [];
 
-        stadiums.forEach(stadium => {
-            const marker = L.marker([stadium.latitude, stadium.longitude], {
-    icon: createLeagueIcon(stadium.league_name)
-})
-                .addTo(map)
-                .bindPopup(`
-    <strong>${stadium.name}</strong><br>
-    Team: ${stadium.team_name || 'N/A'}<br>
-    League: ${stadium.league_name || 'N/A'}<br>
-    ${stadium.city || 'N/A'}, ${stadium.country || 'N/A'}<br>
-    Location: ${stadium.location || 'N/A'}<br>
-    Capacity: ${stadium.capacity || 'N/A'}<br>
-    Lat: ${stadium.latitude}<br>
-    Lon: ${stadium.longitude}
-`);
+    stadiums.forEach(stadium => {
+        const marker = L.marker([stadium.latitude, stadium.longitude], {
+            icon: createLeagueIcon(stadium.league_name)
+        }).bindPopup(`
+            <strong>${stadium.name}</strong><br>
+            Team: ${stadium.team_name || 'N/A'}<br>
+            League: ${stadium.league_name || 'N/A'}<br>
+            ${stadium.city || 'N/A'}, ${stadium.country || 'N/A'}<br>
+            Location: ${stadium.location || 'N/A'}<br>
+            Capacity: ${stadium.capacity || 'N/A'}<br>
+            Lat: ${stadium.latitude}<br>
+            Lon: ${stadium.longitude}
+        `);
 
-            markers.addLayer(marker);
-            bounds.push([stadium.latitude, stadium.longitude]);
-        });
+        markers.addLayer(marker);
+        bounds.push([stadium.latitude, stadium.longitude]);
 
-        if (bounds.length > 0) {
-            map.fitBounds(bounds);
-        }
+        heatPoints.push([
+            stadium.latitude,
+            stadium.longitude,
+            1
+        ]);
+    });
+
+    if (heatPoints.length > 0) {
+        heatLayer = L.heatLayer(heatPoints, {
+            radius: 25,
+            blur: 20,
+            maxZoom: 10
+        }).addTo(map);
     }
+
+    if (bounds.length > 0) {
+        map.fitBounds(bounds);
+    }
+}
 
     function loadStadiums() {
         clearMap();
