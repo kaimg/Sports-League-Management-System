@@ -1,11 +1,9 @@
-from flask import Blueprint, render_template, jsonify, request
+from flask import Blueprint, jsonify, request
 from db import get_db
 
 gis_bp = Blueprint('gis', __name__)
 
-@gis_bp.route('/stadiums_map')
-def stadiums_map():
-    return render_template('stadiums_map.html')
+
 
 
 @gis_bp.route('/api/stadiums')
@@ -15,23 +13,37 @@ def api_stadiums():
 
     city = request.args.get('city')
     country = request.args.get('country')
+    league_id = request.args.get('league_id')
 
     query = """
-        SELECT stadium_id, name, location, capacity, city, country, latitude, longitude
-        FROM stadiums
-        WHERE latitude IS NOT NULL
-          AND longitude IS NOT NULL
+        SELECT DISTINCT
+            s.stadium_id,
+            s.name,
+            s.location,
+            s.capacity,
+            s.city,
+            s.country,
+            s.latitude,
+            s.longitude
+        FROM stadiums s
+        LEFT JOIN teams t ON t.stadium_id = s.stadium_id
+        WHERE s.latitude IS NOT NULL
+          AND s.longitude IS NOT NULL
     """
 
     params = []
 
     if city:
-        query += " AND LOWER(city) LIKE LOWER(%s)"
+        query += " AND LOWER(s.city) LIKE LOWER(%s)"
         params.append(f"%{city}%")
 
     if country:
-        query += " AND LOWER(country) LIKE LOWER(%s)"
+        query += " AND LOWER(s.country) LIKE LOWER(%s)"
         params.append(f"%{country}%")
+
+    if league_id:
+        query += " AND t.league_id = %s"
+        params.append(league_id)
 
     cur.execute(query, params)
 

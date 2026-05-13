@@ -488,4 +488,35 @@ def user_scorers():
 
     return render_template('user_scorers.html', scorers=scorers, leagues=leagues, countries=countries, teams=teams, str=str)
 
+@user_bp.route('/stadiums_map')
+@login_required
+def stadiums_map():
+    db = get_db()
+    cur = db.cursor()
+
+    cur.execute("""
+        SELECT
+            s.stadium_id,
+            s.name,
+            s.city,
+            s.country,
+            s.latitude,
+            s.longitude,
+            t.name AS team_name
+        FROM stadiums s
+        LEFT JOIN teams t
+            ON t.stadium_id = s.stadium_id
+        WHERE s.latitude IS NOT NULL
+        AND s.longitude IS NOT NULL
+    """)
+
+    stadiums = cur.fetchall()
+
+    cur.close()
+
+    return render_template(
+        'stadiums_map.html',
+        stadiums=stadiums
+    )
+
 
