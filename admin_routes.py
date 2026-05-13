@@ -53,10 +53,10 @@ def manage_stadiums():
                 if 'add' in request.form:
                     cur.execute("""
                         INSERT INTO stadiums
-                        (name, location, capacity, city, country, latitude, longitude, geom)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s,
-                                ST_SetSRID(ST_MakePoint(%s, %s), 4326))
-                        RETURNING stadium_id
+(name, location, capacity, city, country, latitude, longitude, geom)
+VALUES (%s, %s, %s, %s, %s, %s, %s,
+        ST_SetSRID(ST_MakePoint(%s, %s), 4326))
+RETURNING stadium_id
                     """, (name, location, capacity, city, country, latitude, longitude, longitude, latitude))
 
                     result = cur.fetchone()

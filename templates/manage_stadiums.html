@@ -16,6 +16,9 @@
                     <label for="location">Location:</label>
                     <input type="text" class="form-control" id="location" name="location" required>
                 </div>
+                <button type="button" class="btn btn-info mb-3" onclick="geocodeStadium()">
+    Get coordinates
+</button>
                 <div class="form-group">
                     <label for="capacity">Capacity:</label>
                     <input type="number" class="form-control" id="capacity" name="capacity" required>
@@ -115,6 +118,57 @@
 
 <script>
     
+    function geocodeStadium() {
+    const name = document.getElementById('name').value.trim();
+    const location = document.getElementById('location').value.trim();
+    const city = document.getElementById('city').value.trim();
+    const country = document.getElementById('country').value.trim();
+
+    if (!name && !location) {
+        alert('Please enter a stadium name or location first.');
+        return;
+    }
+
+    //const query = `${name} ${location} ${city} ${country}`.trim();
+    const query = `${name}, ${city}, ${country}`;
+
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&addressdetails=1`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.length === 0) {
+                return fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&limit=1&addressdetails=1`)
+                    .then(response => response.json());
+            }
+            return data;
+        })
+        .then(data => {
+            if (data.length === 0) {
+                alert('No coordinates found. Try adding city and country.');
+                return;
+            }
+
+            const place = data[0];
+
+            document.getElementById('latitude').value = place.lat;
+            document.getElementById('longitude').value = place.lon;
+
+            if (place.address) {
+                document.getElementById('city').value =
+                    place.address.city ||
+                    place.address.town ||
+                    place.address.municipality ||
+                    place.address.village ||
+                    '';
+
+                document.getElementById('country').value = place.address.country || '';
+            }
+        })
+        .catch(error => {
+            alert('Error getting coordinates.');
+            console.error(error);
+        });
+}
+
 document.querySelectorAll('.edit-btn').forEach(button => {
     button.addEventListener('click', function() {
 
