@@ -34,13 +34,58 @@ def manage_stadiums():
             location = request.form['location']
             capacity = request.form['capacity']
 
+            latitude = request.form.get('latitude')
+            longitude = request.form.get('longitude')
+            city = request.form.get('city')
+            country = request.form.get('country')
+
             if 'add' in request.form:
-                cur.execute('INSERT INTO stadiums (name, location, capacity) VALUES (%s, %s, %s)', 
-                            (name, location, capacity))
+                cur.execute("""
+        INSERT INTO stadiums 
+        (name, location, capacity, latitude, longitude, city, country, geom)
+        VALUES (
+            %s, %s, %s, %s, %s, %s, %s,
+            ST_SetSRID(ST_MakePoint(%s, %s), 4326)
+        )
+    """,
+    (
+        name,
+        location,
+        capacity,
+        latitude,
+        longitude,
+        city,
+        country,
+        longitude,
+        latitude
+    ))
                 flash('Stadium added successfully', 'success')
             elif 'edit' in request.form and stadium_id:
-                cur.execute('UPDATE stadiums SET name = %s, location = %s, capacity = %s WHERE stadium_id = %s', 
-                            (name, location, capacity, stadium_id))
+                cur.execute("""
+    UPDATE stadiums
+    SET
+        name = %s,
+        location = %s,
+        capacity = %s,
+        latitude = %s,
+        longitude = %s,
+        city = %s,
+        country = %s,
+        geom = ST_SetSRID(ST_MakePoint(%s, %s), 4326)
+    WHERE stadium_id = %s
+""",
+(
+    name,
+    location,
+    capacity,
+    latitude,
+    longitude,
+    city,
+    country,
+    longitude,
+    latitude,
+    stadium_id
+))
                 flash('Stadium updated successfully', 'success')
             elif 'delete' in request.form and stadium_id:
                 cur.execute('DELETE FROM stadiums WHERE stadium_id = %s', (stadium_id,))
