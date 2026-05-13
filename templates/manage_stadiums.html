@@ -39,6 +39,17 @@
     <label for="longitude">Longitude:</label>
     <input type="number" step="any" class="form-control" id="longitude" name="longitude">
 </div>
+
+<div class="form-group">
+    <label for="team_id">Team:</label>
+    <select class="form-control" id="team_id" name="team_id">
+        <option value="">No team assigned</option>
+        {% for team in teams %}
+            <option value="{{ team[0] }}">{{ team[1] }}</option>
+        {% endfor %}
+    </select>
+</div>
+
                 <button type="submit" name="add" class="btn btn-primary" id="submit-button">Add Stadium</button>
             </form>
         </div>
@@ -71,14 +82,25 @@
 <td>{{ stadium[6] }}</td>
 <td>{{ stadium[7] }}</td>
                         <td>
-                            <button class="btn btn-success btn-sm" onclick="editStadium('{{ stadium[0] }}', '{{ stadium[1] }}', '{{ stadium[2] }}', '{{ stadium[3] }}', '{{ stadium[4] }}', '{{ stadium[5] }}', '{{ stadium[6] }}', '{{ stadium[7] }}')">
+                            <button type="button" class="btn btn-success btn-sm edit-btn"
+                                data-id="{{ stadium[0] | e }}"
+                                data-name="{{ stadium[1] | e }}"
+                                data-location="{{ stadium[2] | e }}"
+                                data-capacity="{{ stadium[3] | e }}"
+                                data-city="{{ stadium[4] | e }}"
+                                data-country="{{ stadium[5] | e }}"
+                                data-latitude="{{ stadium[6] | e }}"
+                                data-longitude="{{ stadium[7] | e }}">
                                 <i class="fa fa-pencil-alt"></i>
-                            </button>
+                        </button>
                         </td>
                         <td>
-                            <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal" data-id="{{ stadium[0] }}" data-action="{{ url_for('admin.manage_stadiums') }}">
-                                <i class="fa fa-minus"></i>
-                            </button>
+                            <form action="{{ url_for('admin.manage_stadiums') }}" method="POST" style="display:inline;">
+    <input type="hidden" name="stadium_id" value="{{ stadium[0] }}">
+    <button type="submit" name="delete" value="delete" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this stadium?');">
+        <i class="fa fa-minus"></i>
+    </button>
+</form>
                         </td>
                     </tr>
                     {% endfor %}
@@ -92,25 +114,31 @@
 {% include 'delete_modal.html' %}
 
 <script>
-    function editStadium(id, name, location, capacity, city, country, latitude, longitude) {
-        document.getElementById('stadium_id').value = id;
-        document.getElementById('name').value = name;
-        document.getElementById('location').value = location;
-        document.getElementById('capacity').value = capacity;
-        document.getElementById('city').value = city;
-document.getElementById('country').value = country;
-document.getElementById('latitude').value = latitude;
-document.getElementById('longitude').value = longitude;
-        document.getElementById('submit-button').innerText = 'Update Stadium';
-        document.getElementById('form-title').innerText = 'Edit Stadium';
-    }
+    
+document.querySelectorAll('.edit-btn').forEach(button => {
+    button.addEventListener('click', function() {
 
-    $('#deleteModal').on('show.bs.modal', function (event) {
-        var button = $(event.relatedTarget);
-        var id = button.data('id');
-        var action = button.data('action');
-        document.getElementById('deleteItemId').value = id;
-        document.getElementById('deleteForm').action = action;
+        document.getElementById('stadium_id').value = this.dataset.id;
+        document.getElementById('name').value = this.dataset.name;
+        document.getElementById('location').value = this.dataset.location;
+        document.getElementById('capacity').value = this.dataset.capacity;
+        document.getElementById('city').value = this.dataset.city;
+        document.getElementById('country').value = this.dataset.country;
+        document.getElementById('latitude').value = this.dataset.latitude;
+        document.getElementById('longitude').value = this.dataset.longitude;
+
+        document.getElementById('submit-button').innerText = 'Update Stadium';
+        document.getElementById('submit-button').name = 'edit';
+        document.getElementById('form-title').innerText = 'Edit Stadium';
     });
+});
+
+$('#deleteModal').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget);
+    var id = button.data('id');
+    var action = button.data('action');
+    document.getElementById('deleteItemId').value = id;
+    document.getElementById('deleteForm').action = action;
+});
 </script>
 {% endblock %}

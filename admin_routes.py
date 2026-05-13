@@ -1,3 +1,5 @@
+from unittest import result
+
 from flask import Blueprint, render_template, request, redirect, session, url_for, flash
 from functools import wraps
 from db import get_db
@@ -29,79 +31,86 @@ def manage_stadiums():
 
     if request.method == 'POST':
         try:
-            stadium_id = request.form.get('stadium_id')
-            name = request.form['name']
-            location = request.form['location']
-            capacity = request.form['capacity']
+            stadium_id = request.form.get('stadium_id') or request.form.get('deleteItemId')
 
-            latitude = request.form.get('latitude')
-            longitude = request.form.get('longitude')
-            city = request.form.get('city')
-            country = request.form.get('country')
+            if 'delete' in request.form:
+                if not stadium_id:
+                    flash('No stadium selected for deletion', 'error')
+                else:
+                    cur.execute('DELETE FROM stadiums WHERE stadium_id = %s', (stadium_id,))
+                    flash('Stadium deleted successfully', 'success')
 
-            if 'add' in request.form:
-                cur.execute("""
-        INSERT INTO stadiums 
-        (name, location, capacity, latitude, longitude, city, country, geom)
-        VALUES (
-            %s, %s, %s, %s, %s, %s, %s,
-            ST_SetSRID(ST_MakePoint(%s, %s), 4326)
-        )
-    """,
-    (
-        name,
-        location,
-        capacity,
-        latitude,
-        longitude,
-        city,
-        country,
-        longitude,
-        latitude
-    ))
-                flash('Stadium added successfully', 'success')
-            elif 'edit' in request.form and stadium_id:
-                cur.execute("""
-    UPDATE stadiums
-    SET
-        name = %s,
-        location = %s,
-        capacity = %s,
-        latitude = %s,
-        longitude = %s,
-        city = %s,
-        country = %s,
-        geom = ST_SetSRID(ST_MakePoint(%s, %s), 4326)
-    WHERE stadium_id = %s
-""",
-(
-    name,
-    location,
-    capacity,
-    latitude,
-    longitude,
-    city,
-    country,
-    longitude,
-    latitude,
-    stadium_id
-))
-                flash('Stadium updated successfully', 'success')
-            elif 'delete' in request.form and stadium_id:
-                cur.execute('DELETE FROM stadiums WHERE stadium_id = %s', (stadium_id,))
-                flash('Stadium deleted successfully', 'success')
+            else:
+                name = request.form['name']
+                location = request.form['location']
+                capacity = request.form['capacity']
+                latitude = request.form.get('latitude')
+                longitude = request.form.get('longitude')
+                city = request.form.get('city')
+                country = request.form.get('country')
+                team_id = request.form.get('team_id') or None
+
+                if 'add' in request.form:
+                    cur.execute("""
+                        INSERT INTO stadiums
+                        (name, location, capacity, city, country, latitude, longitude, geom)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s,
+                                ST_SetSRID(ST_MakePoint(%s, %s), 4326))
+                        RETURNING stadium_id
+                    """, (name, location, capacity, city, country, latitude, longitude, longitude, latitude))
+
+                    result = cur.fetchone()
+                    new_stadium_id = result[0]
+
+                    if team_id:
+                        cur.execute(
+                            'UPDATE teams SET stadium_id = %s WHERE team_id = %s',
+                            (new_stadium_id, team_id)
+                        )
+
+                    flash('Stadium added successfully', 'success')
+
+                elif 'edit' in request.form and stadium_id:
+                    cur.execute("""
+                        UPDATE stadiums
+                        SET name = %s,
+                            location = %s,
+                            capacity = %s,
+                            city = %s,
+                            country = %s,
+                            latitude = %s,
+                            longitude = %s,
+                            geom = ST_SetSRID(ST_MakePoint(%s, %s), 4326)
+                        WHERE stadium_id = %s
+                    """, (name, location, capacity, city, country, latitude, longitude, longitude, latitude, stadium_id))
+
+                    if team_id:
+                        cur.execute(
+                            'UPDATE teams SET stadium_id = %s WHERE team_id = %s',
+                            (stadium_id, team_id)
+                        )
+
+                    flash('Stadium updated successfully', 'success')
+
             db.commit()
+
         except Exception as e:
             db.rollback()
             flash('An error occurred: ' + str(e), 'error')
+
         finally:
             cur.close()
+
         return redirect(url_for('admin.manage_stadiums'))
 
     cur.execute('SELECT stadium_id, name, location, capacity, city, country, latitude, longitude FROM stadiums')
     stadiums = cur.fetchall()
+
+    cur.execute('SELECT team_id, name FROM teams ORDER BY name')
+    teams = cur.fetchall()
+
     cur.close()
-    return render_template('manage_stadiums.html', stadiums=stadiums)
+    return render_template('manage_stadiums.html', stadiums=stadiums, teams=teams)
 
 @admin_bp.route('/manage_leagues', methods=['GET', 'POST'])
 @admin_required
@@ -191,7 +200,7 @@ def manage_teams():
             team_id = request.form.get('team_id')
             name = request.form['name']
             founded_year = request.form['founded_year']
-            stadium_id = request.form['stadium_id']
+            stadium_id = request.form.get('stadium_id') or None
             league_id = request.form['league_id']
             coach_id = request.form['coach_id']
 
@@ -214,7 +223,23 @@ def manage_teams():
             cur.close()
         return redirect(url_for('admin.manage_teams'))
 
-    cur.execute('SELECT team_id, name, founded_year, stadium_id, league_id, coach_id FROM teams')
+    cur.execute("""
+    SELECT 
+        t.team_id,
+        t.name,
+        t.founded_year,
+        t.stadium_id,
+        t.league_id,
+        t.coach_id,
+        COALESCE(s.name, 'N/A') AS stadium_name,
+        l.name AS league_name,
+        c.name AS coach_name
+    FROM teams t
+    LEFT JOIN stadiums s ON t.stadium_id = s.stadium_id
+    JOIN leagues l ON t.league_id = l.league_id
+    JOIN coaches c ON t.coach_id = c.coach_id
+    ORDER BY t.team_id
+""")
     teams = cur.fetchall()
     cur.execute('SELECT stadium_id, name FROM stadiums')
     stadiums = cur.fetchall()

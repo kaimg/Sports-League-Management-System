@@ -18,10 +18,12 @@
                 </div>
                 <div class="form-group">
                     <label for="stadium_id">Stadium:</label>
-                    <select class="form-control" id="stadium_id" name="stadium_id" required>
-                        {% for stadium in stadiums %}
-                        <option value="{{ stadium[0] }}">{{ stadium[1] }}</option>
-                        {% endfor %}
+                    <select class="form-control" id="stadium_id" name="stadium_id">
+    <option value="">No stadium</option>
+    {% for stadium in stadiums %}
+    <option value="{{ stadium[0] }}">{{ stadium[1] }}</option>
+    {% endfor %}
+</select>
                     </select>
                 </div>
                 <div class="form-group">
@@ -64,9 +66,9 @@
                         <td>{{ team[0] }}</td>
                         <td>{{ team[1] }}</td>
                         <td>{{ team[2] }}</td>
-                        <td>{{ team[3] }}</td>
-                        <td>{{ team[4] }}</td>
-                        <td>{{ team[5] }}</td>
+                        <td>{{ team[6] }}</td>
+<td>{{ team[7] }}</td>
+<td>{{ team[8] }}</td>
                         <td>
                             <button class="btn btn-success btn-sm" onclick="editTeam('{{ team[0] }}', '{{ team[1] }}', '{{ team[2] }}', '{{ team[3] }}', '{{ team[4] }}', '{{ team[5] }}')">
                                 <i class="fa fa-pencil-alt"></i>
@@ -114,7 +116,7 @@
         document.getElementById('team_id').value = id;
         document.getElementById('name').value = name;
         document.getElementById('founded_year').value = founded_year;
-        document.getElementById('stadium_id').value = stadium_id;
+        document.getElementById('stadium_id').value = stadium_id || '';
         document.getElementById('league_id').value = league_id;
         document.getElementById('coach_id').value = coach_id;
         document.getElementById('submit-button').innerText = 'Update Team';

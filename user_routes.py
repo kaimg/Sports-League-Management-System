@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, session, url_for, flash
 from functools import wraps
+
+from pip._vendor.distlib.util import OR
 from db import get_db
 
 user_bp = Blueprint('user', __name__)
@@ -37,18 +39,19 @@ def user_teams():
 
     # Build the base query
     query = """
-        SELECT team_id, name, crestURL 
-        FROM teams
-        WHERE 1=1
-    """
+    SELECT t.team_id, t.name, t.crestURL
+    FROM teams t
+    JOIN leagues l ON t.league_id = l.league_id
+    WHERE 1=1
+"""
     filters = []
 
     # Add filters based on the selected values
     if league_id:
-        query += " AND league_id = %s"
+        query += " AND t.league_id = %s"
         filters.append(league_id)
     if country_id:
-        query += " AND nationality = (SELECT name FROM countries WHERE country_id = %s)"
+        query += " AND l.country_id = %s"
         filters.append(country_id)
 
     query += " LIMIT %s OFFSET %s"
@@ -58,8 +61,19 @@ def user_teams():
     cur.execute(query, filters)
     teams = cur.fetchall()
 
-    cur.execute('SELECT COUNT(*) FROM teams WHERE 1=1 ' + (' AND league_id = %s' if league_id else '') + (' AND nationality = (SELECT name FROM countries WHERE country_id = %s)' if country_id else ''), filters[:-2])
-    total_teams = cur.fetchone()[0]
+    count_query = "SELECT COUNT(*) FROM teams WHERE 1=1"
+    count_filters = []
+
+    if league_id:
+        count_query += " AND league_id = %s"
+        count_filters.append(league_id)
+
+    if country_id:
+        count_query += " AND country_id = %s"
+        count_filters.append(country_id)
+
+    cur.execute(count_query, count_filters)
+    total_teams =  cur.fetchone()[0]
     cur.close()
 
     total_pages = (total_teams + 19) // 20
@@ -199,9 +213,19 @@ def user_matches():
         query += " AND m.league_id = %s"
         filters.append(league_id)
     if country_id:
-        query += " AND (t1.country_id = %s OR t2.country_id = %s)"
-        filters.append(country_id)
-        filters.append(country_id)
+        query += """
+    AND (
+        t1.league_id IN (
+            SELECT league_id FROM leagues WHERE country_id = %s
+        )
+        OR
+        t2.league_id IN (
+            SELECT league_id FROM leagues WHERE country_id = %s
+        )
+    )
+    """
+    filters.append(country_id)
+    filters.append(country_id)
     if team_id:
         query += " AND (m.home_team_id = %s OR m.away_team_id = %s)"
         filters.append(team_id)
@@ -230,7 +254,7 @@ def profile_team(team_id):
     cur.execute("""
         SELECT t.name, t.founded_year, s.name AS stadium_name, c.name AS coach_name, l.name AS league_name, t.crestURL, co.flag_url
         FROM teams t 
-        JOIN stadiums s ON t.stadium_id = s.stadium_id 
+        LEFT JOIN stadiums s ON t.stadium_id = s.stadium_id
         JOIN coaches c ON t.coach_id = c.coach_id 
         JOIN countries co ON c.nationality = co.name
         JOIN leagues l ON t.league_id = l.league_id
@@ -326,30 +350,34 @@ def profile_match(match_id):
     cur = db.cursor()
 
     cur.execute("""
-        SELECT m.match_id, 
-               t1.name AS home_team_name, 
-               t2.name AS away_team_name, 
-               s.full_time_home AS home_score, 
-               s.full_time_away AS away_score,
-               TO_CHAR(m.utc_date, 'Month DD, YYYY') AS formatted_date,
-               m.matchday,
-               t1.crestURL AS home_team_logo,
-               t2.crestURL AS away_team_logo,
-               st.name AS stadium_name,
-               st.location AS stadium_location,
-               r.name AS referee_name,
-               c.flag_url AS referee_flag_url,
-               t1.team_id AS home_team_id,
-               t2.team_id AS away_team_id
-        FROM matches m
-        JOIN teams t1 ON m.home_team_id = t1.team_id
-        JOIN teams t2 ON m.away_team_id = t2.team_id
-        LEFT JOIN scores s ON m.match_id = s.match_id
-        JOIN stadiums st ON t1.stadium_id = st.stadium_id
-        JOIN match_referees mr ON m.match_id = mr.match_id
-        JOIN referees r ON mr.referee_id = r.referee_id
-        JOIN countries c ON r.nationality = c.name
-        WHERE m.match_id = %s
+    SELECT m.match_id, 
+           t1.name AS home_team_name, 
+           t2.name AS away_team_name, 
+           s.full_time_home AS home_score, 
+           s.full_time_away AS away_score,
+           TO_CHAR(m.utc_date, 'Month DD, YYYY') AS formatted_date,
+           m.matchday,
+           t1.crestURL AS home_team_logo,
+           t2.crestURL AS away_team_logo,
+           st.name AS stadium_name,
+           st.location AS stadium_location,
+           st.city AS stadium_city,
+           st.country AS stadium_country,
+           st.latitude AS stadium_latitude,
+           st.longitude AS stadium_longitude,
+           r.name AS referee_name,
+           c.flag_url AS referee_flag_url,
+           t1.team_id AS home_team_id,
+           t2.team_id AS away_team_id
+    FROM matches m
+    JOIN teams t1 ON m.home_team_id = t1.team_id
+    JOIN teams t2 ON m.away_team_id = t2.team_id
+    LEFT JOIN scores s ON m.match_id = s.match_id
+    LEFT JOIN stadiums st ON t1.stadium_id = st.stadium_id
+    JOIN match_referees mr ON m.match_id = mr.match_id
+    JOIN referees r ON mr.referee_id = r.referee_id
+    JOIN countries c ON r.nationality = c.name
+    WHERE m.match_id = %s
     """, (match_id,))
     match = cur.fetchone()
 

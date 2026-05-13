@@ -38,26 +38,62 @@
             <p><strong>Matchday:</strong> {{ match[6] }}</p>
         </div>
         <div class="text-right">
-            <p><strong>Venue:</strong> {{ match[9] }} - {{ match[10] }}</p>
-            <p><strong>Referee:</strong> {{ match[11] }} 
-                {% if match[12] %}
-                    <img src="{{ match[12] }}" alt="Flag" class="flag-img mr-2">
-                {% endif %}
-            </p>
+            <p>
+    <strong>Venue:</strong> {{ match[9] or 'N/A' }} -
+    {{ match[10] or 'N/A' }},
+    {{ match[11] or 'N/A' }},
+    {{ match[12] or 'N/A' }}
+</p>
+            <p><strong>Referee:</strong> {{ match[15] }}
+    {% if match[16] %}
+        <img src="{{ match[16] }}" alt="Flag" class="flag-img mr-2">
+    {% endif %}
+</p>
         </div>
     </div>
 
     <div class="d-flex justify-content-center align-items-center match-result-box p-3 bg-light rounded shadow-sm mb-4">
-        <a href="{{ url_for('user.profile_team', team_id=match[13]) }}" class="d-flex align-items-center text-dark">
+        <a href="{{ url_for('user.profile_team', team_id=match[17]) }}" class="d-flex align-items-center text-dark">
             <img src="{{ match[7] }}" alt="{{ match[1] }} Logo" class="team-logo">
             <strong class="mx-2">{{ match[1] }}</strong>
         </a>
         <span class="match-score-box mx-2">{{ match[3] }} - {{ match[4] }}</span>
-        <a href="{{ url_for('user.profile_team', team_id=match[14]) }}" class="d-flex align-items-center text-dark">
+        <a href="{{ url_for('user.profile_team', team_id=match[18]) }}" class="d-flex align-items-center text-dark">
             <strong class="mx-2">{{ match[2] }}</strong>
             <img src="{{ match[8] }}" alt="{{ match[2] }} Logo" class="team-logo">
         </a>
-    </div>
+        </div>
+
+{% if match[13] and match[14] %}
+    <h2>Match Location</h2>
+    <div id="matchMap" style="height: 400px; width: 100%; border-radius: 10px;" class="mb-4"></div>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script>
+        const matchLat = Number("{{ match[13] }}");
+        const matchLon = Number("{{ match[14] }}");
+
+        const matchMap = L.map('matchMap').setView([matchLat, matchLon], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(matchMap);
+
+        L.marker([matchLat, matchLon])
+            .addTo(matchMap)
+            .bindPopup(`
+    <strong>{{ match[9] or 'N/A' }}</strong><br>
+    <strong>Location:</strong> {{ match[10] or 'N/A' }}<br>
+    <strong>City:</strong> {{ match[11] or 'N/A' }}<br>
+    <strong>Country:</strong> {{ match[12] or 'N/A' }}<br>
+    <strong>Latitude:</strong> {{ match[13] or 'N/A' }}<br>
+    <strong>Longitude:</strong> {{ match[14] or 'N/A' }}
+`)
+            .openPopup();
+    </script>
+{% endif %}
 
     <h2>Scores</h2>
     {% if scores %}
