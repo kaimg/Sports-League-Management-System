@@ -150,41 +150,42 @@ function createLeagueIcon(leagueName) {
     });
 }
 
-    function addStadiumMarkers(stadiums) {
+    function addGeoJsonToMap(geojson) {
     const bounds = [];
-    const heatPoints = [];
 
-    stadiums.forEach(stadium => {
-        const marker = L.marker([stadium.latitude, stadium.longitude], {
-            icon: createLeagueIcon(stadium.league_name)
-        }).bindPopup(`
-            <strong>${stadium.name}</strong><br>
-            Team: ${stadium.team_name || 'N/A'}<br>
-            League: ${stadium.league_name || 'N/A'}<br>
-            ${stadium.city || 'N/A'}, ${stadium.country || 'N/A'}<br>
-            Location: ${stadium.location || 'N/A'}<br>
-            Capacity: ${stadium.capacity || 'N/A'}<br>
-            Lat: ${stadium.latitude}<br>
-            Lon: ${stadium.longitude}
-        `);
+    L.geoJSON(geojson, {
+        pointToLayer: function(feature, latlng) {
 
-        markers.addLayer(marker);
-        bounds.push([stadium.latitude, stadium.longitude]);
+            const leagueName = feature.properties.league_name;
 
-        heatPoints.push([
-            stadium.latitude,
-            stadium.longitude,
-            1
-        ]);
+            return L.marker(latlng, {
+                icon: createLeagueIcon(leagueName)
+            });
+        },
+
+        onEachFeature: function(feature, layer) {
+
+            const p = feature.properties;
+
+            layer.bindPopup(`
+                <strong>${p.name}</strong><br>
+                Team: ${p.team_name || 'N/A'}<br>
+                League: ${p.league_name || 'N/A'}<br>
+                ${p.city || 'N/A'}, ${p.country || 'N/A'}<br>
+                Location: ${p.location || 'N/A'}<br>
+                Capacity: ${p.capacity || 'N/A'}<br>
+Latitude: ${feature.geometry.coordinates[1]}<br>
+Longitude: ${feature.geometry.coordinates[0]}
+            `);
+
+            markers.addLayer(layer);
+
+            bounds.push([
+                feature.geometry.coordinates[1],
+                feature.geometry.coordinates[0]
+            ]);
+        }
     });
-
-    if (heatPoints.length > 0) {
-        heatLayer = L.heatLayer(heatPoints, {
-            radius: 25,
-            blur: 20,
-            maxZoom: 10
-        }).addTo(map);
-    }
 
     if (bounds.length > 0) {
         map.fitBounds(bounds);
@@ -198,11 +199,11 @@ function createLeagueIcon(leagueName) {
         const country = document.getElementById('countryFilter').value;
         const leagueId = document.getElementById('leagueFilter').value;
 
-        fetch(`/api/stadiums?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&league_id=${encodeURIComponent(leagueId)}`)
-            .then(response => response.json())
-            .then(stadiums => {
-                addStadiumMarkers(stadiums);
-            });
+        fetch(`/api/stadiums/geojson?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&league_id=${encodeURIComponent(leagueId)}`)
+    .then(response => response.json())
+    .then(data => {
+        addGeoJsonToMap(data);
+    });
     }
 
     function findNearbyStadiums() {
@@ -219,8 +220,8 @@ function createLeagueIcon(leagueName) {
 
         fetch(`/api/stadiums/nearby?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&radius=${encodeURIComponent(radius)}`)
             .then(response => response.json())
-            .then(stadiums => {
-                addStadiumMarkers(stadiums);
+            .then(data => {
+    addGeoJsonToMap(data);
 
                 radiusCircle = L.circle([lat, lon], {
                     color: 'green',
