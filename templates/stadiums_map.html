@@ -1,0 +1,127 @@
+{% extends "layout.html" %}
+{% block title %}Stadiums Map{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <h1 class="mb-4">Stadiums Map</h1>
+
+    <div class="row mb-3">
+    <div class="col-md-5">
+        <input type="text" id="cityFilter" class="form-control" placeholder="Filter by city">
+    </div>
+    <div class="col-md-5">
+        <input type="text" id="countryFilter" class="form-control" placeholder="Filter by country">
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-primary w-100" onclick="loadStadiums()">Filter</button>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-4">
+        <input type="number" step="any" id="nearLat" class="form-control" placeholder="Latitude">
+    </div>
+    <div class="col-md-4">
+        <input type="number" step="any" id="nearLon" class="form-control" placeholder="Longitude">
+    </div>
+    <div class="col-md-2">
+        <input type="number" id="radiusKm" class="form-control" placeholder="Radius km">
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-success w-100" onclick="findNearbyStadiums()">Nearby</button>
+    </div>
+</div>
+
+    <div id="map" style="height: 600px; width: 100%; border-radius: 10px;"></div>
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+    const map = L.map('map').setView([13.6929, -89.2182], 6);
+
+    L.circle([13.6929, -89.2182], {
+    color: 'blue',
+    fillColor: '#30a3ec',
+    fillOpacity: 0.2,
+    radius: 50000
+}).addTo(map);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    let markers = [];
+
+function loadStadiums() {
+    markers.forEach(marker => map.removeLayer(marker));
+    markers = [];
+
+    const city = document.getElementById('cityFilter').value;
+    const country = document.getElementById('countryFilter').value;
+
+    fetch(`/api/stadiums?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}`)
+        .then(response => response.json())
+        .then(stadiums => {
+            stadiums.forEach(stadium => {
+                const marker = L.marker([stadium.latitude, stadium.longitude])
+                    .addTo(map)
+                    .bindPopup(`
+                        <strong>${stadium.name}</strong><br>
+                        ${stadium.city || ''}, ${stadium.country || ''}<br>
+                        Location: ${stadium.location || ''}<br>
+                        Capacity: ${stadium.capacity || 'N/A'}<br>
+                        Lat: ${stadium.latitude}<br>
+                        Lon: ${stadium.longitude}
+                    `);
+
+                markers.push(marker);
+            });
+        });
+}
+
+loadStadiums();
+function findNearbyStadiums() {
+    const lat = document.getElementById('nearLat').value;
+    const lon = document.getElementById('nearLon').value;
+    const radius = document.getElementById('radiusKm').value || 50;
+
+    if (!lat || !lon) {
+        alert('Please enter latitude and longitude');
+        return;
+    }
+
+    markers.forEach(marker => map.removeLayer(marker));
+    markers = [];
+
+    fetch(`/api/stadiums/nearby?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&radius=${encodeURIComponent(radius)}`)
+        .then(response => response.json())
+        .then(stadiums => {
+            stadiums.forEach(stadium => {
+                const marker = L.marker([stadium.latitude, stadium.longitude])
+                    .addTo(map)
+                    .bindPopup(`
+                        <strong>${stadium.name}</strong><br>
+                        ${stadium.city || ''}, ${stadium.country || ''}<br>
+                        Distance: ${stadium.distance_km} km<br>
+                        Location: ${stadium.location || ''}<br>
+                        Capacity: ${stadium.capacity || 'N/A'}
+                    `);
+
+                markers.push(marker);
+            });
+
+            L.circle([lat, lon], {
+                color: 'green',
+                fillColor: '#5cb85c',
+                fillOpacity: 0.2,
+                radius: radius * 1000
+            }).addTo(map);
+
+            map.setView([lat, lon], 9);
+        });
+}
+</script>
+{% endblock %}
