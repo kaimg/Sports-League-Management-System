@@ -20,6 +20,25 @@
                     <label for="capacity">Capacity:</label>
                     <input type="number" class="form-control" id="capacity" name="capacity" required>
                 </div>
+                <div class="form-group">
+    <label for="city">City:</label>
+    <input type="text" class="form-control" id="city" name="city">
+</div>
+
+<div class="form-group">
+    <label for="country">Country:</label>
+    <input type="text" class="form-control" id="country" name="country">
+</div>
+
+<div class="form-group">
+    <label for="latitude">Latitude:</label>
+    <input type="number" step="any" class="form-control" id="latitude" name="latitude">
+</div>
+
+<div class="form-group">
+    <label for="longitude">Longitude:</label>
+    <input type="number" step="any" class="form-control" id="longitude" name="longitude">
+</div>
                 <button type="submit" name="add" class="btn btn-primary" id="submit-button">Add Stadium</button>
             </form>
         </div>
@@ -27,24 +46,32 @@
             <h2>Existing Stadiums</h2>
             <table class="table table-striped">
                 <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Location</th>
-                        <th>Capacity</th>
-                        <th>Edit</th>
-                        <th>Delete</th>
-                    </tr>
-                </thead>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Location</th>
+        <th>Capacity</th>
+        <th>City</th>
+        <th>Country</th>
+        <th>Latitude</th>
+        <th>Longitude</th>
+        <th>Edit</th>
+        <th>Delete</th>
+    </tr>
+</thead>
                 <tbody>
                     {% for stadium in stadiums %}
                     <tr>
                         <td>{{ stadium[0] }}</td>
-                        <td>{{ stadium[1] }}</td>
-                        <td>{{ stadium[2] }}</td>
-                        <td>{{ stadium[3] }}</td>
+<td>{{ stadium[1] }}</td>
+<td>{{ stadium[2] }}</td>
+<td>{{ stadium[3] }}</td>
+<td>{{ stadium[4] }}</td>
+<td>{{ stadium[5] }}</td>
+<td>{{ stadium[6] }}</td>
+<td>{{ stadium[7] }}</td>
                         <td>
-                            <button class="btn btn-success btn-sm" onclick="editStadium('{{ stadium[0] }}', '{{ stadium[1] }}', '{{ stadium[2] }}', '{{ stadium[3] }}')">
+                            <button class="btn btn-success btn-sm" onclick="editStadium('{{ stadium[0] }}', '{{ stadium[1] }}', '{{ stadium[2] }}', '{{ stadium[3] }}', '{{ stadium[4] }}', '{{ stadium[5] }}', '{{ stadium[6] }}', '{{ stadium[7] }}')">
                                 <i class="fa fa-pencil-alt"></i>
                             </button>
                         </td>
@@ -65,11 +92,15 @@
 {% include 'delete_modal.html' %}
 
 <script>
-    function editStadium(id, name, location, capacity) {
+    function editStadium(id, name, location, capacity, city, country, latitude, longitude) {
         document.getElementById('stadium_id').value = id;
         document.getElementById('name').value = name;
         document.getElementById('location').value = location;
         document.getElementById('capacity').value = capacity;
+        document.getElementById('city').value = city;
+document.getElementById('country').value = country;
+document.getElementById('latitude').value = latitude;
+document.getElementById('longitude').value = longitude;
         document.getElementById('submit-button').innerText = 'Update Stadium';
         document.getElementById('form-title').innerText = 'Edit Stadium';
     }

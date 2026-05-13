@@ -98,7 +98,7 @@ def manage_stadiums():
             cur.close()
         return redirect(url_for('admin.manage_stadiums'))
 
-    cur.execute('SELECT stadium_id, name, location, capacity FROM stadiums')
+    cur.execute('SELECT stadium_id, name, location, capacity, city, country, latitude, longitude FROM stadiums')
     stadiums = cur.fetchall()
     cur.close()
     return render_template('manage_stadiums.html', stadiums=stadiums)
