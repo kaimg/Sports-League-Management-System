@@ -3,6 +3,7 @@ version: '3.8'
 services:
   web:
     build: .
+    command: flask run --host=0.0.0.0 --port=5000 --debug
     ports:
       - "5000:5000"
     volumes:
@@ -23,7 +24,7 @@ services:
       - sports_network
 
   db:
-    image: postgres:16.2
+    image: postgis/postgis:16-3.4
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
