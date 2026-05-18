@@ -382,7 +382,7 @@ def manage_matches():
 
     cur.execute('''
         SELECT m.match_id, m.utc_date, t1.name AS team1, t2.name AS team2, s.year AS season, l.name AS league,
-               m.home_team_id, m.away_team_id
+               m.home_team_id, m.away_team_id, m.status
         FROM matches m
         JOIN teams t1 ON m.home_team_id = t1.team_id
         JOIN teams t2 ON m.away_team_id = t2.team_id

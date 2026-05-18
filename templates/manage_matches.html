@@ -68,6 +68,7 @@
                         <th>Team 2</th>
                         <th>Season</th>
                         <th>League</th>
+                        <th>Status</th>
                         <th>Edit</th>
                         <th>Delete</th>
                     </tr>
@@ -81,6 +82,15 @@
                         <td>{{ match[3] }}</td>
                         <td>{{ match[4] }}</td>
                         <td>{{ match[5] }}</td>
+                        <td>
+                            {% if match[8] == 'FINISHED' %}
+                                <span class="badge badge-success">Finished</span>
+                            {% elif match[8] in ['SCHEDULED', 'TIMED'] %}
+                                <span class="badge badge-warning">Scheduled</span>
+                            {% else %}
+                                <span class="badge badge-secondary">{{ match[8] }}</span>
+                            {% endif %}
+                        </td>
                         <td>
                             <button class="btn btn-success btn-sm" onclick="editMatch('{{ match[0] }}', '{{ match[1] }}', '{{ match[6] }}', '{{ match[7] }}', '{{ match[4] }}', '{{ match[5] }}')">
                                 <i class="fa fa-pencil-alt"></i>

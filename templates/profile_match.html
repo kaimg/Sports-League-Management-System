@@ -57,7 +57,17 @@
             <img src="{{ match[7] }}" alt="{{ match[1] }} Logo" class="team-logo">
             <strong class="mx-2">{{ match[1] }}</strong>
         </a>
-        <span class="match-score-box mx-2">{{ match[3] }} - {{ match[4] }}</span>
+        <span class="match-score-box mx-2">
+            {% if match[19] == 'FINISHED' %}
+                {{ match[3] }} - {{ match[4] }}
+            {% elif match[19] in ['SCHEDULED', 'TIMED'] %}
+                Scheduled
+            {% elif match[19] in ['POSTPONED', 'CANCELED', 'SUSPENDED'] %}
+                {{ match[19].title() }}
+            {% else %}
+                {{ match[19].replace('_', ' ').title() }}
+            {% endif %}
+        </span>
         <a href="{{ url_for('user.profile_team', team_id=match[18]) }}" class="d-flex align-items-center text-dark">
             <strong class="mx-2">{{ match[2] }}</strong>
             <img src="{{ match[8] }}" alt="{{ match[2] }} Logo" class="team-logo">
@@ -95,17 +105,24 @@
     </script>
 {% endif %}
 
-    <h2>Scores</h2>
-    {% if scores %}
-        <ul class="list-group">
-            {% for score in scores %}
-                <li class="list-group-item">
-                    Full Time: {{ score[0] }} - {{ score[1] }}, Half Time: {{ score[2] }} - {{ score[3] }}
-                </li>
-            {% endfor %}
-        </ul>
+    {% if match[19] == 'FINISHED' %}
+        <h2>Scores</h2>
+        {% if scores %}
+            <ul class="list-group">
+                {% for score in scores %}
+                    <li class="list-group-item">
+                        Full Time: {{ score[0] }} - {{ score[1] }}, Half Time: {{ score[2] }} - {{ score[3] }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No scores found.</p>
+        {% endif %}
     {% else %}
-        <p>No scores found.</p>
+        <h2>Status</h2>
+        <div class="alert alert-info">
+            <i class="fa fa-calendar"></i> This match has not been played yet. Status: <strong>{{ match[19].replace('_', ' ').title() }}</strong>
+        </div>
     {% endif %}
 </div>
 {% endblock %}

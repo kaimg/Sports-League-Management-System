@@ -78,16 +78,16 @@ def sync_matches_for_league(league_code):
             if cur.fetchone():
                 cur.execute("""
                     UPDATE matches 
-                    SET utc_date = %s, matchday = %s, home_team_id = %s, away_team_id = %s, winner = %s, season_id = %s
+                    SET utc_date = %s, matchday = %s, home_team_id = %s, away_team_id = %s, winner = %s, season_id = %s, status = %s
                     WHERE match_id = %s
-                """, (utc_date, matchday, home_team_id, away_team_id, winner, season_id, match_id))
+                """, (utc_date, matchday, home_team_id, away_team_id, winner, season_id, status, match_id))
             else:
-                # Need to handle potential missing teams gracefully, but assuming API team IDs match our DB
+                # Need to handle potential missing teams, but assuming API team IDs match our DB
                 cur.execute("""
-                    INSERT INTO matches (match_id, season_id, league_id, matchday, home_team_id, away_team_id, winner, utc_date)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    INSERT INTO matches (match_id, season_id, league_id, matchday, home_team_id, away_team_id, winner, utc_date, status)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT (match_id) DO NOTHING
-                """, (match_id, season_id, league_id, matchday, home_team_id, away_team_id, winner, utc_date))
+                """, (match_id, season_id, league_id, matchday, home_team_id, away_team_id, winner, utc_date, status))
                 
             # Upsert scores
             full_home = match['score']['fullTime'].get('home')
@@ -236,14 +236,11 @@ def sync_scorers_for_league(league_code):
         if season_info:
             season_id = get_or_create_season(cur, league_id, season_info['startDate'], season_info['endDate'])
             
-        # Optional: clear existing top scorers for this season/league to refresh, or just upsert.
-        # It's easier to upsert based on player_id and season_id.
         for scorer in scorers:
             player = scorer['player']
             player_id = player['id']
             team_id = scorer['team']['id']
             
-            # Ensure player exists
             cur.execute("SELECT player_id FROM players WHERE player_id = %s", (player_id,))
             if not cur.fetchone():
                 cur.execute("""
@@ -295,7 +292,6 @@ def sync_standings_for_league(league_code):
     if not standings:
         return {"success": 0, "error": "No standings found in API response"}
         
-    # We only want the TOTAL standings table, which is usually the first item
     total_standings = next((s for s in standings if s['type'] == 'TOTAL'), None)
     if not total_standings:
         return {"success": 0, "error": "TOTAL standings not found"}

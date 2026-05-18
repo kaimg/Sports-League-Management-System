@@ -171,7 +171,8 @@ CREATE TABLE public.matches (
     home_team_id integer,
     away_team_id integer,
     winner character varying(50),
-    utc_date date
+    utc_date date,
+    status character varying(50) DEFAULT 'FINISHED'
 );
 
 

@@ -58,7 +58,15 @@
                         <strong>{{ match[1] }}</strong>
                     </div>
                     <div class="d-flex align-items-center">
-                        <span class="match-score-box bg-primary text-white px-2 py-1 rounded">{{ match[3] }} - {{ match[4] }}</span>
+                        {% if match[9] == 'FINISHED' %}
+                            <span class="match-score-box bg-primary text-white px-2 py-1 rounded">{{ match[3] }} - {{ match[4] }}</span>
+                        {% elif match[9] in ['SCHEDULED', 'TIMED'] %}
+                            <span class="match-score-box bg-secondary text-white px-2 py-1 rounded">Scheduled</span>
+                        {% elif match[9] in ['POSTPONED', 'CANCELED', 'SUSPENDED'] %}
+                            <span class="match-score-box bg-danger text-white px-2 py-1 rounded">{{ match[9].title() }}</span>
+                        {% else %}
+                            <span class="match-score-box bg-info text-white px-2 py-1 rounded">{{ match[9].replace('_', ' ').title() }}</span>
+                        {% endif %}
                     </div>
                     <div class="d-flex align-items-center">
                         <strong>{{ match[2] }}</strong>

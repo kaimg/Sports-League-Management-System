@@ -199,7 +199,8 @@ def user_matches():
                TO_CHAR(m.utc_date, 'Month DD, YYYY') AS formatted_date,
                t1.crestURL AS home_team_logo,
                t2.crestURL AS away_team_logo,
-               m.matchday
+               m.matchday,
+               m.status
         FROM matches m
         JOIN teams t1 ON m.home_team_id = t1.team_id
         JOIN teams t2 ON m.away_team_id = t2.team_id
@@ -370,7 +371,8 @@ def profile_match(match_id):
            r.name AS referee_name,
            c.flag_url AS referee_flag_url,
            t1.team_id AS home_team_id,
-           t2.team_id AS away_team_id
+           t2.team_id AS away_team_id,
+           m.status
     FROM matches m
     JOIN teams t1 ON m.home_team_id = t1.team_id
     JOIN teams t2 ON m.away_team_id = t2.team_id
