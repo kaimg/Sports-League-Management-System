@@ -110,6 +110,27 @@ def sync_matches_for_league(league_code):
                     VALUES (%s, %s, %s, %s, %s)
                 """, (match_id, full_home, full_away, half_home, half_away))
                 
+            # Upsert referees
+            referees = match.get('referees', [])
+            for ref in referees:
+                if ref.get('type') == 'REFEREE':
+                    ref_id = ref['id']
+                    ref_name = ref['name']
+                    ref_nat = ref.get('nationality')
+                    
+                    # Upsert referee
+                    cur.execute("SELECT referee_id FROM referees WHERE referee_id = %s", (ref_id,))
+                    if cur.fetchone():
+                        cur.execute("UPDATE referees SET name = %s, nationality = %s WHERE referee_id = %s",
+                                    (ref_name, ref_nat, ref_id))
+                    else:
+                        cur.execute("INSERT INTO referees (referee_id, name, nationality) VALUES (%s, %s, %s)",
+                                    (ref_id, ref_name, ref_nat))
+                                    
+                    # Upsert match_referees mapping
+                    cur.execute("SELECT 1 FROM match_referees WHERE match_id = %s AND referee_id = %s", (match_id, ref_id))
+                    if not cur.fetchone():
+                        cur.execute("INSERT INTO match_referees (match_id, referee_id) VALUES (%s, %s)", (match_id, ref_id))
             updated_count += 1
             
         db.commit()

@@ -376,9 +376,9 @@ def profile_match(match_id):
     JOIN teams t2 ON m.away_team_id = t2.team_id
     LEFT JOIN scores s ON m.match_id = s.match_id
     LEFT JOIN stadiums st ON t1.stadium_id = st.stadium_id
-    JOIN match_referees mr ON m.match_id = mr.match_id
-    JOIN referees r ON mr.referee_id = r.referee_id
-    JOIN countries c ON r.nationality = c.name
+    LEFT JOIN match_referees mr ON m.match_id = mr.match_id
+    LEFT JOIN referees r ON mr.referee_id = r.referee_id
+    LEFT JOIN countries c ON r.nationality = c.name
     WHERE m.match_id = %s
     """, (match_id,))
     match = cur.fetchone()
