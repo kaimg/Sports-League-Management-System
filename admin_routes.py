@@ -233,7 +233,8 @@ def manage_teams():
         t.coach_id,
         COALESCE(s.name, 'N/A') AS stadium_name,
         l.name AS league_name,
-        c.name AS coach_name
+        c.name AS coach_name,
+        t.is_active
     FROM teams t
     LEFT JOIN stadiums s ON t.stadium_id = s.stadium_id
     JOIN leagues l ON t.league_id = l.league_id
@@ -664,3 +665,97 @@ def manage_users():
     cur.close()
 
     return render_template('manage_users.html', users=users)
+
+@admin_bp.route('/sync_api/matches', methods=['POST'])
+@admin_required
+def sync_api_matches():
+    from sync_api import sync_matches_for_league
+    
+    leagues = ['PL', 'PD', 'SA', 'BL1', 'FL1']
+    total_updated = 0
+    errors = []
+    
+    for league in leagues:
+        result = sync_matches_for_league(league)
+        if "error" in result:
+            # Foreign key errors might happen if a team doesn't exist yet, we catch them but log
+            errors.append(f"{league}: {result['error']}")
+        else:
+            total_updated += result.get("success", 0)
+            
+    if errors:
+        flash(f"Sync completed with some errors: {', '.join(errors)}. Updated {total_updated} matches.", "warning")
+    else:
+        flash(f"Successfully synced {total_updated} matches from all top 5 leagues.", "success")
+        
+    return redirect(url_for('admin.manage_matches'))
+
+@admin_bp.route('/sync_api/scorers', methods=['POST'])
+@admin_required
+def sync_api_scorers():
+    from sync_api import sync_scorers_for_league
+    
+    leagues = ['PL', 'PD', 'SA', 'BL1', 'FL1']
+    total_updated = 0
+    errors = []
+    
+    for league in leagues:
+        result = sync_scorers_for_league(league)
+        if "error" in result:
+            errors.append(f"{league}: {result['error']}")
+        else:
+            total_updated += result.get("success", 0)
+            
+    if errors:
+        flash(f"Sync completed with some errors: {', '.join(errors)}. Updated {total_updated} scorers.", "warning")
+    else:
+        flash(f"Successfully synced {total_updated} scorers from all top 5 leagues.", "success")
+        
+    return redirect(url_for('admin.manage_scorers'))
+
+@admin_bp.route('/sync_api/teams', methods=['POST'])
+@admin_required
+def sync_api_teams():
+    from sync_api import sync_teams_for_league
+    
+    leagues = ['PL', 'PD', 'SA', 'BL1', 'FL1']
+    total_updated = 0
+    errors = []
+    
+    for league in leagues:
+        result = sync_teams_for_league(league)
+        if "error" in result:
+            errors.append(f"{league}: {result['error']}")
+        else:
+            total_updated += result.get("success", 0)
+            
+    if errors:
+        flash(f"Sync completed with some errors: {', '.join(errors)}. Updated {total_updated} teams.", "warning")
+    else:
+        flash(f"Successfully synced {total_updated} teams from all top 5 leagues.", "success")
+        
+    return redirect(url_for('admin.manage_teams'))
+
+@admin_bp.route('/sync_api/all', methods=['POST'])
+@admin_required
+def sync_api_all():
+    import threading
+    from flask import current_app
+    from sync_api import sync_all_data
+    
+    if current_app.config.get('SYNC_IN_PROGRESS'):
+        flash('A background sync is already in progress. Please wait until it completes.', 'warning')
+        return redirect(url_for('admin'))
+        
+    current_app.config['SYNC_IN_PROGRESS'] = True
+    import time
+    current_app.config['SYNC_START_TIME'] = time.time()
+    
+    # Run the orchestrator in a background thread
+    app_context = current_app._get_current_object()
+    thread = threading.Thread(target=sync_all_data, args=(app_context,))
+    thread.daemon = True
+    thread.start()
+    
+    flash("Global sync started in the background. It will take approximately 2.5 minutes. Please do not start another sync.", "info")
+    return redirect(url_for('admin'))

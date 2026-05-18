@@ -23,7 +23,45 @@
         </div>
         <div class="col-md-9">
             <h2>Welcome to the Admin Dashboard</h2>
-            <p>Use the sidebar to manage the system.</p>
+            <p class="mb-4">Use the sidebar to manage the system.</p>
+            
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-dark text-white font-weight-bold">
+                    <i class="fa fa-sync-alt"></i> System Synchronization
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Global API Sync</h5>
+                    <p class="card-text text-muted">
+                        This action will download and update all Teams, Matches, and Scorers from the top 5 European leagues in the correct dependency order.
+                        This guarantees database integrity and prevents "ghost team" errors.
+                    </p>
+                    {% if config.SYNC_IN_PROGRESS %}
+                    <div class="alert alert-info" role="alert">
+                        <i class="fa fa-spinner fa-spin"></i> <strong>Sync in Progress:</strong> A global sync is currently running in the background. It will take approximately 2.5 minutes. This page will auto-refresh every 30 seconds.
+                    </div>
+                    <button class="btn btn-secondary shadow-sm font-weight-bold" disabled>
+                        <i class="fa fa-sync fa-spin"></i> Syncing...
+                    </button>
+                    <script>
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 30000);
+                    </script>
+                    {% else %}
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fa fa-exclamation-triangle"></i> <strong>Warning:</strong> This process fetches a large amount of data from the API and will run in the background for about 2.5 minutes to respect rate limits.
+                    </div>
+                    <form action="{{ url_for('admin.sync_api_all') }}" method="POST" onsubmit="document.getElementById('global-sync-spinner').style.display='inline-block'; document.getElementById('global-sync-btn').disabled=true;">
+                        <button type="submit" id="global-sync-btn" class="btn btn-warning shadow-sm font-weight-bold">
+                            <i class="fa fa-sync"></i> Run Global Sync
+                            <div id="global-sync-spinner" class="spinner-border spinner-border-sm text-dark ms-2" role="status" style="display: none;">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
     <nav class="mt-4">

@@ -42,7 +42,7 @@ def user_teams():
     SELECT t.team_id, t.name, t.crestURL
     FROM teams t
     JOIN leagues l ON t.league_id = l.league_id
-    WHERE 1=1
+    WHERE t.is_active = TRUE
 """
     filters = []
 
@@ -61,7 +61,7 @@ def user_teams():
     cur.execute(query, filters)
     teams = cur.fetchall()
 
-    count_query = "SELECT COUNT(*) FROM teams WHERE 1=1"
+    count_query = "SELECT COUNT(*) FROM teams WHERE is_active = TRUE"
     count_filters = []
 
     if league_id:
@@ -328,6 +328,8 @@ def profile_player(player_id):
         SELECT sc.goals, sc.assists, sc.penalties
         FROM scorers sc
         WHERE sc.player_id = %s
+        ORDER BY sc.season_id DESC
+        LIMIT 1
     """, (player_id,))
     statistics = cur.fetchone()
 
@@ -414,7 +416,7 @@ def profile_league(league_id):
     """, (league_id,))
     league = cur.fetchone()
 
-    cur.execute('SELECT team_id, name, cresturl FROM teams WHERE league_id = %s', (league_id,))
+    cur.execute('SELECT team_id, name, cresturl FROM teams WHERE league_id = %s AND is_active = TRUE', (league_id,))
     teams = cur.fetchall()
 
     cur.execute("""
@@ -426,9 +428,14 @@ def profile_league(league_id):
         FROM standings s
         JOIN teams t ON s.team_id = t.team_id
         JOIN leagues l ON s.league_id = l.league_id
-        WHERE s.league_id = %s
+        WHERE s.league_id = %s AND s.season_id = (
+            SELECT season_id FROM seasons
+            WHERE league_id = %s
+            ORDER BY year DESC
+            LIMIT 1
+        )
         ORDER BY s.position
-    """, (league_id,))
+    """, (league_id, league_id))
     standings = cur.fetchall()
 
     cur.close()
@@ -465,7 +472,10 @@ def user_scorers():
         FROM scorers sc
         JOIN players p ON sc.player_id = p.player_id
         JOIN teams t ON p.team_id = t.team_id
-        WHERE 1=1
+        WHERE sc.season_id IN (
+            SELECT s1.season_id FROM seasons s1
+            WHERE s1.year = (SELECT MAX(year) FROM seasons s2 WHERE s1.league_id = s2.league_id)
+        )
     """
     filters = []
 

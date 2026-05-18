@@ -2,7 +2,17 @@
 {% block title %}Manage Teams - Admin Panel{% endblock %}
 {% block content %}
 <div class="container mt-4">
-    <h1 class="mb-4">Manage Teams</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Manage Teams</h1>
+        <form action="{{ url_for('admin.sync_api_teams') }}" method="POST" onsubmit="document.getElementById('sync-spinner').style.display='inline-block'; document.getElementById('sync-btn').disabled=true;">
+            <button type="submit" id="sync-btn" class="btn btn-warning shadow-sm fw-bold">
+                <i class="fa fa-sync"></i> Sync Teams from API
+                <div id="sync-spinner" class="spinner-border spinner-border-sm text-dark ms-2" role="status" style="display: none;">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </button>
+        </form>
+    </div>
     <div class="row">
         <div class="col-md-6">
             <h2 id="form-title">Add Team</h2>
@@ -56,6 +66,7 @@
                         <th>Stadium</th>
                         <th>League</th>
                         <th>Coach</th>
+                        <th>Active</th>
                         <th>Edit</th>
                         <th>Delete</th>
                     </tr>
@@ -69,6 +80,13 @@
                         <td>{{ team[6] }}</td>
 <td>{{ team[7] }}</td>
 <td>{{ team[8] }}</td>
+                        <td>
+                            {% if team[9] %}
+                            <span class="badge badge-success bg-success">Yes</span>
+                            {% else %}
+                            <span class="badge badge-secondary bg-secondary">No</span>
+                            {% endif %}
+                        </td>
                         <td>
                             <button class="btn btn-success btn-sm" onclick="editTeam('{{ team[0] }}', '{{ team[1] }}', '{{ team[2] }}', '{{ team[3] }}', '{{ team[4] }}', '{{ team[5] }}')">
                                 <i class="fa fa-pencil-alt"></i>

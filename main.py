@@ -10,6 +10,8 @@ import bcrypt
 
 app = Flask(__name__) 
 app.secret_key = Config.SECRET_KEY
+app.config['SYNC_IN_PROGRESS'] = False
+app.config['SYNC_START_TIME'] = None
 
 app.register_blueprint(admin_bp)
 app.register_blueprint(user_bp)
