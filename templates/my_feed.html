@@ -1,0 +1,171 @@
+{% extends "layout.html" %}
+{% block title %}My Feed - Sports League Management{% endblock %}
+{% block content %}
+<style>
+    .entity-logo {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+    }
+    .match-result-box {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        transition: transform 0.2s;
+    }
+    .match-result-box:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .match-score {
+        background-color: #007bff;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+    .upcoming-time {
+        background-color: #ffc107;
+        color: #212529;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1><i class="fa fa-rss text-primary"></i> My Feed</h1>
+            <p class="text-muted">Stay up to date with the teams and leagues you follow.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sidebar for Followed Entities -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h5 class="mb-0">Following Teams</h5>
+                </div>
+                <div class="card-body">
+                    {% if favorite_teams %}
+                        <ul class="list-group list-group-flush">
+                            {% for team in favorite_teams %}
+                                <li class="list-group-item px-0 d-flex align-items-center">
+                                    <img src="{{ team[2] }}" class="entity-logo mr-3" alt="Logo">
+                                    <a href="{{ url_for('user.profile_team', team_id=team[0]) }}" class="text-dark font-weight-bold text-decoration-none">{{ team[1] }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted mb-0 small">You are not following any teams yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h5 class="mb-0">Following Leagues</h5>
+                </div>
+                <div class="card-body">
+                    {% if favorite_leagues %}
+                        <ul class="list-group list-group-flush">
+                            {% for league in favorite_leagues %}
+                                <li class="list-group-item px-0 d-flex align-items-center">
+                                    <img src="{{ league[2] }}" class="entity-logo mr-3" alt="Logo">
+                                    <a href="{{ url_for('user.profile_league', league_id=league[0]) }}" class="text-dark font-weight-bold text-decoration-none">{{ league[1] }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted mb-0 small">You are not following any leagues yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Feed Content -->
+        <div class="col-md-8">
+            {% if not favorite_teams and not favorite_leagues %}
+                <div class="alert alert-info border-0 shadow-sm text-center py-5">
+                    <i class="fa fa-star fa-3x mb-3 text-warning"></i>
+                    <h4>Your feed is empty!</h4>
+                    <p class="mb-0">Explore teams and leagues and click the <i class="fa fa-star text-warning"></i> Follow button to see their updates here.</p>
+                </div>
+            {% else %}
+                <ul class="nav nav-tabs mb-4" id="feedTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link active font-weight-bold" id="upcoming-tab" data-toggle="tab" href="#upcoming" role="tab">Upcoming Matches</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link font-weight-bold" id="recent-tab" data-toggle="tab" href="#recent" role="tab">Recent Results</a>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="feedTabsContent">
+                    <!-- Upcoming Tab -->
+                    <div class="tab-pane fade show active" id="upcoming" role="tabpanel">
+                        {% if upcoming_matches %}
+                            {% for match in upcoming_matches %}
+                                <div class="card mb-3 border-0 shadow-sm match-result-box">
+                                    <div class="card-body p-3">
+                                        <div class="text-center mb-2">
+                                            <span class="badge badge-light text-muted border">{{ match[7] }}</span>
+                                        </div>
+                                        <a href="{{ url_for('user.profile_match', match_id=match[0]) }}" class="text-decoration-none text-dark d-flex justify-content-between align-items-center">
+                                            <div class="text-right flex-grow-1">
+                                                <strong class="mr-2">{{ match[1] }}</strong>
+                                                <img src="{{ match[4] }}" class="entity-logo">
+                                            </div>
+                                            <div class="px-4 text-center">
+                                                <div class="upcoming-time mb-1">{{ match[3] }}</div>
+                                            </div>
+                                            <div class="text-left flex-grow-1">
+                                                <img src="{{ match[5] }}" class="entity-logo">
+                                                <strong class="ml-2">{{ match[2] }}</strong>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted text-center py-4">No upcoming matches scheduled.</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Recent Results Tab -->
+                    <div class="tab-pane fade" id="recent" role="tabpanel">
+                        {% if recent_matches %}
+                            {% for match in recent_matches %}
+                                <div class="card mb-3 border-0 shadow-sm match-result-box">
+                                    <div class="card-body p-3">
+                                        <div class="text-center mb-2">
+                                            <span class="badge badge-light text-muted border">{{ match[9] }}</span>
+                                            <small class="text-muted ml-2">{{ match[5] }}</small>
+                                        </div>
+                                        <a href="{{ url_for('user.profile_match', match_id=match[0]) }}" class="text-decoration-none text-dark d-flex justify-content-between align-items-center">
+                                            <div class="text-right flex-grow-1">
+                                                <strong class="mr-2">{{ match[1] }}</strong>
+                                                <img src="{{ match[6] }}" class="entity-logo">
+                                            </div>
+                                            <div class="px-4">
+                                                <span class="match-score fs-5">{{ match[3] }} - {{ match[4] }}</span>
+                                            </div>
+                                            <div class="text-left flex-grow-1">
+                                                <img src="{{ match[7] }}" class="entity-logo">
+                                                <strong class="ml-2">{{ match[2] }}</strong>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted text-center py-4">No recent matches found.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -26,7 +26,8 @@ def api_stadiums():
     s.latitude,
     s.longitude,
     t.name AS team_name,
-    l.name AS league_name
+    l.name AS league_name,
+    t.team_id
 FROM stadiums s
 LEFT JOIN teams t ON t.stadium_id = s.stadium_id
 LEFT JOIN leagues l ON t.league_id = l.league_id
@@ -66,7 +67,8 @@ AND s.longitude IS NOT NULL
     "latitude": float(stadium[6]),
     "longitude": float(stadium[7]),
     "team_name": stadium[8],
-    "league_name": stadium[9]
+    "league_name": stadium[9],
+    "team_id": stadium[10]
 })
 
     return jsonify(data)
@@ -171,7 +173,8 @@ def api_stadiums_geojson():
             s.latitude,
             s.longitude,
             t.name AS team_name,
-            l.name AS league_name
+            l.name AS league_name,
+            t.team_id
         FROM stadiums s
         LEFT JOIN teams t ON t.stadium_id = s.stadium_id
         LEFT JOIN leagues l ON t.league_id = l.league_id
@@ -214,7 +217,8 @@ def api_stadiums_geojson():
                 "city": stadium[4],
                 "country": stadium[5],
                 "team_name": stadium[8],
-                "league_name": stadium[9]
+                "league_name": stadium[9],
+                "team_id": stadium[10]
             }
         })
 
