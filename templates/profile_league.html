@@ -7,7 +7,13 @@
         <div class="col-12 mb-4">
             <div class="card border-0">
                 <div class="card-body text-center">
-                    <h1>{{ league[0] }}'s Profile</h1>
+                    <div class="d-flex justify-content-center align-items-center mb-3">
+                        <h1 class="mb-0 mr-3">{{ league[0] }}'s Profile</h1>
+                        <button id="favoriteBtn" class="btn {% if is_favorite %}btn-success{% else %}btn-outline-success{% endif %}" data-type="league" data-id="{{ league_id }}">
+                            <i class="fa {% if is_favorite %}fa-star{% else %}fa-star-o{% endif %}"></i>
+                            <span id="favoriteText">{% if is_favorite %}Following{% else %}Follow{% endif %}</span>
+                        </button>
+                    </div>
                     {% if league[2] %}
                         <img src="{{ league[2] }}" alt="{{ league[0] }} Logo" class="img-fluid rounded border mb-2" style="max-height: 100px;">
                     {% endif %}
@@ -110,4 +116,66 @@
         </div>
     </div>
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const favBtn = document.getElementById('favoriteBtn');
+        if(favBtn) {
+            favBtn.addEventListener('click', function() {
+                const entityType = this.dataset.type;
+                const entityId = this.dataset.id;
+                const isFavorite = this.classList.contains('btn-success');
+                
+                if(!isFavorite) {
+                    fetch('/api/favorites', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            entity_type: entityType,
+                            entity_id: entityId
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.success) {
+                            this.classList.remove('btn-outline-success');
+                            this.classList.add('btn-success');
+                            this.querySelector('i').classList.remove('fa-star-o');
+                            this.querySelector('i').classList.add('fa-star');
+                            document.getElementById('favoriteText').innerText = 'Following';
+                        } else {
+                            alert(data.error);
+                        }
+                    });
+                } else {
+                    fetch('/api/favorites', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            entity_type: entityType,
+                            entity_id: entityId
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.success) {
+                            this.classList.remove('btn-success');
+                            this.classList.add('btn-outline-success');
+                            this.querySelector('i').classList.remove('fa-star');
+                            this.querySelector('i').classList.add('fa-star-o');
+                            document.getElementById('favoriteText').innerText = 'Follow';
+                        } else {
+                            alert(data.error);
+                        }
+                    });
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

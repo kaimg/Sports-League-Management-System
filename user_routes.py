@@ -1,5 +1,7 @@
-from flask import Blueprint, render_template, request, redirect, session, url_for, flash
+from flask import Blueprint, render_template, request, redirect, session, url_for, flash, jsonify
 from functools import wraps
+
+from pip._vendor.distlib.util import OR
 from db import get_db
 
 user_bp = Blueprint('user', __name__)
@@ -17,6 +19,112 @@ def login_required(f):
 @login_required
 def user_dashboard():
     return render_template('user_dashboard.html')
+
+@user_bp.route('/my-feed')
+@login_required
+def my_feed():
+    user_id = session['user_id']
+    db = get_db()
+    cur = db.cursor()
+
+    # Get favorite teams
+    cur.execute("""
+        SELECT t.team_id, t.name, t.crestURL 
+        FROM teams t
+        JOIN user_favorites uf ON t.team_id = uf.entity_id
+        WHERE uf.user_id = %s AND uf.entity_type = 'team'
+    """, (user_id,))
+    favorite_teams = cur.fetchall()
+
+    # Get favorite leagues
+    cur.execute("""
+        SELECT l.league_id, l.name, l.icon_url 
+        FROM leagues l
+        JOIN user_favorites uf ON l.league_id = uf.entity_id
+        WHERE uf.user_id = %s AND uf.entity_type = 'league'
+    """, (user_id,))
+    favorite_leagues = cur.fetchall()
+
+    # Extract IDs for filtering matches
+    fav_team_ids = [team[0] for team in favorite_teams]
+    fav_league_ids = [league[0] for league in favorite_leagues]
+
+    recent_matches = []
+    upcoming_matches = []
+
+    if fav_team_ids or fav_league_ids:
+        # Construct dynamic query params
+        team_placeholders = ','.join(['%s'] * len(fav_team_ids)) if fav_team_ids else 'NULL'
+        league_placeholders = ','.join(['%s'] * len(fav_league_ids)) if fav_league_ids else 'NULL'
+        
+        params = []
+        if fav_team_ids:
+            params.extend(fav_team_ids)
+            params.extend(fav_team_ids)
+        if fav_league_ids:
+            params.extend(fav_league_ids)
+
+        where_clause = []
+        if fav_team_ids:
+            where_clause.append(f"(m.home_team_id IN ({team_placeholders}) OR m.away_team_id IN ({team_placeholders}))")
+        if fav_league_ids:
+            where_clause.append(f"m.league_id IN ({league_placeholders})")
+        
+        where_sql = " OR ".join(where_clause)
+
+        # Get recent matches (FINISHED)
+        cur.execute(f"""
+            SELECT m.match_id, t1.name AS home_name, t2.name AS away_name, 
+                   s.full_time_home, s.full_time_away, 
+                   TO_CHAR(m.utc_date, 'Month DD, YYYY') AS f_date,
+                   t1.crestURL, t2.crestURL, m.status, l.name AS league_name
+            FROM matches m
+            JOIN teams t1 ON m.home_team_id = t1.team_id
+            JOIN teams t2 ON m.away_team_id = t2.team_id
+            JOIN leagues l ON m.league_id = l.league_id
+            LEFT JOIN scores s ON m.match_id = s.match_id
+            WHERE ({where_sql}) AND m.status IN ('FINISHED', 'IN_PLAY', 'PAUSED')
+            ORDER BY m.utc_date DESC
+            LIMIT 10
+        """, tuple(params))
+        recent_matches = cur.fetchall()
+
+        # Get upcoming matches (TIMED, SCHEDULED)
+        cur.execute(f"""
+            SELECT m.match_id, t1.name AS home_name, t2.name AS away_name, 
+                   TO_CHAR(m.utc_date, 'Month DD, YYYY HH24:MI') AS f_date,
+                   t1.crestURL, t2.crestURL, m.status, l.name AS league_name
+            FROM matches m
+            JOIN teams t1 ON m.home_team_id = t1.team_id
+            JOIN teams t2 ON m.away_team_id = t2.team_id
+            JOIN leagues l ON m.league_id = l.league_id
+            WHERE ({where_sql}) AND m.status IN ('SCHEDULED', 'TIMED', 'POSTPONED')
+            ORDER BY m.utc_date ASC
+            LIMIT 10
+        """, tuple(params))
+        upcoming_matches = cur.fetchall()
+
+    cur.close()
+
+    return render_template('my_feed.html', 
+                           favorite_teams=favorite_teams, 
+                           favorite_leagues=favorite_leagues,
+                           recent_matches=recent_matches,
+                           upcoming_matches=upcoming_matches)
+
+@user_bp.route('/map')
+@login_required
+def stadiums_map():
+    db = get_db()
+    cur = db.cursor()
+    cur.execute('SELECT league_id, name FROM leagues')
+    leagues = cur.fetchall()
+    cur.execute('SELECT DISTINCT country FROM stadiums WHERE country IS NOT NULL ORDER BY country ASC')
+    countries = cur.fetchall()
+    cur.execute('SELECT DISTINCT city FROM stadiums WHERE city IS NOT NULL ORDER BY city ASC')
+    cities = cur.fetchall()
+    cur.close()
+    return render_template('map.html', leagues=leagues, countries=countries, cities=cities)
 
 @user_bp.route('/user/teams')
 @login_required
@@ -37,18 +145,19 @@ def user_teams():
 
     # Build the base query
     query = """
-        SELECT team_id, name, crestURL 
-        FROM teams
-        WHERE 1=1
-    """
+    SELECT t.team_id, t.name, t.crestURL
+    FROM teams t
+    JOIN leagues l ON t.league_id = l.league_id
+    WHERE t.is_active = TRUE
+"""
     filters = []
 
     # Add filters based on the selected values
     if league_id:
-        query += " AND league_id = %s"
+        query += " AND t.league_id = %s"
         filters.append(league_id)
     if country_id:
-        query += " AND nationality = (SELECT name FROM countries WHERE country_id = %s)"
+        query += " AND l.country_id = %s"
         filters.append(country_id)
 
     query += " LIMIT %s OFFSET %s"
@@ -58,8 +167,19 @@ def user_teams():
     cur.execute(query, filters)
     teams = cur.fetchall()
 
-    cur.execute('SELECT COUNT(*) FROM teams WHERE 1=1 ' + (' AND league_id = %s' if league_id else '') + (' AND nationality = (SELECT name FROM countries WHERE country_id = %s)' if country_id else ''), filters[:-2])
-    total_teams = cur.fetchone()[0]
+    count_query = "SELECT COUNT(*) FROM teams WHERE is_active = TRUE"
+    count_filters = []
+
+    if league_id:
+        count_query += " AND league_id = %s"
+        count_filters.append(league_id)
+
+    if country_id:
+        count_query += " AND country_id = %s"
+        count_filters.append(country_id)
+
+    cur.execute(count_query, count_filters)
+    total_teams =  cur.fetchone()[0]
     cur.close()
 
     total_pages = (total_teams + 19) // 20
@@ -185,7 +305,8 @@ def user_matches():
                TO_CHAR(m.utc_date, 'Month DD, YYYY') AS formatted_date,
                t1.crestURL AS home_team_logo,
                t2.crestURL AS away_team_logo,
-               m.matchday
+               m.matchday,
+               m.status
         FROM matches m
         JOIN teams t1 ON m.home_team_id = t1.team_id
         JOIN teams t2 ON m.away_team_id = t2.team_id
@@ -199,9 +320,19 @@ def user_matches():
         query += " AND m.league_id = %s"
         filters.append(league_id)
     if country_id:
-        query += " AND (t1.country_id = %s OR t2.country_id = %s)"
-        filters.append(country_id)
-        filters.append(country_id)
+        query += """
+    AND (
+        t1.league_id IN (
+            SELECT league_id FROM leagues WHERE country_id = %s
+        )
+        OR
+        t2.league_id IN (
+            SELECT league_id FROM leagues WHERE country_id = %s
+        )
+    )
+    """
+    filters.append(country_id)
+    filters.append(country_id)
     if team_id:
         query += " AND (m.home_team_id = %s OR m.away_team_id = %s)"
         filters.append(team_id)
@@ -228,9 +359,9 @@ def profile_team(team_id):
 
     # Get team details along with stadium, coach, league, and crestURL
     cur.execute("""
-        SELECT t.name, t.founded_year, s.name AS stadium_name, c.name AS coach_name, l.name AS league_name, t.crestURL, co.flag_url
+        SELECT t.name, t.founded_year, s.name AS stadium_name, c.name AS coach_name, l.name AS league_name, t.crestURL, co.flag_url, s.latitude, s.longitude, s.city, s.country
         FROM teams t 
-        JOIN stadiums s ON t.stadium_id = s.stadium_id 
+        LEFT JOIN stadiums s ON t.stadium_id = s.stadium_id
         JOIN coaches c ON t.coach_id = c.coach_id 
         JOIN countries co ON c.nationality = co.name
         JOIN leagues l ON t.league_id = l.league_id
@@ -268,6 +399,12 @@ def profile_team(team_id):
     """, (team_id, team_id))
     scores = cur.fetchall()
 
+    # Check if the user has favorited this team
+    user_id = session['user_id']
+    cur = get_db().cursor()
+    cur.execute("SELECT id FROM user_favorites WHERE user_id = %s AND entity_type = 'team' AND entity_id = %s", (user_id, team_id))
+    fav_record = cur.fetchone()
+    is_favorite = True if fav_record else False
     cur.close()
 
     if team:
@@ -275,7 +412,9 @@ def profile_team(team_id):
                                team=team,
                                players=players,
                                scores=scores,
-                               logo_url=team[5])
+                               logo_url=team[5],
+                               team_id=team_id,
+                               is_favorite=is_favorite)
     else:
         flash('Team not found', 'error')
         return redirect(url_for('user.user_dashboard'))
@@ -304,6 +443,8 @@ def profile_player(player_id):
         SELECT sc.goals, sc.assists, sc.penalties
         FROM scorers sc
         WHERE sc.player_id = %s
+        ORDER BY sc.season_id DESC
+        LIMIT 1
     """, (player_id,))
     statistics = cur.fetchone()
 
@@ -326,30 +467,35 @@ def profile_match(match_id):
     cur = db.cursor()
 
     cur.execute("""
-        SELECT m.match_id, 
-               t1.name AS home_team_name, 
-               t2.name AS away_team_name, 
-               s.full_time_home AS home_score, 
-               s.full_time_away AS away_score,
-               TO_CHAR(m.utc_date, 'Month DD, YYYY') AS formatted_date,
-               m.matchday,
-               t1.crestURL AS home_team_logo,
-               t2.crestURL AS away_team_logo,
-               st.name AS stadium_name,
-               st.location AS stadium_location,
-               r.name AS referee_name,
-               c.flag_url AS referee_flag_url,
-               t1.team_id AS home_team_id,
-               t2.team_id AS away_team_id
-        FROM matches m
-        JOIN teams t1 ON m.home_team_id = t1.team_id
-        JOIN teams t2 ON m.away_team_id = t2.team_id
-        LEFT JOIN scores s ON m.match_id = s.match_id
-        JOIN stadiums st ON t1.stadium_id = st.stadium_id
-        JOIN match_referees mr ON m.match_id = mr.match_id
-        JOIN referees r ON mr.referee_id = r.referee_id
-        JOIN countries c ON r.nationality = c.name
-        WHERE m.match_id = %s
+    SELECT m.match_id, 
+           t1.name AS home_team_name, 
+           t2.name AS away_team_name, 
+           s.full_time_home AS home_score, 
+           s.full_time_away AS away_score,
+           TO_CHAR(m.utc_date, 'Month DD, YYYY') AS formatted_date,
+           m.matchday,
+           t1.crestURL AS home_team_logo,
+           t2.crestURL AS away_team_logo,
+           st.name AS stadium_name,
+           st.location AS stadium_location,
+           st.city AS stadium_city,
+           st.country AS stadium_country,
+           st.latitude AS stadium_latitude,
+           st.longitude AS stadium_longitude,
+           r.name AS referee_name,
+           c.flag_url AS referee_flag_url,
+           t1.team_id AS home_team_id,
+           t2.team_id AS away_team_id,
+           m.status
+    FROM matches m
+    JOIN teams t1 ON m.home_team_id = t1.team_id
+    JOIN teams t2 ON m.away_team_id = t2.team_id
+    LEFT JOIN scores s ON m.match_id = s.match_id
+    LEFT JOIN stadiums st ON t1.stadium_id = st.stadium_id
+    LEFT JOIN match_referees mr ON m.match_id = mr.match_id
+    LEFT JOIN referees r ON mr.referee_id = r.referee_id
+    LEFT JOIN countries c ON r.nationality = c.name
+    WHERE m.match_id = %s
     """, (match_id,))
     match = cur.fetchone()
 
@@ -386,7 +532,7 @@ def profile_league(league_id):
     """, (league_id,))
     league = cur.fetchone()
 
-    cur.execute('SELECT team_id, name, cresturl FROM teams WHERE league_id = %s', (league_id,))
+    cur.execute('SELECT team_id, name, cresturl FROM teams WHERE league_id = %s AND is_active = TRUE', (league_id,))
     teams = cur.fetchall()
 
     cur.execute("""
@@ -398,14 +544,24 @@ def profile_league(league_id):
         FROM standings s
         JOIN teams t ON s.team_id = t.team_id
         JOIN leagues l ON s.league_id = l.league_id
-        WHERE s.league_id = %s
+        WHERE s.league_id = %s AND s.season_id = (
+            SELECT season_id FROM seasons
+            WHERE league_id = %s
+            ORDER BY year DESC
+            LIMIT 1
+        )
         ORDER BY s.position
-    """, (league_id,))
+    """, (league_id, league_id))
     standings = cur.fetchall()
+
+    user_id = session['user_id']
+    cur.execute("SELECT id FROM user_favorites WHERE user_id = %s AND entity_type = 'league' AND entity_id = %s", (user_id, league_id))
+    fav_record = cur.fetchone()
+    is_favorite = True if fav_record else False
 
     cur.close()
 
-    return render_template('profile_league.html', league=league, teams=teams, standings=standings)
+    return render_template('profile_league.html', league=league, teams=teams, standings=standings, league_id=league_id, is_favorite=is_favorite)
 
 
 
@@ -437,7 +593,10 @@ def user_scorers():
         FROM scorers sc
         JOIN players p ON sc.player_id = p.player_id
         JOIN teams t ON p.team_id = t.team_id
-        WHERE 1=1
+        WHERE sc.season_id IN (
+            SELECT s1.season_id FROM seasons s1
+            WHERE s1.year = (SELECT MAX(year) FROM seasons s2 WHERE s1.league_id = s2.league_id)
+        )
     """
     filters = []
 
@@ -461,3 +620,87 @@ def user_scorers():
     return render_template('user_scorers.html', scorers=scorers, leagues=leagues, countries=countries, teams=teams, str=str)
 
 
+@user_bp.route('/api/favorites', methods=['POST'])
+@login_required
+def add_favorite():
+    data = request.get_json()
+    if not data or 'entity_type' not in data or 'entity_id' not in data:
+        return jsonify({"error": "Missing required fields"}), 400
+        
+    entity_type = data['entity_type']
+    entity_id = data['entity_id']
+    user_id = session['user_id']
+    
+    db = get_db()
+    cur = db.cursor()
+    try:
+        cur.execute(
+            "INSERT INTO user_favorites (user_id, entity_type, entity_id) VALUES (%s, %s, %s) RETURNING id",
+            (user_id, entity_type, entity_id)
+        )
+        fav_id = cur.fetchone()[0]
+        db.commit()
+        return jsonify({"success": True, "id": fav_id}), 201
+    except Exception as e:
+        db.rollback()
+        # Handle unique constraint violation
+        if 'unique constraint' in str(e).lower():
+            return jsonify({"error": "Already marked as favorite"}), 409
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cur.close()
+
+@user_bp.route('/api/favorites', methods=['DELETE'])
+@login_required
+def remove_favorite():
+    data = request.get_json()
+    if not data or 'entity_type' not in data or 'entity_id' not in data:
+        return jsonify({"error": "Missing required fields"}), 400
+        
+    entity_type = data['entity_type']
+    entity_id = data['entity_id']
+    user_id = session['user_id']
+    
+    db = get_db()
+    cur = db.cursor()
+    try:
+        cur.execute(
+            "DELETE FROM user_favorites WHERE entity_type = %s AND entity_id = %s AND user_id = %s RETURNING id",
+            (entity_type, entity_id, user_id)
+        )
+        deleted = cur.fetchone()
+        db.commit()
+        if deleted:
+            return jsonify({"success": True}), 200
+        else:
+            return jsonify({"error": "Favorite not found or unauthorized"}), 404
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cur.close()
+
+@user_bp.route('/api/favorites', methods=['GET'])
+@login_required
+def get_favorites():
+    user_id = session['user_id']
+    db = get_db()
+    cur = db.cursor()
+    
+    cur.execute(
+        "SELECT id, entity_type, entity_id, created_at FROM user_favorites WHERE user_id = %s ORDER BY created_at DESC",
+        (user_id,)
+    )
+    favorites = cur.fetchall()
+    cur.close()
+    
+    result = []
+    for fav in favorites:
+        result.append({
+            "id": fav[0],
+            "entity_type": fav[1],
+            "entity_id": fav[2],
+            "created_at": fav[3].isoformat() if fav[3] else None
+        })
+        
+    return jsonify(result), 200

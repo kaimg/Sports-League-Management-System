@@ -1,0 +1,138 @@
+{% extends "layout.html" %}
+{% block title %}Global Interactive Map - Sports League Management{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<style>
+    #globalMap {
+        height: 600px;
+        width: 100%;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .map-controls {
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="container mt-4">
+    <h1 class="mb-4"><i class="fa fa-globe"></i> Global Stadiums Map</h1>
+    
+    <div class="map-controls row">
+        <div class="col-md-4">
+            <label for="leagueFilter">Filter by League:</label>
+            <select id="leagueFilter" class="form-control">
+                <option value="">All Leagues</option>
+                {% for league in leagues %}
+                    <option value="{{ league[0] }}">{{ league[1] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="countryFilter">Filter by Country:</label>
+            <select id="countryFilter" class="form-control">
+                <option value="">All Countries</option>
+                {% for country in countries %}
+                    <option value="{{ country[0] }}">{{ country[0] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="cityFilter">Filter by City:</label>
+            <select id="cityFilter" class="form-control">
+                <option value="">All Cities</option>
+                {% for city in cities %}
+                    <option value="{{ city[0] }}">{{ city[0] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button id="applyFilters" class="btn btn-primary w-100"><i class="fa fa-filter"></i> Apply</button>
+        </div>
+    </div>
+
+    <div id="globalMap"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializar el mapa
+        const map = L.map('globalMap').setView([48.8566, 2.3522], 4); // Centro de Europa por defecto
+
+        // Capa de mapa base (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        let geojsonLayer;
+
+        // Función para cargar los estadios
+        function loadStadiums() {
+            const leagueId = document.getElementById('leagueFilter').value;
+            const country = document.getElementById('countryFilter').value;
+            const city = document.getElementById('cityFilter').value;
+            
+            let url = '/api/stadiums/geojson?';
+            if (leagueId) url += `league_id=${leagueId}&`;
+            if (country) url += `country=${encodeURIComponent(country)}&`;
+            if (city) url += `city=${encodeURIComponent(city)}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    // Limpiar capa anterior si existe
+                    if (geojsonLayer) {
+                        map.removeLayer(geojsonLayer);
+                    }
+
+                    // Ícono personalizado (puedes ajustarlo luego)
+                    const stadiumIcon = L.icon({
+                        iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+                        shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    });
+
+                    // Añadir nueva capa GeoJSON
+                    geojsonLayer = L.geoJSON(data, {
+                        pointToLayer: function (feature, latlng) {
+                            return L.marker(latlng, {icon: stadiumIcon});
+                        },
+                        onEachFeature: function (feature, layer) {
+                            const props = feature.properties;
+                            const popupContent = `
+                                <div>
+                                    <h5 class="mb-1">${props.name}</h5>
+                                    <p class="mb-1 text-muted"><i class="fa fa-map-marker-alt"></i> ${props.city}, ${props.country}</p>
+                                    <hr class="my-2">
+                                    <p class="mb-1"><strong>Home Team:</strong> ${props.team_name ? `<a href="/team/${props.team_id || ''}">${props.team_name}</a>` : 'N/A'}</p>
+                                    <p class="mb-1"><strong>League:</strong> ${props.league_name || 'N/A'}</p>
+                                    <p class="mb-0"><strong>Capacity:</strong> ${props.capacity ? props.capacity.toLocaleString() : 'N/A'}</p>
+                                </div>
+                            `;
+                            layer.bindPopup(popupContent);
+                        }
+                    }).addTo(map);
+
+                    // Ajustar la vista del mapa para que quepan todos los marcadores
+                    if (data.features.length > 0) {
+                        map.fitBounds(geojsonLayer.getBounds(), {padding: [50, 50]});
+                    }
+                })
+                .catch(error => console.error('Error loading stadiums:', error));
+        }
+
+        // Carga inicial
+        loadStadiums();
+
+        // Escuchar botón de aplicar filtros
+        document.getElementById('applyFilters').addEventListener('click', loadStadiums);
+    });
+</script>
+{% endblock %}

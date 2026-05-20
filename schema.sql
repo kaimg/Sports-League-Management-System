@@ -18,6 +18,8 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+CREATE EXTENSION IF NOT EXISTS postgis;
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -171,7 +173,8 @@ CREATE TABLE public.matches (
     home_team_id integer,
     away_team_id integer,
     winner character varying(50),
-    utc_date date
+    utc_date date,
+    status character varying(50) DEFAULT 'FINISHED'
 );
 
 
@@ -391,8 +394,31 @@ CREATE TABLE public.stadiums (
     stadium_id integer NOT NULL,
     name character varying(255) NOT NULL,
     location character varying(255) NOT NULL,
-    capacity integer
+    capacity integer,
+    city character varying(255),
+    country character varying(255),
+    latitude double precision,
+    longitude double precision,
+    geom geometry(Point,4326)
 );
+
+CREATE OR REPLACE FUNCTION update_stadium_geom()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.latitude IS NOT NULL AND NEW.longitude IS NOT NULL THEN
+        NEW.geom := ST_SetSRID(ST_MakePoint(NEW.longitude, NEW.latitude), 4326);
+    ELSE
+        NEW.geom := NULL;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER stadium_geom_trigger
+BEFORE INSERT OR UPDATE OF latitude, longitude
+ON public.stadiums
+FOR EACH ROW
+EXECUTE FUNCTION update_stadium_geom();
 
 
 ALTER TABLE public.stadiums OWNER TO sports_league_owner;
@@ -484,7 +510,8 @@ CREATE TABLE public.teams (
     stadium_id integer,
     league_id integer,
     coach_id integer,
-    cresturl character varying(255)
+    cresturl character varying(255),
+    team_region character varying(255)
 );
 
 
@@ -555,6 +582,24 @@ ALTER SEQUENCE public.users_user_id_seq OWNER TO sports_league_owner;
 
 ALTER SEQUENCE public.users_user_id_seq OWNED BY public.users.user_id;
 
+CREATE TABLE public.user_favorites (
+    id SERIAL PRIMARY KEY,
+    user_id integer NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
+    entity_type character varying(50) NOT NULL,
+    entity_id integer NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, entity_type, entity_id)
+);
+
+CREATE TABLE public.notifications (
+    id SERIAL PRIMARY KEY,
+    user_id integer NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
+    type character varying(50) NOT NULL,
+    message text NOT NULL,
+    related_match_id integer REFERENCES public.matches(match_id) ON DELETE CASCADE,
+    is_read boolean DEFAULT FALSE,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
 
 --
 -- TOC entry 3249 (class 2604 OID 16523)

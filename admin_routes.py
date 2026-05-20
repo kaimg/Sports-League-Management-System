@@ -1,3 +1,5 @@
+from unittest import result
+
 from flask import Blueprint, render_template, request, redirect, session, url_for, flash
 from functools import wraps
 from db import get_db
@@ -29,34 +31,86 @@ def manage_stadiums():
 
     if request.method == 'POST':
         try:
-            stadium_id = request.form.get('stadium_id')
-            name = request.form['name']
-            location = request.form['location']
-            capacity = request.form['capacity']
+            stadium_id = request.form.get('stadium_id') or request.form.get('deleteItemId')
 
-            if 'add' in request.form:
-                cur.execute('INSERT INTO stadiums (name, location, capacity) VALUES (%s, %s, %s)', 
-                            (name, location, capacity))
-                flash('Stadium added successfully', 'success')
-            elif 'edit' in request.form and stadium_id:
-                cur.execute('UPDATE stadiums SET name = %s, location = %s, capacity = %s WHERE stadium_id = %s', 
-                            (name, location, capacity, stadium_id))
-                flash('Stadium updated successfully', 'success')
-            elif 'delete' in request.form and stadium_id:
-                cur.execute('DELETE FROM stadiums WHERE stadium_id = %s', (stadium_id,))
-                flash('Stadium deleted successfully', 'success')
+            if 'delete' in request.form:
+                if not stadium_id:
+                    flash('No stadium selected for deletion', 'error')
+                else:
+                    cur.execute('DELETE FROM stadiums WHERE stadium_id = %s', (stadium_id,))
+                    flash('Stadium deleted successfully', 'success')
+
+            else:
+                name = request.form['name']
+                location = request.form['location']
+                capacity = request.form['capacity']
+                latitude = request.form.get('latitude')
+                longitude = request.form.get('longitude')
+                city = request.form.get('city')
+                country = request.form.get('country')
+                team_id = request.form.get('team_id') or None
+
+                if 'add' in request.form:
+                    cur.execute("""
+                        INSERT INTO stadiums
+(name, location, capacity, city, country, latitude, longitude, geom)
+VALUES (%s, %s, %s, %s, %s, %s, %s,
+        ST_SetSRID(ST_MakePoint(%s, %s), 4326))
+RETURNING stadium_id
+                    """, (name, location, capacity, city, country, latitude, longitude, longitude, latitude))
+
+                    result = cur.fetchone()
+                    new_stadium_id = result[0]
+
+                    if team_id:
+                        cur.execute(
+                            'UPDATE teams SET stadium_id = %s WHERE team_id = %s',
+                            (new_stadium_id, team_id)
+                        )
+
+                    flash('Stadium added successfully', 'success')
+
+                elif 'edit' in request.form and stadium_id:
+                    cur.execute("""
+                        UPDATE stadiums
+                        SET name = %s,
+                            location = %s,
+                            capacity = %s,
+                            city = %s,
+                            country = %s,
+                            latitude = %s,
+                            longitude = %s,
+                            geom = ST_SetSRID(ST_MakePoint(%s, %s), 4326)
+                        WHERE stadium_id = %s
+                    """, (name, location, capacity, city, country, latitude, longitude, longitude, latitude, stadium_id))
+
+                    if team_id:
+                        cur.execute(
+                            'UPDATE teams SET stadium_id = %s WHERE team_id = %s',
+                            (stadium_id, team_id)
+                        )
+
+                    flash('Stadium updated successfully', 'success')
+
             db.commit()
+
         except Exception as e:
             db.rollback()
             flash('An error occurred: ' + str(e), 'error')
+
         finally:
             cur.close()
+
         return redirect(url_for('admin.manage_stadiums'))
 
-    cur.execute('SELECT stadium_id, name, location, capacity FROM stadiums')
+    cur.execute('SELECT stadium_id, name, location, capacity, city, country, latitude, longitude FROM stadiums')
     stadiums = cur.fetchall()
+
+    cur.execute('SELECT team_id, name FROM teams ORDER BY name')
+    teams = cur.fetchall()
+
     cur.close()
-    return render_template('manage_stadiums.html', stadiums=stadiums)
+    return render_template('manage_stadiums.html', stadiums=stadiums, teams=teams)
 
 @admin_bp.route('/manage_leagues', methods=['GET', 'POST'])
 @admin_required
@@ -146,7 +200,7 @@ def manage_teams():
             team_id = request.form.get('team_id')
             name = request.form['name']
             founded_year = request.form['founded_year']
-            stadium_id = request.form['stadium_id']
+            stadium_id = request.form.get('stadium_id') or None
             league_id = request.form['league_id']
             coach_id = request.form['coach_id']
 
@@ -169,7 +223,24 @@ def manage_teams():
             cur.close()
         return redirect(url_for('admin.manage_teams'))
 
-    cur.execute('SELECT team_id, name, founded_year, stadium_id, league_id, coach_id FROM teams')
+    cur.execute("""
+    SELECT 
+        t.team_id,
+        t.name,
+        t.founded_year,
+        t.stadium_id,
+        t.league_id,
+        t.coach_id,
+        COALESCE(s.name, 'N/A') AS stadium_name,
+        l.name AS league_name,
+        c.name AS coach_name,
+        t.is_active
+    FROM teams t
+    LEFT JOIN stadiums s ON t.stadium_id = s.stadium_id
+    JOIN leagues l ON t.league_id = l.league_id
+    JOIN coaches c ON t.coach_id = c.coach_id
+    ORDER BY t.team_id
+""")
     teams = cur.fetchall()
     cur.execute('SELECT stadium_id, name FROM stadiums')
     stadiums = cur.fetchall()
@@ -311,7 +382,7 @@ def manage_matches():
 
     cur.execute('''
         SELECT m.match_id, m.utc_date, t1.name AS team1, t2.name AS team2, s.year AS season, l.name AS league,
-               m.home_team_id, m.away_team_id
+               m.home_team_id, m.away_team_id, m.status
         FROM matches m
         JOIN teams t1 ON m.home_team_id = t1.team_id
         JOIN teams t2 ON m.away_team_id = t2.team_id
@@ -594,3 +665,97 @@ def manage_users():
     cur.close()
 
     return render_template('manage_users.html', users=users)
+
+@admin_bp.route('/sync_api/matches', methods=['POST'])
+@admin_required
+def sync_api_matches():
+    from sync_api import sync_matches_for_league
+    
+    leagues = ['PL', 'PD', 'SA', 'BL1', 'FL1']
+    total_updated = 0
+    errors = []
+    
+    for league in leagues:
+        result = sync_matches_for_league(league)
+        if "error" in result:
+            # Foreign key errors might happen if a team doesn't exist yet, we catch them but log
+            errors.append(f"{league}: {result['error']}")
+        else:
+            total_updated += result.get("success", 0)
+            
+    if errors:
+        flash(f"Sync completed with some errors: {', '.join(errors)}. Updated {total_updated} matches.", "warning")
+    else:
+        flash(f"Successfully synced {total_updated} matches from all top 5 leagues.", "success")
+        
+    return redirect(url_for('admin.manage_matches'))
+
+@admin_bp.route('/sync_api/scorers', methods=['POST'])
+@admin_required
+def sync_api_scorers():
+    from sync_api import sync_scorers_for_league
+    
+    leagues = ['PL', 'PD', 'SA', 'BL1', 'FL1']
+    total_updated = 0
+    errors = []
+    
+    for league in leagues:
+        result = sync_scorers_for_league(league)
+        if "error" in result:
+            errors.append(f"{league}: {result['error']}")
+        else:
+            total_updated += result.get("success", 0)
+            
+    if errors:
+        flash(f"Sync completed with some errors: {', '.join(errors)}. Updated {total_updated} scorers.", "warning")
+    else:
+        flash(f"Successfully synced {total_updated} scorers from all top 5 leagues.", "success")
+        
+    return redirect(url_for('admin.manage_scorers'))
+
+@admin_bp.route('/sync_api/teams', methods=['POST'])
+@admin_required
+def sync_api_teams():
+    from sync_api import sync_teams_for_league
+    
+    leagues = ['PL', 'PD', 'SA', 'BL1', 'FL1']
+    total_updated = 0
+    errors = []
+    
+    for league in leagues:
+        result = sync_teams_for_league(league)
+        if "error" in result:
+            errors.append(f"{league}: {result['error']}")
+        else:
+            total_updated += result.get("success", 0)
+            
+    if errors:
+        flash(f"Sync completed with some errors: {', '.join(errors)}. Updated {total_updated} teams.", "warning")
+    else:
+        flash(f"Successfully synced {total_updated} teams from all top 5 leagues.", "success")
+        
+    return redirect(url_for('admin.manage_teams'))
+
+@admin_bp.route('/sync_api/all', methods=['POST'])
+@admin_required
+def sync_api_all():
+    import threading
+    from flask import current_app
+    from sync_api import sync_all_data
+    
+    if current_app.config.get('SYNC_IN_PROGRESS'):
+        flash('A background sync is already in progress. Please wait until it completes.', 'warning')
+        return redirect(url_for('admin'))
+        
+    current_app.config['SYNC_IN_PROGRESS'] = True
+    import time
+    current_app.config['SYNC_START_TIME'] = time.time()
+    
+    # Run the orchestrator in a background thread
+    app_context = current_app._get_current_object()
+    thread = threading.Thread(target=sync_all_data, args=(app_context,))
+    thread.daemon = True
+    thread.start()
+    
+    flash("Global sync started in the background. It will take approximately 2.5 minutes. Please do not start another sync.", "info")
+    return redirect(url_for('admin'))

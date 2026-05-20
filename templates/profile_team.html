@@ -1,7 +1,16 @@
 {% extends "layout.html" %}
 {% block title %}{{ team[0] }} - Team Profile{% endblock %}
 {% block content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <style>
+    #teamMap {
+        height: 300px;
+        width: 100%;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        margin-top: 20px;
+        margin-bottom: 30px;
+    }
     .flag-img {
         width: 20px;
         height: auto;
@@ -31,13 +40,23 @@
     }
 </style>
 <div class="container mt-4">
-    <h1>{{ team[0] }}'s Profile</h1>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>{{ team[0] }}'s Profile</h1>
+        <button id="favoriteBtn" class="btn {% if is_favorite %}btn-success{% else %}btn-outline-success{% endif %}" data-type="team" data-id="{{ team_id }}">
+            <i class="fa {% if is_favorite %}fa-star{% else %}fa-star-o{% endif %}"></i>
+            <span id="favoriteText">{% if is_favorite %}Following{% else %}Follow{% endif %}</span>
+        </button>
+    </div>
     <p><strong>Founded:</strong> {{ team[1] }}</p>
     <p><strong>Stadium:</strong> {{ team[2] }}</p>
     <p><strong>Coach:</strong> {{ team[3] }} <img src="{{ team[6] }}" alt="Flag" class="flag-img"></p>
     <p><strong>League:</strong> {{ team[4] }}</p>
     {% if logo_url %}
         <img src="{{ logo_url }}" alt="{{ team[0] }} Logo" class="img-fluid rounded border mb-2" style="max-height: 100px;">
+    {% endif %}
+
+    {% if team[7] and team[8] %}
+        <div id="teamMap"></div>
     {% endif %}
 
     <h2>Players</h2>
@@ -84,4 +103,108 @@
         <p>No match scores found.</p>
     {% endif %}
 </div>
+{% endblock %}
+{% block scripts %}
+{% if team[7] and team[8] %}
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const lat = {{ team[7] }};
+        const lng = {{ team[8] }};
+        const stadiumName = "{{ team[2] }}";
+        const city = "{{ team[9] }}";
+        const country = "{{ team[10] }}";
+        const teamName = "{{ team[0] }}";
+
+        const map = L.map('teamMap').setView([lat, lng], 14);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        const stadiumIcon = L.icon({
+            iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+            shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
+        const popupContent = `
+            <div>
+                <h6 class="mb-1">${stadiumName}</h6>
+                <p class="mb-1 text-muted"><i class="fa fa-map-marker-alt"></i> ${city}, ${country}</p>
+                <hr class="my-1">
+                <p class="mb-0"><strong>Home:</strong> ${teamName}</p>
+            </div>
+        `;
+
+        L.marker([lat, lng], {icon: stadiumIcon})
+            .addTo(map)
+            .bindPopup(popupContent)
+            .openPopup();
+    });
+</script>
+{% endif %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const favBtn = document.getElementById('favoriteBtn');
+        if(favBtn) {
+            favBtn.addEventListener('click', function() {
+                const entityType = this.dataset.type;
+                const entityId = this.dataset.id;
+                const isFavorite = this.classList.contains('btn-success');
+                
+                if(!isFavorite) {
+                    fetch('/api/favorites', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            entity_type: entityType,
+                            entity_id: entityId
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.success) {
+                            this.classList.remove('btn-outline-success');
+                            this.classList.add('btn-success');
+                            this.querySelector('i').classList.remove('fa-star-o');
+                            this.querySelector('i').classList.add('fa-star');
+                            document.getElementById('favoriteText').innerText = 'Following';
+                        } else {
+                            alert(data.error);
+                        }
+                    });
+                } else {
+                    fetch('/api/favorites', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            entity_type: entityType,
+                            entity_id: entityId
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.success) {
+                            this.classList.remove('btn-success');
+                            this.classList.add('btn-outline-success');
+                            this.querySelector('i').classList.remove('fa-star');
+                            this.querySelector('i').classList.add('fa-star-o');
+                            document.getElementById('favoriteText').innerText = 'Follow';
+                        } else {
+                            alert(data.error);
+                        }
+                    });
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}
