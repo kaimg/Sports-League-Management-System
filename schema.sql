@@ -12,7 +12,7 @@ SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
+SELECT pg_catalog.set_config('search_path', 'public', false);
 SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
@@ -511,7 +511,8 @@ CREATE TABLE public.teams (
     league_id integer,
     coach_id integer,
     cresturl character varying(255),
-    team_region character varying(255)
+    team_region character varying(255),
+    is_active boolean DEFAULT true NOT NULL
 );
 
 
@@ -581,25 +582,6 @@ ALTER SEQUENCE public.users_user_id_seq OWNER TO sports_league_owner;
 --
 
 ALTER SEQUENCE public.users_user_id_seq OWNED BY public.users.user_id;
-
-CREATE TABLE public.user_favorites (
-    id SERIAL PRIMARY KEY,
-    user_id integer NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
-    entity_type character varying(50) NOT NULL,
-    entity_id integer NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, entity_type, entity_id)
-);
-
-CREATE TABLE public.notifications (
-    id SERIAL PRIMARY KEY,
-    user_id integer NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
-    type character varying(50) NOT NULL,
-    message text NOT NULL,
-    related_match_id integer REFERENCES public.matches(match_id) ON DELETE CASCADE,
-    is_read boolean DEFAULT FALSE,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
 
 --
 -- TOC entry 3249 (class 2604 OID 16523)
@@ -10203,6 +10185,24 @@ ALTER TABLE ONLY public.teams
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (user_id);
 
+CREATE TABLE public.user_favorites (
+    id SERIAL PRIMARY KEY,
+    user_id integer NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
+    entity_type character varying(50) NOT NULL,
+    entity_id integer NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, entity_type, entity_id)
+);
+
+CREATE TABLE public.notifications (
+    id SERIAL PRIMARY KEY,
+    user_id integer NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
+    type character varying(50) NOT NULL,
+    message text NOT NULL,
+    related_match_id integer REFERENCES public.matches(match_id) ON DELETE CASCADE,
+    is_read boolean DEFAULT FALSE,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
 
 --
 -- TOC entry 3289 (class 2606 OID 16526)

@@ -59,14 +59,34 @@ The Sports League Management System aims to manage comprehensive data associated
    - Other configuration variables as needed
 
 3. Run the setup script:
+
+   **Windows (PowerShell):**
+   ```powershell
+   .\setup.ps1
+   ```
+
+   **Linux / macOS:**
    ```sh
    chmod +x setup.sh
    ./setup.sh
    ```
+
    This will:
    - Check if Docker is running
    - Create necessary environment files
    - Build and start the Docker containers
+   - Wait for PostgreSQL and apply `schema.sql` if tables are missing
+   - Run SQL migrations and synchronize sequences
+
+   If the database was partially initialized or tables are missing, reset and run setup again:
+
+   ```powershell
+   .\setup.ps1 -Fresh
+   ```
+
+   ```sh
+   ./setup.sh --fresh
+   ```
 
 The application will be available at `http://localhost:5000`
 
