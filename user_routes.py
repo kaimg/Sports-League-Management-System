@@ -184,7 +184,7 @@ def user_teams():
 
     total_pages = (total_teams + 19) // 20
 
-    return render_template('user_teams.html', teams=teams, page=request.args.get('page', 1, type=int), total_pages=total_pages, leagues=leagues, countries=countries, max=max, min=min, str=str)
+    return render_template('user_teams.html', teams=teams, page=request.args.get('page', 1, type=int), total_pages=total_pages, total_teams=total_teams, leagues=leagues, countries=countries, max=max, min=min, str=str)
 
 @user_bp.route('/user/players')
 @login_required

@@ -470,9 +470,9 @@
 <div class="stats-bar">
     <div class="stat-item">
         <i class="fas fa-shield-alt"></i>
-        <div class="stat-text">
+            <div class="stat-text">
             <span class="stat-label">Total Teams</span>
-            <span class="stat-value">{{ teams|length }}</span>
+            <span class="stat-value">{{ total_teams }}</span>
         </div>
     </div>
 </div>
@@ -564,45 +564,6 @@
                 {% endfor %}
             </div>
         </div>
-        
-        <!-- Pagination -->
-        <div class="pagination-container">
-            <div class="pagination-info">
-                <i class="fas fa-book"></i> Page {{ page }} of {{ total_pages }}
-            </div>
-            <div class="pagination-links">
-                {% if page > 1 %}
-                    <a href="{{ url_for('user.user_teams', page=1, league_id=request.args.get('league_id'), country_id=request.args.get('country_id')) }}" class="page-link" title="First">
-                        <i class="fas fa-chevron-left"></i><i class="fas fa-chevron-left"></i>
-                    </a>
-                    <a href="{{ url_for('user.user_teams', page=page-1, league_id=request.args.get('league_id'), country_id=request.args.get('country_id')) }}" class="page-link" title="Previous">
-                        <i class="fas fa-chevron-left"></i>
-                    </a>
-                {% else %}
-                    <button class="page-link disabled"><i class="fas fa-chevron-left"></i><i class="fas fa-chevron-left"></i></button>
-                    <button class="page-link disabled"><i class="fas fa-chevron-left"></i></button>
-                {% endif %}
-                
-                {% for p in range(max(1, page-2), min(total_pages, page+2) + 1) %}
-                    <a href="{{ url_for('user.user_teams', page=p, league_id=request.args.get('league_id'), country_id=request.args.get('country_id')) }}" 
-                       class="page-link {% if page == p %}active{% endif %}">
-                        {{ p }}
-                    </a>
-                {% endfor %}
-                
-                {% if page < total_pages %}
-                    <a href="{{ url_for('user.user_teams', page=page+1, league_id=request.args.get('league_id'), country_id=request.args.get('country_id')) }}" class="page-link" title="Next">
-                        <i class="fas fa-chevron-right"></i>
-                    </a>
-                    <a href="{{ url_for('user.user_teams', page=total_pages, league_id=request.args.get('league_id'), country_id=request.args.get('country_id')) }}" class="page-link" title="Last">
-                        <i class="fas fa-chevron-right"></i><i class="fas fa-chevron-right"></i>
-                    </a>
-                {% else %}
-                    <button class="page-link disabled"><i class="fas fa-chevron-right"></i></button>
-                    <button class="page-link disabled"><i class="fas fa-chevron-right"></i><i class="fas fa-chevron-right"></i></button>
-                {% endif %}
-            </div>
-        </div>
     {% else %}
         <div class="teams-container">
             <div class="empty-state">
@@ -613,6 +574,47 @@
         </div>
     {% endif %}
 </div>
+
+{# Pagination moved outside the scrollable teams wrapper so it is always visible below the list #}
+{% if teams and total_pages and total_pages > 1 %}
+<div class="pagination-container">
+    <div class="pagination-info">
+        <i class="fas fa-book"></i> Page {{ page }} of {{ total_pages }}
+    </div>
+    <div class="pagination-links">
+        {% if page > 1 %}
+            <a href="{{ url_for('user.user_teams', page=1, league_id=request.args.get('league_id'), country_id=request.args.get('country_id')) }}" class="page-link" title="First">
+                <i class="fas fa-chevron-left"></i><i class="fas fa-chevron-left"></i>
+            </a>
+            <a href="{{ url_for('user.user_teams', page=page-1, league_id=request.args.get('league_id'), country_id=request.args.get('country_id')) }}" class="page-link" title="Previous">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+        {% else %}
+            <button class="page-link disabled"><i class="fas fa-chevron-left"></i><i class="fas fa-chevron-left"></i></button>
+            <button class="page-link disabled"><i class="fas fa-chevron-left"></i></button>
+        {% endif %}
+        
+        {% for p in range(max(1, page-2), min(total_pages, page+2) + 1) %}
+            <a href="{{ url_for('user.user_teams', page=p, league_id=request.args.get('league_id'), country_id=request.args.get('country_id')) }}" 
+               class="page-link {% if page == p %}active{% endif %}">
+                {{ p }}
+            </a>
+        {% endfor %}
+        
+        {% if page < total_pages %}
+            <a href="{{ url_for('user.user_teams', page=page+1, league_id=request.args.get('league_id'), country_id=request.args.get('country_id')) }}" class="page-link" title="Next">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            <a href="{{ url_for('user.user_teams', page=total_pages, league_id=request.args.get('league_id'), country_id=request.args.get('country_id')) }}" class="page-link" title="Last">
+                <i class="fas fa-chevron-right"></i><i class="fas fa-chevron-right"></i>
+            </a>
+        {% else %}
+            <button class="page-link disabled"><i class="fas fa-chevron-right"></i></button>
+            <button class="page-link disabled"><i class="fas fa-chevron-right"></i><i class="fas fa-chevron-right"></i></button>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
 
 <script>
     function filterTeams() {
@@ -637,6 +639,15 @@
         
         // Show empty state if no results
         const grid = document.getElementById('teamsGrid');
+        const pagination = document.querySelector('.pagination-container');
+
+        // Hide pagination while searching
+        if (filter) {
+            if (pagination) pagination.style.display = 'none';
+        } else {
+            if (pagination) pagination.style.display = '';
+        }
+
         if (visibleCount === 0) {
             grid.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><i class="fas fa-search"></i><h3>No teams match your search</h3></div>';
         }
