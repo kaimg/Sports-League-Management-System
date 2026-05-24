@@ -1,72 +1,664 @@
 {% extends "user_dashboard.html" %}
+{% block page_icon %}<i class="fas fa-shield-alt"></i>{% endblock %}
+{% block page_title %}Teams{% endblock %}
 {% block user_content %}
-<h2>Team Profiles</h2>
-<form method="get" action="{{ url_for('user.user_teams') }}">
-    <div class="form-row">
-        <div class="form-group col-md-4">
-            <label for="league_id">League</label>
-            <select id="league_id" name="league_id" class="form-control">
-                <option value="">All Leagues</option>
-                {% for league in leagues %}
-                    <option value="{{ league[0] }}" {% if request.args.get('league_id') == str(league[0]) %}selected{% endif %}>{{ league[1] }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group col-md-4">
-            <label for="country_id">Country</label>
-            <select id="country_id" name="country_id" class="form-control">
-                <option value="">All Countries</option>
-                {% for country in countries %}
-                    <option value="{{ country[0] }}" {% if request.args.get('country_id') == str(country[0]) %}selected{% endif %}>{{ country[1] }}</option>
-                {% endfor %}
-            </select>
+
+<style>
+    :root {
+        --primary: #0066cc;
+        --primary-dark: #004999;
+        --secondary: #f0f2f5;
+        --accent: #00d4ff;
+        --text-dark: #1a1a1a;
+        --text-light: #666666;
+    }
+    
+    /* Filter Panel */
+    .filter-panel {
+        background: linear-gradient(135deg, var(--secondary) 0%, #ffffff 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 102, 204, 0.05);
+        border: 1px solid #e0e0e0;
+    }
+    
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: flex-end;
+        margin-bottom: 1rem;
+    }
+    
+    .form-group-modern {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .form-group-modern label {
+        font-weight: 600;
+        color: var(--text-dark);
+        font-size: 0.95rem;
+    }
+    
+    .form-select-modern {
+        padding: 0.75rem 1rem;
+        border: 2px solid var(--secondary);
+        border-radius: 8px;
+        background: white;
+        color: var(--text-dark);
+        font-weight: 500;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .form-select-modern:hover {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    }
+    
+    .form-select-modern:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.2);
+    }
+    
+    /* Search Bar Moderno */
+    .search-box-modern {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        background: white;
+        border: 2px solid var(--secondary);
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .search-box-modern:hover {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    }
+    
+    .search-box-modern:focus-within {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.2);
+    }
+    
+    .search-box-modern input {
+        flex: 1;
+        border: none;
+        background: transparent;
+        outline: none;
+        font-size: 1rem;
+        color: var(--text-dark);
+    }
+    
+    .search-box-modern input::placeholder {
+        color: var(--text-light);
+    }
+    
+    .search-box-modern button {
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .search-box-modern button:hover {
+        background: var(--primary-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+    }
+    
+    .clear-search {
+        background: transparent;
+        color: var(--text-light);
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+    
+    .clear-search:hover {
+        background: var(--secondary);
+        color: var(--text-dark);
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn-modern {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-primary-modern {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(0, 102, 204, 0.3);
+    }
+    
+    .btn-primary-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0, 102, 204, 0.4);
+    }
+    
+    .btn-secondary-modern {
+        background: var(--secondary);
+        color: var(--text-dark);
+        border: 2px solid transparent;
+    }
+    
+    .btn-secondary-modern:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+    
+    /* Teams Container */
+    .teams-wrapper {
+        position: relative;
+        height: calc(100vh - 520px);
+        min-height: 400px;
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e0e0e0;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 102, 204, 0.05);
+    }
+    
+    .teams-container {
+        height: 100%;
+        overflow-y: auto;
+        padding: 1.5rem;
+    }
+    
+    .teams-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    /* Team Card */
+    .team-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        cursor: pointer;
+        position: relative;
+    }
+    
+    .team-card:hover {
+        border-color: var(--accent);
+        transform: translateY(-8px);
+        box-shadow: 0 8px 24px rgba(0, 102, 204, 0.2);
+    }
+    
+    .team-logo-wrapper {
+        height: 140px;
+        background: linear-gradient(135deg, var(--secondary) 0%, #e8ecf1 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .team-logo-wrapper::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+        transition: all 0.3s ease;
+    }
+    
+    .team-card:hover .team-logo-wrapper::before {
+        top: -30%;
+        right: -30%;
+    }
+    
+    .team-logo {
+        width: 80px;
+        height: 80px;
+        object-fit: contain;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        position: relative;
+        z-index: 1;
+        transition: transform 0.3s ease;
+    }
+    
+    .team-card:hover .team-logo {
+        transform: scale(1.15);
+    }
+    
+    .team-info {
+        padding: 1.25rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .team-name {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin: 0;
+        word-break: break-word;
+    }
+    
+    .team-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .team-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-light);
+    }
+    
+    .team-meta-item i {
+        color: var(--accent);
+        width: 16px;
+    }
+    
+    .team-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: auto;
+    }
+    
+    .btn-team {
+        flex: 1;
+        padding: 0.5rem 0.75rem;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        text-decoration: none;
+        color: white;
+    }
+    
+    .btn-team-view {
+        background: var(--primary);
+    }
+    
+    .btn-team-view:hover {
+        background: var(--primary-dark);
+        transform: translateY(-2px);
+    }
+    
+    /* Empty State */
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        text-align: center;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: var(--secondary);
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state h3 {
+        color: var(--text-dark);
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-state p {
+        color: var(--text-light);
+        margin: 0;
+    }
+    
+    /* Pagination Moderno */
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1.5rem;
+        background: var(--secondary);
+        border-radius: 0 0 12px 12px;
+        flex-wrap: wrap;
+    }
+    
+    .pagination-info {
+        color: var(--text-dark);
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-right: 1rem;
+    }
+    
+    .pagination-links {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .page-link {
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        border: 2px solid transparent;
+        background: white;
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        min-width: 40px;
+        text-align: center;
+    }
+    
+    .page-link:hover {
+        background: var(--primary);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0, 102, 204, 0.3);
+    }
+    
+    .page-link.active {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        border-color: var(--accent);
+    }
+    
+    .page-link.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    /* Stats */
+    .stats-bar {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: linear-gradient(135deg, rgba(0,102,204,0.05) 0%, rgba(0,212,255,0.05) 100%);
+        border-radius: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .stat-item i {
+        color: var(--primary);
+        font-size: 1.5rem;
+    }
+    
+    .stat-text {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .stat-label {
+        font-size: 0.85rem;
+        color: var(--text-light);
+        font-weight: 500;
+    }
+    
+    .stat-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .teams-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .filter-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .teams-wrapper {
+            height: auto;
+            min-height: 300px;
+        }
+        
+        .teams-container {
+            height: auto;
+            max-height: 600px;
+        }
+    }
+</style>
+
+<!-- Stats Bar -->
+<div class="stats-bar">
+    <div class="stat-item">
+        <i class="fas fa-shield-alt"></i>
+        <div class="stat-text">
+            <span class="stat-label">Total Teams</span>
+            <span class="stat-value">{{ teams|length }}</span>
         </div>
     </div>
-    <button type="submit" class="btn btn-primary">Filter</button>
-</form>
+</div>
 
-<ul class="list-group mt-3">
-    {% for team in teams %}
-        <li class="list-group-item d-flex align-items-center">
-            {% if team[2] %}
-                <img src="{{ team[2] }}" alt="{{ team[1] }} Logo" class="mr-3" style="height: 30px;">
-            {% endif %}
-            <a href="{{ url_for('user.profile_team', team_id=team[0]) }}">{{ team[1] }}</a>
-        </li>
-    {% endfor %}
-</ul>
+<!-- Filter Panel -->
+<div class="filter-panel">
+    <form method="get" action="{{ url_for('user.user_teams') }}" id="filterForm">
+        <div class="filter-row">
+            <div class="form-group-modern">
+                <label for="league_id"><i class="fas fa-trophy"></i> League</label>
+                <select id="league_id" name="league_id" class="form-select-modern">
+                    <option value="">All Leagues</option>
+                    {% for league in leagues %}
+                        <option value="{{ league[0] }}" {% if request.args.get('league_id') == str(league[0]) %}selected{% endif %}>
+                            {{ league[1] }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group-modern">
+                <label for="country_id"><i class="fas fa-globe"></i> Country</label>
+                <select id="country_id" name="country_id" class="form-select-modern">
+                    <option value="">All Countries</option>
+                    {% for country in countries %}
+                        <option value="{{ country[0] }}" {% if request.args.get('country_id') == str(country[0]) %}selected{% endif %}>
+                            {{ country[1] }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group-modern" style="justify-content: flex-end;">
+                <div class="action-buttons">
+                    <button type="submit" class="btn-modern btn-primary-modern">
+                        <i class="fas fa-filter"></i> Apply Filters
+                    </button>
+                    <a href="{{ url_for('user.user_teams') }}" class="btn-modern btn-secondary-modern">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
 
-<nav aria-label="Page navigation" class="mt-3">
-    <ul class="pagination justify-content-center">
-        {% if page > 1 %}
-            <li class="page-item">
-                <a class="page-link" href="{{ url_for('user.user_teams', page=1, league_id=request.args.get('league_id'), country_id=request.args.get('country_id')) }}" aria-label="First">
-                    <span aria-hidden="true">&laquo;&laquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="{{ url_for('user.user_teams', page=page-1, league_id=request.args.get('league_id'), country_id=request.args.get('country_id')) }}" aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
-        {% endif %}
-        {% for p in range(max(1, page-2), min(total_pages, page+2) + 1) %}
-            <li class="page-item {% if page == p %}active{% endif %}">
-                <a class="page-link" href="{{ url_for('user.user_teams', page=p, league_id=request.args.get('league_id'), country_id=request.args.get('country_id')) }}">{{ p }}</a>
-            </li>
-        {% endfor %}
-        {% if page < total_pages %}
-            <li class="page-item">
-                <a class="page-link" href="{{ url_for('user.user_teams', page=page+1, league_id=request.args.get('league_id'), country_id=request.args.get('country_id')) }}" aria-label="Next">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="{{ url_for('user.user_teams', page=total_pages, league_id=request.args.get('league_id'), country_id=request.args.get('country_id')) }}" aria-label="Last">
-                    <span aria-hidden="true">&raquo;&raquo;</span>
-                </a>
-            </li>
-        {% endif %}
-    </ul>
-</nav>
+<!-- Search Bar -->
+<div class="search-box-modern" style="margin-bottom: 1.5rem;">
+    <i class="fas fa-search"></i>
+    <input 
+        type="text" 
+        id="teamSearch" 
+        placeholder="Search teams by name..." 
+        onkeyup="filterTeams()"
+        autocomplete="off"
+    >
+    <button type="button" onclick="clearSearch()" class="clear-search" id="clearBtn" style="display: none;">
+        <i class="fas fa-times"></i>
+    </button>
+</div>
+
+<!-- Teams Container -->
+<div class="teams-wrapper">
+    {% if teams %}
+        <div class="teams-container">
+            <div class="teams-grid" id="teamsGrid">
+                {% for team in teams %}
+                    <div class="team-card" data-team-name="{{ team[1].lower() }}">
+                        <div class="team-logo-wrapper">
+                            {% if team[2] %}
+                                <img src="{{ team[2] }}" alt="{{ team[1] }} Logo" class="team-logo">
+                            {% else %}
+                                <i class="fas fa-shield-alt" style="font-size: 3rem; color: var(--primary); opacity: 0.3;"></i>
+                            {% endif %}
+                        </div>
+                        <div class="team-info">
+                            <h3 class="team-name">{{ team[1] }}</h3>
+                            <div class="team-meta">
+                                <div class="team-meta-item">
+                                    <i class="fas fa-city"></i>
+                                    <span>City: {{ team[3] or 'N/A' }}</span>
+                                </div>
+                            </div>
+                            <div class="team-actions">
+                                <a href="{{ url_for('user.profile_team', team_id=team[0]) }}" class="btn-team btn-team-view">
+                                    <i class="fas fa-eye"></i> View Profile
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="pagination-container">
+            <div class="pagination-info">
+                <i class="fas fa-book"></i> Page {{ page }} of {{ total_pages }}
+            </div>
+            <div class="pagination-links">
+                {% if page > 1 %}
+                    <a href="{{ url_for('user.user_teams', page=1, league_id=request.args.get('league_id'), country_id=request.args.get('country_id')) }}" class="page-link" title="First">
+                        <i class="fas fa-chevron-left"></i><i class="fas fa-chevron-left"></i>
+                    </a>
+                    <a href="{{ url_for('user.user_teams', page=page-1, league_id=request.args.get('league_id'), country_id=request.args.get('country_id')) }}" class="page-link" title="Previous">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                {% else %}
+                    <button class="page-link disabled"><i class="fas fa-chevron-left"></i><i class="fas fa-chevron-left"></i></button>
+                    <button class="page-link disabled"><i class="fas fa-chevron-left"></i></button>
+                {% endif %}
+                
+                {% for p in range(max(1, page-2), min(total_pages, page+2) + 1) %}
+                    <a href="{{ url_for('user.user_teams', page=p, league_id=request.args.get('league_id'), country_id=request.args.get('country_id')) }}" 
+                       class="page-link {% if page == p %}active{% endif %}">
+                        {{ p }}
+                    </a>
+                {% endfor %}
+                
+                {% if page < total_pages %}
+                    <a href="{{ url_for('user.user_teams', page=page+1, league_id=request.args.get('league_id'), country_id=request.args.get('country_id')) }}" class="page-link" title="Next">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="{{ url_for('user.user_teams', page=total_pages, league_id=request.args.get('league_id'), country_id=request.args.get('country_id')) }}" class="page-link" title="Last">
+                        <i class="fas fa-chevron-right"></i><i class="fas fa-chevron-right"></i>
+                    </a>
+                {% else %}
+                    <button class="page-link disabled"><i class="fas fa-chevron-right"></i></button>
+                    <button class="page-link disabled"><i class="fas fa-chevron-right"></i><i class="fas fa-chevron-right"></i></button>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="teams-container">
+            <div class="empty-state">
+                <i class="fas fa-search"></i>
+                <h3>No Teams Found</h3>
+                <p>Try adjusting your filters or search criteria</p>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    function filterTeams() {
+        const searchInput = document.getElementById('teamSearch');
+        const clearBtn = document.getElementById('clearBtn');
+        const filter = searchInput.value.toLowerCase();
+        const cards = document.querySelectorAll('.team-card');
+        let visibleCount = 0;
+        
+        // Show/hide clear button
+        clearBtn.style.display = filter ? 'block' : 'none';
+        
+        cards.forEach(card => {
+            const teamName = card.getAttribute('data-team-name');
+            if (teamName.includes(filter)) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Show empty state if no results
+        const grid = document.getElementById('teamsGrid');
+        if (visibleCount === 0) {
+            grid.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><i class="fas fa-search"></i><h3>No teams match your search</h3></div>';
+        }
+    }
+    
+    function clearSearch() {
+        document.getElementById('teamSearch').value = '';
+        document.getElementById('clearBtn').style.display = 'none';
+        filterTeams();
+    }
+    
+    // Auto-focus search on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const teamsGrid = document.getElementById('teamsGrid');
+        if (teamsGrid) {
+            // Recreate the original HTML if search was cleared
+            const teamCards = document.querySelectorAll('.team-card');
+            if (teamCards.length === 0 && document.querySelector('.empty-state')) {
+                location.reload();
+            }
+        }
+    });
+</script>
+
 {% endblock %}

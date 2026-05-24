@@ -1,22 +1,234 @@
 {% extends "layout.html" %}
 {% block title %}User Dashboard - Sports League Management{% endblock %}
 {% block content %}
-<div class="container">
-    <h1 class="mt-4">User Dashboard</h1>
-    <div class="row">
-        <div class="col-md-3">
-            <div class="list-group">
-                <a href="{{ url_for('user.user_dashboard') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'user.user_dashboard' %}active{% endif %}">Dashboard</a>
-                <a href="{{ url_for('user.user_teams') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'user.user_teams' %}active{% endif %}">Teams</a>
-                <a href="{{ url_for('user.user_players') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'user.user_players' %}active{% endif %}">Players</a>
-                <a href="{{ url_for('user.user_leagues') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'user.user_leagues' %}active{% endif %}">Leagues</a>
-                <a href="{{ url_for('user.user_matches') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'user.user_matches' %}active{% endif %}">Matches</a>
-                <a href="{{ url_for('user.user_scorers') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'user.user_scorers' %}active{% endif %}">Top Scorers</a>
-            </div>
+<style>
+    :root {
+        --primary: #0066cc;
+        --primary-dark: #004999;
+        --secondary: #f0f2f5;
+        --accent: #00d4ff;
+    }
+    
+    .dashboard-container {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 2rem;
+        min-height: calc(100vh - 200px);
+    }
+    
+    /* Sidebar Moderno */
+    .sidebar-modern {
+        background: white;
+        border-radius: 16px;
+        padding: 0;
+        box-shadow: 0 2px 16px rgba(0, 102, 204, 0.08);
+        overflow: hidden;
+        position: sticky;
+        top: 2rem;
+        max-height: calc(100vh - 300px);
+    }
+    
+    .sidebar-header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        padding: 1.5rem;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+    
+    .sidebar-header i {
+        font-size: 1.5rem;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+    
+    .nav-menu {
+        list-style: none;
+        padding: 0.5rem;
+    }
+    
+    .nav-menu li {
+        margin: 0.3rem 0;
+    }
+    
+    .nav-menu a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0.875rem 1.25rem;
+        color: var(--text-dark);
+        text-decoration: none;
+        border-left: 4px solid transparent;
+        transition: all 0.3s ease;
+        border-radius: 8px;
+        margin: 0 0.5rem;
+        font-weight: 500;
+        position: relative;
+    }
+    
+    .nav-menu a:hover {
+        background: var(--secondary);
+        color: var(--primary);
+        border-left-color: var(--accent);
+        transform: translateX(4px);
+    }
+    
+    .nav-menu a.active {
+        background: linear-gradient(135deg, rgba(0, 102, 204, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%);
+        color: var(--primary);
+        border-left-color: var(--primary);
+        font-weight: 600;
+        box-shadow: inset 0 0 8px rgba(0, 102, 204, 0.1);
+    }
+    
+    .nav-menu a i {
+        width: 20px;
+        text-align: center;
+        font-size: 1.1rem;
+        transition: transform 0.3s ease;
+    }
+    
+    .nav-menu a:hover i {
+        transform: scale(1.2);
+    }
+    
+    /* Main Content */
+    .main-content {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 2px 16px rgba(0, 102, 204, 0.08);
+    }
+    
+    .page-header {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 2px solid var(--secondary);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .page-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .page-header i {
+        font-size: 2.5rem;
+        opacity: 0.7;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .dashboard-container {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .sidebar-modern {
+            position: relative;
+            top: auto;
+            max-height: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        }
+        
+        .sidebar-header {
+            grid-column: 1 / -1;
+        }
+        
+        .nav-menu {
+            display: contents;
+        }
+        
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+    }
+    
+    /* Badges y tags */
+    .badge-modern {
+        display: inline-block;
+        padding: 0.35rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+</style>
+
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar-modern">
+        <div class="sidebar-header">
+            <i class="fas fa-compass"></i>
+            Navigation
         </div>
-        <div class="col-md-9">
-            {% block user_content %}{% endblock %}
+        <ul class="nav-menu">
+            <li>
+                <a href="{{ url_for('user.user_dashboard') }}" 
+                   class="{% if request.endpoint == 'user.user_dashboard' %}active{% endif %}">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('user.user_teams') }}" 
+                   class="{% if request.endpoint == 'user.user_teams' %}active{% endif %}">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Teams</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('user.user_players') }}" 
+                   class="{% if request.endpoint == 'user.user_players' %}active{% endif %}">
+                    <i class="fas fa-users"></i>
+                    <span>Players</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('user.user_leagues') }}" 
+                   class="{% if request.endpoint == 'user.user_leagues' %}active{% endif %}">
+                    <i class="fas fa-trophy"></i>
+                    <span>Leagues</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('user.user_matches') }}" 
+                   class="{% if request.endpoint == 'user.user_matches' %}active{% endif %}">
+                    <i class="fas fa-futbol"></i>
+                    <span>Matches</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('user.user_scorers') }}" 
+                   class="{% if request.endpoint == 'user.user_scorers' %}active{% endif %}">
+                    <i class="fas fa-fire"></i>
+                    <span>Top Scorers</span>
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="page-header">
+            <h1>
+                {% block page_icon %}<i class="fas fa-home"></i>{% endblock %}
+                {% block page_title %}Dashboard{% endblock %}
+            </h1>
         </div>
+        {% block user_content %}{% endblock %}
     </div>
 </div>
+
 {% endblock %}
