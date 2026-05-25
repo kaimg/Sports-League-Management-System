@@ -130,7 +130,7 @@
     }
 
     /* Responsive */
-    @media (max-width: 768px) {
+    @media (max-width: 1024px) {
         .dashboard-container {
             grid-template-columns: 1fr;
             gap: 1rem;
@@ -181,15 +181,21 @@
 </style>
 
 {% block mobile_sidebar_toggle %}
-<button class="btn btn-outline-light d-md-none ms-2" type="button" data-bs-toggle="offcanvas"
+<button class="btn btn-outline-light mobile-sidebar-btn ms-2" type="button" data-bs-toggle="offcanvas"
     data-bs-target="#mobileSidebar" aria-controls="mobileSidebar" style="border-color: rgba(255,255,255,0.5);">
     <i class="fas fa-bars"></i>
 </button>
+<style>
+    .mobile-sidebar-btn { display: none; }
+    @media (max-width: 1024px) {
+        .mobile-sidebar-btn { display: inline-block !important; }
+    }
+</style>
 {% endblock %}
 
 <div class="dashboard-container">
     <!-- Mobile Offcanvas Sidebar -->
-    <div class="offcanvas offcanvas-start bg-dark text-white d-md-none" tabindex="-1" id="mobileSidebar"
+    <div class="offcanvas offcanvas-start bg-dark text-white" tabindex="-1" id="mobileSidebar"
         aria-labelledby="mobileSidebarLabel">
         <div class="offcanvas-header" style="background-color: #343a40; border-bottom: 2px solid var(--accent);">
             <h5 class="offcanvas-title" id="mobileSidebarLabel"><i class="fas fa-compass"></i> Navigation</h5>

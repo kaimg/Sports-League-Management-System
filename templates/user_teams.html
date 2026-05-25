@@ -21,7 +21,7 @@
     .main-content {
         padding-left: 0.5rem !important;
     }
-    
+
     /* Filter Panel */
     .filter-panel {
         background: linear-gradient(135deg, var(--secondary) 0%, #ffffff 100%);
@@ -39,7 +39,7 @@
         gap: 1rem;
         overflow-x: auto;
     }
-    
+
     .form-group-modern {
         display: flex;
         flex-direction: row;
@@ -65,18 +65,18 @@
         cursor: pointer;
         font-size: 0.9rem;
     }
-    
+
     .form-select-modern:hover {
         border-color: var(--primary);
         box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
     }
-    
+
     .form-select-modern:focus {
         outline: none;
         border-color: var(--accent);
         box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.2);
     }
-    
+
     /* Search Bar Moderno */
     .search-box-modern {
         display: flex;
@@ -554,26 +554,29 @@
                     {% endfor %}
                 </select>
             </div>
-                <div class="form-group-modern" style="margin-right:auto; margin-left: 1rem;">
-                    <label>Total Teams:</label>
-                    <div class="stat-value" style="font-weight:700; font-size:1.1rem; color:var(--primary);">{{ total_teams }}</div>
-                </div>
-                <div class="search-box-modern" style="flex:1; min-width: 250px;">
-                    <i class="fas fa-search" style="color: var(--text-light);"></i>
+            <div class="form-group-modern" style="margin-right:auto; margin-left: 1rem;">
+                <label>Total Teams:</label>
+                <div class="stat-value" style="font-weight:700; font-size:1.1rem; color:var(--primary);">{{ total_teams
+                    }}</div>
+            </div>
+            <div class="search-box-modern" style="flex:1; min-width: 250px;">
+                <i class="fas fa-search" style="color: var(--text-light);"></i>
                 <input type="text" id="teamSearch" name="search" placeholder="Search teams..." autocomplete="off" />
-                    <button type="submit" class="btn-modern" style="background: var(--primary); color:white; padding: 0.4rem 1rem; border-radius: 6px;">Search</button>
-                    <button type="button" onclick="clearSearch()" class="clear-search" id="clearBtn" style="display:none; padding: 0.2rem 0.5rem;"><i class="fas fa-times"></i></button>
+                <button type="submit" class="btn-modern"
+                    style="background: var(--primary); color:white; padding: 0.4rem 1rem; border-radius: 6px;">Search</button>
+                <button type="button" onclick="clearSearch()" class="clear-search" id="clearBtn"
+                    style="display:none; padding: 0.2rem 0.5rem;"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="form-group-modern" style="margin-left: auto;">
+                <div class="action-buttons">
+                    <button type="submit" class="btn-modern btn-primary-modern">
+                        <i class="fas fa-filter"></i> Apply
+                    </button>
+                    <a href="{{ url_for('user.user_teams') }}" class="btn-modern btn-secondary-modern">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
                 </div>
-                <div class="form-group-modern" style="margin-left: auto;">
-                    <div class="action-buttons">
-                        <button type="submit" class="btn-modern btn-primary-modern">
-                            <i class="fas fa-filter"></i> Apply
-                        </button>
-                        <a href="{{ url_for('user.user_teams') }}" class="btn-modern btn-secondary-modern">
-                            <i class="fas fa-times"></i> Clear
-                        </a>
-                    </div>
-                </div>
+            </div>
         </div>
     </form>
 </div>
@@ -623,7 +626,7 @@
 </div>
 
 {# Pagination moved outside the scrollable teams wrapper so it is always visible below the list #}
-{% if teams and total_pages and total_pages > 1 %}
+{% if teams and total_pages %}
 <div class="pagination-container">
     <div class="pagination-info">
         <i class="fas fa-book"></i> Page {{ page }} of {{ total_pages }}
@@ -670,42 +673,6 @@
 {% endif %}
 
 <script>
-    function filterTeams() {
-        const searchInput = document.getElementById('teamSearch');
-        const clearBtn = document.getElementById('clearBtn');
-        const filter = searchInput.value.toLowerCase();
-        const cards = document.querySelectorAll('.team-card');
-        let visibleCount = 0;
-
-        // Show/hide clear button
-        clearBtn.style.display = filter ? 'block' : 'none';
-
-        cards.forEach(card => {
-            const teamName = card.getAttribute('data-team-name');
-            if (teamName.includes(filter)) {
-                card.style.display = '';
-                visibleCount++;
-            } else {
-                card.style.display = 'none';
-            }
-        });
-
-        // Show empty state if no results
-        const grid = document.getElementById('teamsGrid');
-        const pagination = document.querySelector('.pagination-container');
-
-        // Hide pagination while searching
-        if (filter) {
-            if (pagination) pagination.style.display = 'none';
-        } else {
-            if (pagination) pagination.style.display = '';
-        }
-
-        if (visibleCount === 0) {
-            grid.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><i class="fas fa-search"></i><h3>No teams match your search</h3></div>';
-        }
-    }
-
     function clearSearch() {
         const searchInput = document.getElementById('teamSearch');
         searchInput.value = '';

@@ -172,21 +172,25 @@ def user_teams():
     cur.execute(query, filters)
     teams = cur.fetchall()
 
-    count_query = "SELECT COUNT(*) FROM teams WHERE is_active = TRUE"
+    count_query = """
+        SELECT COUNT(*) 
+        FROM teams t
+        LEFT JOIN leagues l ON t.league_id = l.league_id
+        WHERE t.is_active = TRUE
+    """
     count_filters = []
 
     if league_id:
-        count_query += " AND league_id = %s"
+        count_query += " AND t.league_id = %s"
         count_filters.append(league_id)
 
     if country_id:
-        count_query += " AND country_id = %s"
+        count_query += " AND l.country_id = %s"
         count_filters.append(country_id)
 
-    # Apply same search filter to count
     search = request.args.get('search')
     if search:
-        count_query += " AND name ILIKE %s"
+        count_query += " AND t.name ILIKE %s"
         count_filters.append(f"%{search}%")
 
     cur.execute(count_query, count_filters)
