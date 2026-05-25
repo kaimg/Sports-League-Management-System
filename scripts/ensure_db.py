@@ -162,6 +162,10 @@ def fix_sequences(database_url: str) -> None:
 
 
 def main() -> int:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+
     database_url = os.getenv("DATABASE_URL")
     if not database_url:
         print("DATABASE_URL is not set.", file=sys.stderr)
@@ -194,10 +198,9 @@ def main() -> int:
             file=sys.stderr,
         )
         print(
-            "Reset the database volume and run setup again:\n"
-            "  docker compose down -v\n"
-            "  .\\setup.ps1 -Fresh    (Windows)\n"
-            "  ./setup.sh --fresh     (Linux/macOS)",
+            "Reset the database and run setup again:\n"
+            "  Docker:  docker compose down -v  then  .\\setup.ps1 -Fresh  or  ./setup.sh --fresh\n"
+            "  Local:   drop/recreate the DB, then  python scripts/ensure_db.py",
             file=sys.stderr,
         )
         return 1
