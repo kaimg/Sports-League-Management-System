@@ -598,12 +598,6 @@
                 </div>
                 <div class="team-info">
                     <h3 class="team-name">{{ team[1] }}</h3>
-                    <div class="team-meta">
-                        <div class="team-meta-item">
-                            <i class="fas fa-city"></i>
-                            <span>City: {{ team[3] or 'N/A' }}</span>
-                        </div>
-                    </div>
                     <div class="team-actions">
                         <a href="{{ url_for('user.profile_team', team_id=team[0]) }}" class="btn-team btn-team-view">
                             <i class="fas fa-eye"></i> View Profile

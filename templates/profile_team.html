@@ -157,6 +157,50 @@
         }
     }
     
+    @media (max-width: 576px) {
+        .profile-hero {
+            padding: 1.5rem 1rem;
+        }
+        .team-logo-large {
+            width: 110px;
+            height: 110px;
+            padding: 10px;
+        }
+        .team-info-main h1 {
+            font-size: 1.8rem;
+        }
+        .players-grid {
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 0.75rem;
+        }
+        .player-card {
+            padding: 1rem 0.5rem;
+        }
+        .player-name {
+            font-size: 0.95rem;
+        }
+        .match-teams {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .match-team {
+            width: 100%;
+        }
+        .match-team.home {
+            justify-content: center;
+        }
+        .match-team.away {
+            justify-content: center;
+        }
+        .match-score {
+            width: auto;
+            align-self: center;
+        }
+        #teamMap {
+            height: 250px;
+        }
+    }
+    
     /* Section Styles */
     .section-title {
         font-size: 1.5rem;
@@ -286,6 +330,7 @@
         align-items: center;
         gap: 0.75rem;
         flex: 1;
+        min-width: 0;
     }
     
     .match-team.home { justify-content: flex-end; text-align: right; }
@@ -295,11 +340,15 @@
         width: 35px;
         height: 35px;
         object-fit: contain;
+        flex-shrink: 0;
     }
     
     .match-team-name {
         font-weight: 700;
         font-size: 1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     
     .match-score {
@@ -312,6 +361,8 @@
         min-width: 70px;
         text-align: center;
         box-shadow: 0 2px 4px rgba(0,102,204,0.3);
+        white-space: nowrap;
+        flex-shrink: 0;
     }
     
     /* Map Container */
@@ -368,6 +419,13 @@
     }
     
 </style>
+
+<!-- Go Back Button -->
+<div class="mb-3">
+    <a href="{{ url_for('user.user_teams') }}" class="btn btn-outline-secondary btn-sm" style="border-radius: 20px; font-weight: 600; padding: 0.4rem 1rem; border: 2px solid #e0e0e0; color: var(--text-dark); background: white;">
+        <i class="fas fa-arrow-left"></i> Back to Teams
+    </a>
+</div>
 
 <!-- Hero Section -->
 <div class="profile-hero">
@@ -443,7 +501,7 @@
                         </div>
                         <div class="match-teams">
                             <div class="match-team home">
-                                <span class="match-team-name text-truncate" style="max-width: 90px;" title="{{ score[2] }}">{{ score[2] }}</span>
+                                <span class="match-team-name" title="{{ score[2] }}">{{ score[2] }}</span>
                                 <img src="{{ score[6] }}" alt="Home Logo" class="match-team-logo">
                             </div>
                             <div class="match-score">
@@ -451,7 +509,7 @@
                             </div>
                             <div class="match-team away">
                                 <img src="{{ score[7] }}" alt="Away Logo" class="match-team-logo">
-                                <span class="match-team-name text-truncate" style="max-width: 90px;" title="{{ score[3] }}">{{ score[3] }}</span>
+                                <span class="match-team-name" title="{{ score[3] }}">{{ score[3] }}</span>
                             </div>
                         </div>
                     </a>
