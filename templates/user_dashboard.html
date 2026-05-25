@@ -8,14 +8,16 @@
         --secondary: #f0f2f5;
         --accent: #00d4ff;
     }
-    
+
     .dashboard-container {
         display: grid;
-        grid-template-columns: 280px 1fr;
-        gap: 2rem;
+        grid-template-columns: 240px minmax(0, 1fr);
+        gap: 0.5rem;
         min-height: calc(100vh - 200px);
+        max-width: 100%;
+        overflow-x: hidden;
     }
-    
+
     /* Sidebar Moderno */
     .sidebar-modern {
         background: white;
@@ -26,8 +28,9 @@
         position: sticky;
         top: 2rem;
         max-height: calc(100vh - 300px);
+        width: 200px;
     }
-    
+
     .sidebar-header {
         background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
         padding: 1.5rem;
@@ -38,21 +41,21 @@
         font-weight: 700;
         font-size: 1.1rem;
     }
-    
+
     .sidebar-header i {
         font-size: 1.5rem;
-        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
     }
-    
+
     .nav-menu {
         list-style: none;
         padding: 0.5rem;
     }
-    
+
     .nav-menu li {
         margin: 0.3rem 0;
     }
-    
+
     .nav-menu a {
         display: flex;
         align-items: center;
@@ -67,14 +70,14 @@
         font-weight: 500;
         position: relative;
     }
-    
+
     .nav-menu a:hover {
         background: var(--secondary);
         color: var(--primary);
         border-left-color: var(--accent);
         transform: translateX(4px);
     }
-    
+
     .nav-menu a.active {
         background: linear-gradient(135deg, rgba(0, 102, 204, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%);
         color: var(--primary);
@@ -82,26 +85,26 @@
         font-weight: 600;
         box-shadow: inset 0 0 8px rgba(0, 102, 204, 0.1);
     }
-    
+
     .nav-menu a i {
         width: 20px;
         text-align: center;
         font-size: 1.1rem;
         transition: transform 0.3s ease;
     }
-    
+
     .nav-menu a:hover i {
         transform: scale(1.2);
     }
-    
+
     /* Main Content */
     .main-content {
         background: white;
         border-radius: 16px;
-        padding: 2rem;
+        padding: 1rem;
         box-shadow: 0 2px 16px rgba(0, 102, 204, 0.08);
     }
-    
+
     .page-header {
         margin-bottom: 2rem;
         padding-bottom: 1.5rem;
@@ -110,7 +113,7 @@
         align-items: center;
         justify-content: space-between;
     }
-    
+
     .page-header h1 {
         font-size: 2rem;
         font-weight: 700;
@@ -120,42 +123,34 @@
         align-items: center;
         gap: 12px;
     }
-    
+
     .page-header i {
         font-size: 2.5rem;
         opacity: 0.7;
     }
-    
+
     /* Responsive */
     @media (max-width: 768px) {
         .dashboard-container {
             grid-template-columns: 1fr;
             gap: 1rem;
         }
-        
+
         .sidebar-modern {
-            position: relative;
-            top: auto;
-            max-height: none;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            display: none !important;
         }
-        
-        .sidebar-header {
-            grid-column: 1 / -1;
-        }
-        
+
         .nav-menu {
             display: contents;
         }
-        
+
         .page-header {
             flex-direction: column;
             align-items: flex-start;
             gap: 1rem;
         }
     }
-    
+
     /* Badges y tags */
     .badge-modern {
         display: inline-block;
@@ -166,7 +161,64 @@
     }
 </style>
 
+<style>
+    /* Mobile Offcanvas Nav Styling */
+    #mobileSidebar .nav-menu a {
+        color: #fff;
+    }
+
+    #mobileSidebar .nav-menu a:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--accent);
+        border-left-color: var(--accent);
+    }
+
+    #mobileSidebar .nav-menu a.active {
+        background: rgba(255, 255, 255, 0.2);
+        color: var(--accent);
+        border-left-color: var(--accent);
+    }
+</style>
+
+{% block mobile_sidebar_toggle %}
+<button class="btn btn-outline-light d-md-none ms-2" type="button" data-bs-toggle="offcanvas"
+    data-bs-target="#mobileSidebar" aria-controls="mobileSidebar" style="border-color: rgba(255,255,255,0.5);">
+    <i class="fas fa-bars"></i>
+</button>
+{% endblock %}
+
 <div class="dashboard-container">
+    <!-- Mobile Offcanvas Sidebar -->
+    <div class="offcanvas offcanvas-start bg-dark text-white d-md-none" tabindex="-1" id="mobileSidebar"
+        aria-labelledby="mobileSidebarLabel">
+        <div class="offcanvas-header" style="background-color: #343a40; border-bottom: 2px solid var(--accent);">
+            <h5 class="offcanvas-title" id="mobileSidebarLabel"><i class="fas fa-compass"></i> Navigation</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
+                aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            <ul class="nav-menu mt-2">
+                <li><a href="{{ url_for('user.user_dashboard') }}"
+                        class="{% if request.endpoint == 'user.user_dashboard' %}active{% endif %}"><i
+                            class="fas fa-home"></i><span>Dashboard</span></a></li>
+                <li><a href="{{ url_for('user.user_teams') }}"
+                        class="{% if request.endpoint == 'user.user_teams' %}active{% endif %}"><i
+                            class="fas fa-shield-alt"></i><span>Teams</span></a></li>
+                <li><a href="{{ url_for('user.user_players') }}"
+                        class="{% if request.endpoint == 'user.user_players' %}active{% endif %}"><i
+                            class="fas fa-users"></i><span>Players</span></a></li>
+                <li><a href="{{ url_for('user.user_leagues') }}"
+                        class="{% if request.endpoint == 'user.user_leagues' %}active{% endif %}"><i
+                            class="fas fa-trophy"></i><span>Leagues</span></a></li>
+                <li><a href="{{ url_for('user.user_matches') }}"
+                        class="{% if request.endpoint == 'user.user_matches' %}active{% endif %}"><i
+                            class="fas fa-futbol"></i><span>Matches</span></a></li>
+                <li><a href="{{ url_for('user.user_scorers') }}"
+                        class="{% if request.endpoint == 'user.user_scorers' %}active{% endif %}"><i
+                            class="fas fa-fire"></i><span>Top Scorers</span></a></li>
+            </ul>
+        </div>
+    </div>
     <!-- Sidebar -->
     <aside class="sidebar-modern">
         <div class="sidebar-header">
@@ -175,43 +227,43 @@
         </div>
         <ul class="nav-menu">
             <li>
-                <a href="{{ url_for('user.user_dashboard') }}" 
-                   class="{% if request.endpoint == 'user.user_dashboard' %}active{% endif %}">
+                <a href="{{ url_for('user.user_dashboard') }}"
+                    class="{% if request.endpoint == 'user.user_dashboard' %}active{% endif %}">
                     <i class="fas fa-home"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li>
-                <a href="{{ url_for('user.user_teams') }}" 
-                   class="{% if request.endpoint == 'user.user_teams' %}active{% endif %}">
+                <a href="{{ url_for('user.user_teams') }}"
+                    class="{% if request.endpoint == 'user.user_teams' %}active{% endif %}">
                     <i class="fas fa-shield-alt"></i>
                     <span>Teams</span>
                 </a>
             </li>
             <li>
-                <a href="{{ url_for('user.user_players') }}" 
-                   class="{% if request.endpoint == 'user.user_players' %}active{% endif %}">
+                <a href="{{ url_for('user.user_players') }}"
+                    class="{% if request.endpoint == 'user.user_players' %}active{% endif %}">
                     <i class="fas fa-users"></i>
                     <span>Players</span>
                 </a>
             </li>
             <li>
-                <a href="{{ url_for('user.user_leagues') }}" 
-                   class="{% if request.endpoint == 'user.user_leagues' %}active{% endif %}">
+                <a href="{{ url_for('user.user_leagues') }}"
+                    class="{% if request.endpoint == 'user.user_leagues' %}active{% endif %}">
                     <i class="fas fa-trophy"></i>
                     <span>Leagues</span>
                 </a>
             </li>
             <li>
-                <a href="{{ url_for('user.user_matches') }}" 
-                   class="{% if request.endpoint == 'user.user_matches' %}active{% endif %}">
+                <a href="{{ url_for('user.user_matches') }}"
+                    class="{% if request.endpoint == 'user.user_matches' %}active{% endif %}">
                     <i class="fas fa-futbol"></i>
                     <span>Matches</span>
                 </a>
             </li>
             <li>
-                <a href="{{ url_for('user.user_scorers') }}" 
-                   class="{% if request.endpoint == 'user.user_scorers' %}active{% endif %}">
+                <a href="{{ url_for('user.user_scorers') }}"
+                    class="{% if request.endpoint == 'user.user_scorers' %}active{% endif %}">
                     <i class="fas fa-fire"></i>
                     <span>Top Scorers</span>
                 </a>

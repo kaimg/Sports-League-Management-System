@@ -159,6 +159,11 @@ def user_teams():
     if country_id:
         query += " AND l.country_id = %s"
         filters.append(country_id)
+    # Add global search filter
+    search = request.args.get('search')
+    if search:
+        query += " AND t.name ILIKE %s"
+        filters.append(f"%{search}%")
 
     query += " LIMIT %s OFFSET %s"
     filters.append(20)
@@ -177,6 +182,12 @@ def user_teams():
     if country_id:
         count_query += " AND country_id = %s"
         count_filters.append(country_id)
+
+    # Apply same search filter to count
+    search = request.args.get('search')
+    if search:
+        count_query += " AND name ILIKE %s"
+        count_filters.append(f"%{search}%")
 
     cur.execute(count_query, count_filters)
     total_teams =  cur.fetchone()[0]

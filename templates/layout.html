@@ -36,10 +36,13 @@
         
         /* Header Moderno */
         .navbar-modern {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            box-shadow: 0 2px 20px rgba(0, 102, 204, 0.15);
+            background-color: #343a40;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
             padding: 1rem 0;
             border-bottom: 3px solid var(--accent);
+            position: sticky;
+            top: 0;
+            z-index: 1050;
         }
         
         .navbar-brand {
@@ -160,12 +163,12 @@
         
         /* Footer Moderno */
         .footer-modern {
-            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            background-color: #343a40;
             color: white;
             padding: 2rem 0;
             margin-top: auto;
             border-top: 3px solid var(--accent);
-            box-shadow: 0 -2px 20px rgba(0, 102, 204, 0.15);
+            box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.15);
         }
         
         .footer-modern a {
@@ -206,6 +209,7 @@
                 <img src="{{ url_for('static', filename='images/icon.png') }}" width="45" alt="Logo">
                 <span>SLM</span>
             </a>
+            {% block mobile_sidebar_toggle %}{% endblock %}
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
