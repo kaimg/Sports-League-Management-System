@@ -159,6 +159,11 @@ def user_teams():
     if country_id:
         query += " AND l.country_id = %s"
         filters.append(country_id)
+    # Add global search filter
+    search = request.args.get('search')
+    if search:
+        query += " AND t.name ILIKE %s"
+        filters.append(f"%{search}%")
 
     query += " LIMIT %s OFFSET %s"
     filters.append(20)
@@ -167,16 +172,26 @@ def user_teams():
     cur.execute(query, filters)
     teams = cur.fetchall()
 
-    count_query = "SELECT COUNT(*) FROM teams WHERE is_active = TRUE"
+    count_query = """
+        SELECT COUNT(*) 
+        FROM teams t
+        LEFT JOIN leagues l ON t.league_id = l.league_id
+        WHERE t.is_active = TRUE
+    """
     count_filters = []
 
     if league_id:
-        count_query += " AND league_id = %s"
+        count_query += " AND t.league_id = %s"
         count_filters.append(league_id)
 
     if country_id:
-        count_query += " AND country_id = %s"
+        count_query += " AND l.country_id = %s"
         count_filters.append(country_id)
+
+    search = request.args.get('search')
+    if search:
+        count_query += " AND t.name ILIKE %s"
+        count_filters.append(f"%{search}%")
 
     cur.execute(count_query, count_filters)
     total_teams =  cur.fetchone()[0]
@@ -184,7 +199,7 @@ def user_teams():
 
     total_pages = (total_teams + 19) // 20
 
-    return render_template('user_teams.html', teams=teams, page=request.args.get('page', 1, type=int), total_pages=total_pages, leagues=leagues, countries=countries, max=max, min=min, str=str)
+    return render_template('user_teams.html', teams=teams, page=request.args.get('page', 1, type=int), total_pages=total_pages, total_teams=total_teams, leagues=leagues, countries=countries, max=max, min=min, str=str)
 
 @user_bp.route('/user/players')
 @login_required

@@ -1,109 +1,558 @@
-{% extends "layout.html" %}
-{% block title %}{{ team[0] }} - Team Profile{% endblock %}
-{% block content %}
+{% extends "user_dashboard.html" %}
+{% block page_title %}{% endblock %}
+{% block page_icon %}{% endblock %}
+
+{% block user_content %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <style>
-    #teamMap {
+    :root {
+        --primary: #0066cc;
+        --primary-dark: #004999;
+        --secondary: #f0f2f5;
+        --accent: #00d4ff;
+        --text-dark: #1a1a1a;
+        --text-light: #666666;
+        --success: #28a745;
+        --danger: #dc3545;
+        --warning: #ffc107;
+    }
+    
+    .page-header {
+        display: none !important;
+    }
+    
+    /* Hero Section */
+    .profile-hero {
+        background: linear-gradient(135deg, var(--secondary) 0%, #ffffff 100%);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 16px rgba(0, 102, 204, 0.08);
+        border: 1px solid #e0e0e0;
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .profile-hero::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
         height: 300px;
-        width: 100%;
-        border-radius: 10px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        margin-top: 20px;
-        margin-bottom: 30px;
+        background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+        z-index: 0;
     }
-    .flag-img {
-        width: 20px;
-        height: auto;
-        max-height: 15px;
+    
+    .team-logo-large {
+        width: 150px;
+        height: 150px;
+        object-fit: contain;
+        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+        position: relative;
+        z-index: 1;
+        background: white;
+        border-radius: 50%;
+        padding: 15px;
+        border: 4px solid var(--secondary);
+    }
+    
+    .team-info-main {
+        flex: 1;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .team-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+    
+    .team-info-main h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--primary-dark);
+        margin: 0;
+        letter-spacing: -0.5px;
+    }
+    
+    .team-stats-badges {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+    
+    .badge-modern {
+        background: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border: 1px solid var(--secondary);
+    }
+    
+    .badge-modern i {
+        color: var(--primary);
+    }
+    
+    /* Favorite Button */
+    .btn-favorite {
+        padding: 0.75rem 1.5rem;
+        border-radius: 30px;
+        font-weight: 700;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        border: 2px solid var(--primary);
+        cursor: pointer;
+        background: white;
+        color: var(--primary);
+    }
+    
+    .btn-favorite:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 102, 204, 0.2);
+    }
+    
+    .btn-favorite.active {
+        background: var(--primary);
+        color: white;
+    }
+    
+    /* Grid Layout */
+    .profile-grid {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 2rem;
+    }
+    
+    @media (max-width: 992px) {
+        .profile-grid {
+            grid-template-columns: 1fr;
+        }
+        .profile-hero {
+            flex-direction: column;
+            text-align: center;
+        }
+        .team-title-row {
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+        .team-stats-badges {
+            justify-content: center;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .profile-hero {
+            padding: 1.5rem 1rem;
+        }
+        .team-logo-large {
+            width: 110px;
+            height: 110px;
+            padding: 10px;
+        }
+        .team-info-main h1 {
+            font-size: 1.8rem;
+        }
+        .players-grid {
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 0.75rem;
+        }
+        .player-card {
+            padding: 1rem 0.5rem;
+        }
+        .player-name {
+            font-size: 0.95rem;
+        }
+        .match-teams {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .match-team {
+            width: 100%;
+        }
+        .match-team.home {
+            justify-content: center;
+        }
+        .match-team.away {
+            justify-content: center;
+        }
+        .match-score {
+            width: auto;
+            align-self: center;
+        }
+        #teamMap {
+            height: 250px;
+        }
+    }
+    
+    /* Section Styles */
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--secondary);
+    }
+    
+    .section-title i {
+        color: var(--primary);
+    }
+    
+    /* Players Grid */
+    .players-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1.25rem;
+    }
+    
+    .player-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border: 1px solid #e0e0e0;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        text-decoration: none;
+        color: var(--text-dark);
+    }
+    
+    .player-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 102, 204, 0.15);
+        border-color: var(--accent);
+        color: var(--primary);
+    }
+    
+    .player-position-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .pos-goalkeeper { background: rgba(108, 117, 125, 0.1); color: #6c757d; }
+    .pos-defence { background: rgba(0, 102, 204, 0.1); color: var(--primary); }
+    .pos-midfield { background: rgba(40, 167, 69, 0.1); color: var(--success); }
+    .pos-offence { background: rgba(220, 53, 69, 0.1); color: var(--danger); }
+    
+    .player-name {
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .player-nat {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: var(--text-light);
+    }
+    
+    .flag-icon {
+        width: 24px;
+        height: 16px;
         object-fit: cover;
-        border-radius: 5px;
-        margin-right: 5px;
+        border-radius: 2px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
-    .team-logo {
-        height: 50px;
-        margin-right: 10px;
+    
+    /* Matches List */
+    .matches-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
     }
-    .match-result-box {
+    
+    .match-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border: 1px solid #e0e0e0;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: var(--text-dark);
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .match-card:hover {
+        border-color: var(--primary);
+        background: var(--secondary);
+    }
+    
+    .match-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        color: var(--text-light);
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .match-teams {
         display: flex;
         align-items: center;
         justify-content: center;
-        background-color: #f8f9fa;
-        padding: 10px;
-        border-radius: 5px;
+        gap: 1rem;
     }
-    .match-score-box {
-        background-color: #007bff;
+    
+    .match-team {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .match-team.home { justify-content: flex-end; text-align: right; }
+    .match-team.away { justify-content: flex-start; text-align: left; }
+    
+    .match-team-logo {
+        width: 35px;
+        height: 35px;
+        object-fit: contain;
+        flex-shrink: 0;
+    }
+    
+    .match-team-name {
+        font-weight: 700;
+        font-size: 1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .match-score {
+        background: var(--primary);
         color: white;
-        padding: 5px 10px;
-        border-radius: 5px;
-        font-weight: bold;
+        padding: 0.4rem 1rem;
+        border-radius: 8px;
+        font-weight: 800;
+        font-size: 1.2rem;
+        min-width: 70px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,102,204,0.3);
+        white-space: nowrap;
+        flex-shrink: 0;
     }
+    
+    /* Map Container */
+    .map-container {
+        background: white;
+        border-radius: 16px;
+        padding: 1rem;
+        box-shadow: 0 4px 16px rgba(0, 102, 204, 0.08);
+        border: 1px solid #e0e0e0;
+    }
+    
+    #teamMap {
+        height: 350px;
+        width: 100%;
+        border-radius: 12px;
+        z-index: 1;
+    }
+    
+    .coach-info {
+        background: var(--secondary);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-top: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .coach-avatar {
+        width: 50px;
+        height: 50px;
+        background: var(--primary);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    
+    .coach-details h4 {
+        margin: 0 0 0.25rem 0;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+    
+    .coach-details p {
+        margin: 0;
+        color: var(--text-light);
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
 </style>
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1>{{ team[0] }}'s Profile</h1>
-        <button id="favoriteBtn" class="btn {% if is_favorite %}btn-success{% else %}btn-outline-success{% endif %}" data-type="team" data-id="{{ team_id }}">
-            <i class="fa {% if is_favorite %}fa-star{% else %}fa-star-o{% endif %}"></i>
-            <span id="favoriteText">{% if is_favorite %}Following{% else %}Follow{% endif %}</span>
-        </button>
-    </div>
-    <p><strong>Founded:</strong> {{ team[1] }}</p>
-    <p><strong>Stadium:</strong> {{ team[2] }}</p>
-    <p><strong>Coach:</strong> {{ team[3] }} <img src="{{ team[6] }}" alt="Flag" class="flag-img"></p>
-    <p><strong>League:</strong> {{ team[4] }}</p>
-    {% if logo_url %}
-        <img src="{{ logo_url }}" alt="{{ team[0] }} Logo" class="img-fluid rounded border mb-2" style="max-height: 100px;">
-    {% endif %}
 
-    {% if team[7] and team[8] %}
-        <div id="teamMap"></div>
-    {% endif %}
-
-    <h2>Players</h2>
-    {% if players %}
-        <ul class="list-group">
-            {% for player in players %}
-                <li class="list-group-item">
-                    <span class="badge {% if player[3] == 'Goalkeeper' %}badge-secondary{% elif player[3] == 'Defence' %}badge-primary{% elif player[3] == 'Midfield' %}badge-success{% elif player[3] == 'Offence' %}badge-danger{% endif %} mr-2">&bull;</span>
-                    <a href="{{ url_for('user.profile_player', player_id=player[0]) }}">{{ player[1] }} ({{ player[3] }})</a>
-                    {% if player[4] %}
-                    {{player[4]}}
-                        <img src="{{ player[5] }}" alt="Flag" class="flag-img">
-                    {% endif %}
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No players found.</p>
-    {% endif %}
-
-    <h2>Recent Matches</h2>
-    {% if scores %}
-        <ul class="list-group">
-            {% for score in scores %}
-                <li class="list-group-item d-flex flex-column">
-                    <div class="d-flex justify-content-between w-100 mb-2">
-                        <div class="font-weight-bold">
-                            <small>{{ score[1] }}</small> | <small>Matchday: {{ score[8] }}</small>
-                        </div>
-                    </div>
-                    <div class="d-flex justify-content-center align-items-center match-result-box p-3 bg-light rounded shadow-sm">
-                        <a href="{{ url_for('user.profile_match', match_id=score[0]) }}" class="d-flex align-items-center text-dark">
-                            <img src="{{ score[6] }}" alt="{{ score[2] }} Logo" class="team-logo">
-                            <strong class="mx-2">{{ score[2] }}</strong>
-                            <span class="match-score-box mx-2">{{ score[4] }} - {{ score[5] }}</span>
-                            <strong class="mx-2">{{ score[3] }}</strong>
-                            <img src="{{ score[7] }}" alt="{{ score[3] }} Logo" class="team-logo">
-                        </a>
-                    </div>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No match scores found.</p>
-    {% endif %}
+<!-- Go Back Button -->
+<div class="mb-3">
+    <a href="{{ url_for('user.user_teams') }}" class="btn btn-outline-secondary btn-sm" style="border-radius: 20px; font-weight: 600; padding: 0.4rem 1rem; border: 2px solid #e0e0e0; color: var(--text-dark); background: white;">
+        <i class="fas fa-arrow-left"></i> Back to Teams
+    </a>
 </div>
+
+<!-- Hero Section -->
+<div class="profile-hero">
+    {% if logo_url %}
+        <img src="{{ logo_url }}" alt="{{ team[0] }} Logo" class="team-logo-large">
+    {% else %}
+        <div class="team-logo-large" style="display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-shield-alt" style="font-size: 4rem; color: var(--primary); opacity: 0.3;"></i>
+        </div>
+    {% endif %}
+    
+    <div class="team-info-main">
+        <div class="team-title-row">
+            <h1>{{ team[0] }}</h1>
+            <button id="favoriteBtn" class="btn-favorite {% if is_favorite %}active{% endif %}" data-type="team" data-id="{{ team_id }}">
+                <i class="fas {% if is_favorite %}fa-star{% else %}fa-star{% endif %}"></i>
+                <span id="favoriteText">{% if is_favorite %}Following{% else %}Follow{% endif %}</span>
+            </button>
+        </div>
+        
+        <div class="team-stats-badges">
+            <div class="badge-modern">
+                <i class="fas fa-calendar-alt"></i> Founded: {{ team[1] }}
+            </div>
+            <div class="badge-modern">
+                <i class="fas fa-trophy"></i> {{ team[4] }}
+            </div>
+            <div class="badge-modern">
+                <i class="fas fa-map-marker-alt"></i> {{ team[2] }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="profile-grid">
+    <!-- Main Left Column -->
+    <div class="left-column">
+        <!-- Players Section -->
+        <h2 class="section-title"><i class="fas fa-users"></i> First Team Squad</h2>
+        {% if players %}
+            <div class="players-grid">
+                {% for player in players %}
+                    <a href="{{ url_for('user.profile_player', player_id=player[0]) }}" class="player-card">
+                        <div class="player-position-badge pos-{{ player[3]|lower }}">{{ player[3] }}</div>
+                        <div class="player-name">{{ player[1] }}</div>
+                        <div class="player-nat">
+                            {% if player[5] %}
+                                <img src="{{ player[5] }}" alt="{{ player[4] }} Flag" class="flag-icon">
+                            {% endif %}
+                            {{ player[4] }}
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info bg-light border-0">
+                <i class="fas fa-info-circle"></i> No players found for this team.
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Sidebar Right Column -->
+    <div class="right-column">
+        <!-- Matches Section -->
+        <h2 class="section-title"><i class="fas fa-futbol"></i> Recent Matches</h2>
+        {% if scores %}
+            <div class="matches-list">
+                {% for score in scores[:5] %} <!-- limit to 5 recent matches for UI -->
+                    <a href="{{ url_for('user.profile_match', match_id=score[0]) }}" class="match-card">
+                        <div class="match-meta">
+                            <span>{{ score[1] }}</span>
+                            <span>Matchday {{ score[8] }}</span>
+                        </div>
+                        <div class="match-teams">
+                            <div class="match-team home">
+                                <span class="match-team-name" title="{{ score[2] }}">{{ score[2] }}</span>
+                                <img src="{{ score[6] }}" alt="Home Logo" class="match-team-logo">
+                            </div>
+                            <div class="match-score">
+                                {{ score[4] }} - {{ score[5] }}
+                            </div>
+                            <div class="match-team away">
+                                <img src="{{ score[7] }}" alt="Away Logo" class="match-team-logo">
+                                <span class="match-team-name" title="{{ score[3] }}">{{ score[3] }}</span>
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info bg-light border-0">
+                <i class="fas fa-info-circle"></i> No recent matches found.
+            </div>
+        {% endif %}
+
+        <!-- Stadium & Coach -->
+        <h2 class="section-title mt-4"><i class="fas fa-building"></i> Club Info</h2>
+        <div class="map-container">
+            {% if team[7] and team[8] %}
+                <div id="teamMap"></div>
+            {% else %}
+                <div class="text-center p-4 text-muted">
+                    <i class="fas fa-map-marker-alt fa-3x mb-3"></i>
+                    <p>No stadium location data available.</p>
+                </div>
+            {% endif %}
+            
+            <div class="coach-info">
+                <div class="coach-avatar">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <div class="coach-details">
+                    <h4>{{ team[3] }}</h4>
+                    <p>
+                        Manager 
+                        {% if team[6] %}
+                            <img src="{{ team[6] }}" class="flag-icon ml-1" alt="Coach Nationality">
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
+
 {% block scripts %}
 {% if team[7] and team[8] %}
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -133,10 +582,10 @@
 
         const popupContent = `
             <div>
-                <h6 class="mb-1">${stadiumName}</h6>
-                <p class="mb-1 text-muted"><i class="fa fa-map-marker-alt"></i> ${city}, ${country}</p>
-                <hr class="my-1">
-                <p class="mb-0"><strong>Home:</strong> ${teamName}</p>
+                <h6 style="margin-bottom: 5px; font-weight: 700; color: var(--primary);">${stadiumName}</h6>
+                <p style="margin: 0 0 5px 0; font-size: 0.85rem; color: #666;"><i class="fas fa-map-marker-alt"></i> ${city}, ${country}</p>
+                <hr style="margin: 5px 0;">
+                <p style="margin: 0; font-size: 0.85rem;"><strong>Home:</strong> ${teamName}</p>
             </div>
         `;
 
@@ -144,9 +593,13 @@
             .addTo(map)
             .bindPopup(popupContent)
             .openPopup();
+            
+        // Fix map rendering issue in tabs/hidden elements
+        setTimeout(() => { map.invalidateSize(); }, 100);
     });
 </script>
 {% endif %}
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const favBtn = document.getElementById('favoriteBtn');
@@ -154,7 +607,7 @@
             favBtn.addEventListener('click', function() {
                 const entityType = this.dataset.type;
                 const entityId = this.dataset.id;
-                const isFavorite = this.classList.contains('btn-success');
+                const isFavorite = this.classList.contains('active');
                 
                 if(!isFavorite) {
                     fetch('/api/favorites', {
@@ -170,10 +623,7 @@
                     .then(response => response.json())
                     .then(data => {
                         if(data.success) {
-                            this.classList.remove('btn-outline-success');
-                            this.classList.add('btn-success');
-                            this.querySelector('i').classList.remove('fa-star-o');
-                            this.querySelector('i').classList.add('fa-star');
+                            this.classList.add('active');
                             document.getElementById('favoriteText').innerText = 'Following';
                         } else {
                             alert(data.error);
@@ -193,10 +643,7 @@
                     .then(response => response.json())
                     .then(data => {
                         if(data.success) {
-                            this.classList.remove('btn-success');
-                            this.classList.add('btn-outline-success');
-                            this.querySelector('i').classList.remove('fa-star');
-                            this.querySelector('i').classList.add('fa-star-o');
+                            this.classList.remove('active');
                             document.getElementById('favoriteText').innerText = 'Follow';
                         } else {
                             alert(data.error);

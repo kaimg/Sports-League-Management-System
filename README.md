@@ -91,34 +91,50 @@ The Sports League Management System aims to manage comprehensive data associated
 The application will be available at `http://localhost:5000`
 
 ### Manual Setup (Without Docker)
-If you prefer to run the application without Docker:
+Use the **same database initialization as Docker**: `schema.sql`, then `migrations/`, via one command. Do not run only `psql -f schema.sql`, or you will miss later migrations (for example `teams.is_active`, PostGIS fields).
+
+**Prerequisites**
+- PostgreSQL 16+ with **PostGIS** installed locally
+- `psql` in your PATH
+- Python 3.10+
 
 1. Create and activate a virtual environment:
    ```sh
    python3 -m venv env
-   source env/bin/activate
-   ```
-
-2. Install dependencies using Poetry:
-   ```sh
-   pip install poetry
-   poetry install
-   ```
-   
-   Or using pip:
-   ```sh
+   source env/bin/activate   # Windows: env\Scripts\activate
    pip install -r requirements.txt
    ```
 
-3. Set up PostgreSQL database and run the schema:
+2. Configure environment (use **localhost**, not `db`):
    ```sh
-   psql -U your_username -d your_database -a -f schema.sql
+   cp .env.example .env
+   ```
+   Edit `.env`. `DATABASE_URL` must point to your local server, for example:
+   ```env
+   DATABASE_URL=postgresql://sports_league_owner:sports_league_password@localhost:5432/sports_league
    ```
 
-4. Run the application:
+3. Create the database and PostGIS extension (once):
+   ```sh
+   psql -U postgres -c "CREATE DATABASE sports_league;"
+   psql -U postgres -d sports_league -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+   ```
+
+4. Initialize schema and migrations (from the project root):
+   ```sh
+   python scripts/ensure_db.py
+   ```
+   The script reads `.env`, waits for PostgreSQL, applies `schema.sql` if needed, runs all files in `migrations/`, and syncs sequences.
+
+5. Run the application:
    ```sh
    flask run
    ```
+
+**Keeping schema in sync**
+- After `git pull`, if new files appear under `migrations/`, run `python scripts/ensure_db.py` again on your local database.
+- Docker and local are usually **two separate database instances** (same structure, not necessarily the same data). Port `5432` can only be used by one PostgreSQL at a time.
+- To reset a broken local database, drop and recreate it (step 3), then run step 4 again.
 
 ## Usage
 ### Admin Panel
