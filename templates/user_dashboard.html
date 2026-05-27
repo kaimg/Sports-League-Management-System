@@ -24,10 +24,10 @@
         border-radius: 16px;
         padding: 0;
         box-shadow: 0 2px 16px rgba(0, 102, 204, 0.08);
-        overflow: hidden;
+        overflow-y: auto;
         position: sticky;
         top: 2rem;
-        max-height: calc(100vh - 300px);
+        max-height: calc(100vh - 120px);
         width: 200px;
     }
 
@@ -285,7 +285,175 @@
                 {% block page_title %}Dashboard{% endblock %}
             </h1>
         </div>
-        {% block user_content %}{% endblock %}
+        {% block user_content %}
+        <style>
+            .entity-logo-sm { width: 30px; height: 30px; object-fit: contain; }
+            .entity-logo-md { width: 50px; height: 50px; object-fit: contain; }
+            .dash-card { transition: transform 0.2s; border-radius: 12px; }
+            .dash-card:hover { transform: translateY(-3px); box-shadow: 0 8px 16px rgba(0,0,0,0.1) !important; }
+            .match-score { background: var(--primary); color: white; padding: 4px 12px; border-radius: 6px; font-weight: bold; }
+            .match-time { background: #ffc107; color: #212529; padding: 4px 12px; border-radius: 6px; font-weight: bold; }
+            .suggestion-card { display: flex; flex-direction: column; align-items: center; padding: 1rem; text-align: center; border: 1px solid var(--border-light); border-radius: 12px; text-decoration: none; color: inherit; transition: all 0.3s; }
+            .suggestion-card:hover { background: var(--secondary); color: var(--primary); border-color: var(--primary); }
+            .table-modern td, .table-modern th { vertical-align: middle; border-bottom: 1px solid var(--border-light); }
+            .table-modern tbody tr:hover { background-color: var(--secondary); }
+        </style>
+        
+        <div class="row g-4">
+            <!-- Left Column: Feed Preview & Suggestions -->
+            <div class="col-lg-8">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0 text-primary fw-bold"><i class="fas fa-stream"></i> My Feed Preview</h4>
+                    {% if has_favorites %}
+                    <a href="{{ url_for('user.my_feed') }}" class="btn btn-sm btn-outline-primary">View Full Feed</a>
+                    {% endif %}
+                </div>
+                
+                {% if not has_favorites %}
+                <div class="alert alert-info border-0 shadow-sm rounded-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-info-circle fa-2x me-3"></i>
+                        <div>
+                            <strong>Your feed is empty!</strong><br>
+                            Follow teams and leagues to see their upcoming and recent matches here.
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="row g-3 mb-4">
+                    <!-- Upcoming Match -->
+                    <div class="col-12">
+                        <div class="card shadow-sm border-0 h-100 dash-card">
+                            <div class="card-header bg-white border-0 pt-3 pb-0">
+                                <h6 class="text-muted text-uppercase mb-0"><i class="far fa-clock"></i> Next Match</h6>
+                            </div>
+                            <div class="card-body text-center d-flex flex-column justify-content-center">
+                                {% if upcoming_match %}
+                                <a href="{{ url_for('user.profile_match', match_id=upcoming_match[0]) }}" class="text-decoration-none text-dark">
+                                    <div class="d-flex justify-content-center align-items-center mb-3">
+                                        <div class="text-end" style="width: 40%;">
+                                            <img src="{{ upcoming_match[4] if upcoming_match[4] and upcoming_match[4] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" class="entity-logo-md mb-1"><br>
+                                            <small class="fw-bold">{{ upcoming_match[1] }}</small>
+                                        </div>
+                                        <div class="px-2" style="width: 20%;">
+                                            <span class="badge bg-light text-dark border w-100">VS</span>
+                                        </div>
+                                        <div class="text-start" style="width: 40%;">
+                                            <img src="{{ upcoming_match[5] if upcoming_match[5] and upcoming_match[5] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" class="entity-logo-md mb-1"><br>
+                                            <small class="fw-bold">{{ upcoming_match[2] }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="match-time d-inline-block">{{ upcoming_match[3] }}</div>
+                                </a>
+                                {% else %}
+                                <p class="text-muted my-3">No upcoming matches scheduled for your followed entities.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Recent Match -->
+                    <div class="col-12">
+                        <div class="card shadow-sm border-0 h-100 dash-card">
+                            <div class="card-header bg-white border-0 pt-3 pb-0">
+                                <h6 class="text-muted text-uppercase mb-0"><i class="fas fa-history"></i> Latest Result</h6>
+                            </div>
+                            <div class="card-body text-center d-flex flex-column justify-content-center">
+                                {% if recent_match %}
+                                <a href="{{ url_for('user.profile_match', match_id=recent_match[0]) }}" class="text-decoration-none text-dark">
+                                    <div class="d-flex justify-content-center align-items-center mb-3">
+                                        <div class="text-end" style="width: 40%;">
+                                            <img src="{{ recent_match[5] if recent_match[5] and recent_match[5] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" class="entity-logo-md mb-1"><br>
+                                            <small class="fw-bold">{{ recent_match[1] }}</small>
+                                        </div>
+                                        <div class="px-2" style="width: 20%;">
+                                            <div class="match-score fs-5">{{ recent_match[3] }} - {{ recent_match[4] }}</div>
+                                        </div>
+                                        <div class="text-start" style="width: 40%;">
+                                            <img src="{{ recent_match[6] if recent_match[6] and recent_match[6] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" class="entity-logo-md mb-1"><br>
+                                            <small class="fw-bold">{{ recent_match[2] }}</small>
+                                        </div>
+                                    </div>
+                                    <span class="badge bg-secondary">{{ recent_match[7] }}</span>
+                                </a>
+                                {% else %}
+                                <p class="text-muted my-3">No recent results found for your followed entities.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Suggestions -->
+                <h5 class="mb-3 text-primary fw-bold"><i class="fas fa-lightbulb text-warning"></i> Suggestions for You</h5>
+                <div class="row g-3">
+                    {% for team in suggested_teams %}
+                    <div class="col-4 col-md-3">
+                        <a href="{{ url_for('user.profile_team', team_id=team[0]) }}" class="suggestion-card bg-white h-100 shadow-sm">
+                            <img src="{{ team[2] if team[2] and team[2] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" class="entity-logo-md mb-2">
+                            <span class="small fw-bold">{{ team[1] }}</span>
+                        </a>
+                    </div>
+                    {% endfor %}
+                    {% for league in suggested_leagues %}
+                    <div class="col-4 col-md-3">
+                        <a href="{{ url_for('user.profile_league', league_id=league[0]) }}" class="suggestion-card bg-white h-100 shadow-sm">
+                            <img src="{{ league[2] if league[2] and league[2] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_league.png') }}';" class="entity-logo-md mb-2">
+                            <span class="small fw-bold">{{ league[1] }}</span>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Right Column: Standings -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 h-100 rounded-3">
+                    <div class="card-header bg-white border-bottom pt-4">
+                        <h5 class="mb-0 text-primary fw-bold"><i class="fas fa-list-ol"></i> Top 5: {{ favorite_league or 'Standings' }}</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if standings %}
+                        <div class="table-responsive">
+                            <table class="table table-hover table-modern mb-0">
+                                <thead class="table-light text-muted small">
+                                    <tr>
+                                        <th class="ps-3 border-0">#</th>
+                                        <th class="border-0">Team</th>
+                                        <th class="text-center border-0" title="Played">P</th>
+                                        <th class="text-center border-0 pe-3" title="Points">Pts</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in standings %}
+                                    <tr>
+                                        <td class="ps-3 fw-bold">{{ row[0] }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="{{ row[4] if row[4] and row[4] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" class="entity-logo-sm me-2">
+                                                <span class="text-truncate" style="max-width: 120px;">{{ row[1] }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">{{ row[2] }}</td>
+                                        <td class="text-center pe-3 fw-bold text-primary">{{ row[3] }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="p-3 text-center border-top">
+                            <a href="{{ url_for('user.user_leagues') }}" class="btn btn-sm btn-outline-secondary w-100">Explore Leagues</a>
+                        </div>
+                        {% else %}
+                        <div class="p-4 text-center text-muted">
+                            <p>No standings data available at the moment.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endblock %}
     </div>
 </div>
 

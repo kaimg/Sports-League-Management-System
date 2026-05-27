@@ -18,7 +18,123 @@ def login_required(f):
 @user_bp.route('/user')
 @login_required
 def user_dashboard():
-    return render_template('user_dashboard.html')
+    user_id = session['user_id']
+    db = get_db()
+    cur = db.cursor()
+
+    # Get favorite teams and leagues
+    cur.execute("SELECT entity_id FROM user_favorites WHERE user_id = %s AND entity_type = 'team'", (user_id,))
+    fav_team_ids = [row[0] for row in cur.fetchall()]
+
+    cur.execute("SELECT entity_id FROM user_favorites WHERE user_id = %s AND entity_type = 'league'", (user_id,))
+    fav_league_ids = [row[0] for row in cur.fetchall()]
+
+    upcoming_match = None
+    recent_match = None
+    standings = []
+    favorite_league = None
+
+    if fav_team_ids or fav_league_ids:
+        team_placeholders = ','.join(['%s'] * len(fav_team_ids)) if fav_team_ids else 'NULL'
+        league_placeholders = ','.join(['%s'] * len(fav_league_ids)) if fav_league_ids else 'NULL'
+        
+        params = []
+        if fav_team_ids:
+            params.extend(fav_team_ids)
+            params.extend(fav_team_ids)
+        if fav_league_ids:
+            params.extend(fav_league_ids)
+            
+        where_clause = []
+        if fav_team_ids:
+            where_clause.append(f"(m.home_team_id IN ({team_placeholders}) OR m.away_team_id IN ({team_placeholders}))")
+        if fav_league_ids:
+            where_clause.append(f"m.league_id IN ({league_placeholders})")
+        where_sql = " OR ".join(where_clause)
+
+        # 1. Upcoming match preview
+        cur.execute(f"""
+            SELECT m.match_id, t1.name, t2.name, TO_CHAR(m.utc_date, 'Mon DD, HH24:MI'), t1.crestURL, t2.crestURL
+            FROM matches m
+            JOIN teams t1 ON m.home_team_id = t1.team_id
+            JOIN teams t2 ON m.away_team_id = t2.team_id
+            WHERE ({where_sql}) AND m.status IN ('SCHEDULED', 'TIMED', 'POSTPONED')
+            ORDER BY m.utc_date ASC LIMIT 1
+        """, tuple(params))
+        upcoming_match = cur.fetchone()
+
+        # 1. Recent match preview
+        cur.execute(f"""
+            SELECT m.match_id, t1.name, t2.name, s.full_time_home, s.full_time_away, t1.crestURL, t2.crestURL, m.status
+            FROM matches m
+            JOIN teams t1 ON m.home_team_id = t1.team_id
+            JOIN teams t2 ON m.away_team_id = t2.team_id
+            LEFT JOIN scores s ON m.match_id = s.match_id
+            WHERE ({where_sql}) AND m.status IN ('FINISHED', 'IN_PLAY', 'PAUSED')
+            ORDER BY m.utc_date DESC LIMIT 1
+        """, tuple(params))
+        recent_match = cur.fetchone()
+
+    # 4. Mini Standings table
+    if fav_league_ids:
+        fav_league_id = fav_league_ids[0]
+        cur.execute("SELECT name FROM leagues WHERE league_id = %s", (fav_league_id,))
+        league_row = cur.fetchone()
+        if league_row:
+            favorite_league = league_row[0]
+
+        cur.execute("""
+            SELECT s.position, t.name, s.played_games, s.points, t.crestURL
+            FROM standings s
+            JOIN teams t ON s.team_id = t.team_id
+            WHERE s.league_id = %s AND s.season_id = (
+                SELECT season_id FROM seasons WHERE league_id = %s ORDER BY year DESC LIMIT 1
+            )
+            ORDER BY s.position ASC LIMIT 5
+        """, (fav_league_id, fav_league_id))
+        standings = cur.fetchall()
+    else:
+        # Fallback to some major league, e.g. Premier League or La Liga
+        cur.execute("SELECT league_id, name FROM leagues ORDER BY league_id LIMIT 1")
+        default_league = cur.fetchone()
+        if default_league:
+            favorite_league = default_league[1]
+            cur.execute("""
+                SELECT s.position, t.name, s.played_games, s.points, t.crestURL
+                FROM standings s
+                JOIN teams t ON s.team_id = t.team_id
+                WHERE s.league_id = %s AND s.season_id = (
+                    SELECT season_id FROM seasons WHERE league_id = %s ORDER BY year DESC LIMIT 1
+                )
+                ORDER BY s.position ASC LIMIT 5
+            """, (default_league[0], default_league[0]))
+            standings = cur.fetchall()
+
+    # 6. Suggestions
+    if fav_team_ids:
+        placeholders = ','.join(['%s']*len(fav_team_ids))
+        cur.execute(f"SELECT team_id, name, crestURL FROM teams WHERE is_active = TRUE AND team_id NOT IN ({placeholders}) LIMIT 4", tuple(fav_team_ids))
+    else:
+        cur.execute("SELECT team_id, name, crestURL FROM teams WHERE is_active = TRUE LIMIT 4")
+    suggested_teams = cur.fetchall()
+
+    if fav_league_ids:
+        placeholders = ','.join(['%s']*len(fav_league_ids))
+        cur.execute(f"SELECT league_id, name, icon_url FROM leagues WHERE league_id NOT IN ({placeholders}) LIMIT 3", tuple(fav_league_ids))
+    else:
+        cur.execute("SELECT league_id, name, icon_url FROM leagues LIMIT 3")
+    suggested_leagues = cur.fetchall()
+
+    cur.close()
+
+    return render_template('user_dashboard.html', 
+                           upcoming_match=upcoming_match, 
+                           recent_match=recent_match, 
+                           favorite_league=favorite_league,
+                           standings=standings,
+                           suggested_teams=suggested_teams,
+                           suggested_leagues=suggested_leagues,
+                           has_favorites=bool(fav_team_ids or fav_league_ids))
 
 @user_bp.route('/my-feed')
 @login_required
