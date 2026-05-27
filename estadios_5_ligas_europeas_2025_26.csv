@@ -1,0 +1,97 @@
+﻿team_name,stadium_name,location,capacity,city,country,latitude,longitude
+Arsenal,Emirates Stadium,"Hornsey Road, Holloway, London",60704,London,England,51.5549,-0.1084
+Aston Villa,Villa Park,"Trinity Road, Birmingham",43205,Birmingham,England,52.5092,-1.8848
+Bournemouth,Dean Court,"Kings Park, Bournemouth",11307,Bournemouth,England,50.7352,-1.8383
+Brentford,Brentford Community Stadium,"Lionel Road South, Brentford, London",17250,London,England,51.4908,-0.2887
+Brighton & Hove Albion,Falmer Stadium,"Village Way, Falmer",31876,Falmer,England,50.8618,-0.0833
+Burnley,Turf Moor,"Harry Potts Way, Burnley",21990,Burnley,England,53.789,-2.2302
+Chelsea,Stamford Bridge,"Fulham Road, London",40044,London,England,51.4816,-0.191
+Crystal Palace,Selhurst Park,"Holmesdale Road, London",25194,London,England,51.3983,-0.0855
+Everton,Hill Dickinson Stadium,"Bramley-Moore Dock, Liverpool",52769,Liverpool,England,53.4253,-2.995
+Fulham,Craven Cottage,"Stevenage Road, Fulham, London",28800,London,England,51.4749,-0.2217
+Leeds United,Elland Road,"Elland Road, Leeds",37645,Leeds,England,53.7778,-1.5721
+Liverpool,Anfield,"Anfield Road, Liverpool",61276,Liverpool,England,53.4308,-2.9608
+Manchester City,City of Manchester Stadium,"Rowsley Street, Manchester",52900,Manchester,England,53.4831,-2.2004
+Manchester United,Old Trafford,"Sir Matt Busby Way, Trafford",74244,Trafford,England,53.4631,-2.2913
+Newcastle United,St James' Park,"Barrack Road, Newcastle upon Tyne",52264,Newcastle upon Tyne,England,54.9756,-1.6217
+Nottingham Forest,City Ground,"Pavilion Road, West Bridgford",31042,West Bridgford,England,52.94,-1.1328
+Sunderland,Stadium of Light,"Monkwearmouth, Sunderland",48707,Sunderland,England,54.9145,-1.3882
+Tottenham Hotspur,Tottenham Hotspur Stadium,"782 High Road, Tottenham, London",62850,London,England,51.6043,-0.0662
+West Ham United,London Stadium,"Queen Elizabeth Olympic Park, London",62500,London,England,51.5386,-0.0164
+Wolverhampton Wanderers,Molineux Stadium,"Waterloo Road, Wolverhampton",31750,Wolverhampton,England,52.5903,-2.1304
+Alavés,Campo de Fútbol de Mendizorrotza,"Paseo Cervantes, Vitoria-Gasteiz",19840,Vitoria-Gasteiz,Spain,42.8371,-2.6884
+Athletic Bilbao,Estadio San Mamés,"Rafael Moreno Pitxitxi, Bilbao",53289,Bilbao,Spain,43.2641,-2.9494
+Atlético Madrid,Estadio Riyadh Air Metropolitano,"Avenida de Luis Aragonés, Madrid",70692,Madrid,Spain,40.4362,-3.5995
+Barcelona,Camp Nou,"Carrer d'Arístides Maillol, Barcelona",105000,Barcelona,Spain,41.3809,2.1228
+Celta Vigo,Estadio ABANCA Balaídos,"Avenida de Balaídos, Vigo",24870,Vigo,Spain,42.2119,-8.7397
+Elche,Estadio Martínez Valero,"Avenida Manuel Martínez Valero, Elche",31388,Elche,Spain,38.2669,-0.6633
+Espanyol,RCDE Stadium,"Avinguda del Baix Llobregat, Cornellà de Llobregat",37776,Cornellà de Llobregat,Spain,41.3477,2.0757
+Getafe,Estadio Coliseum,"Avenida Teresa de Calcuta, Getafe",16500,Getafe,Spain,40.3256,-3.7147
+Girona,Estadio Municipal de Montilivi,"Avinguda Montilivi, Girona",14624,Girona,Spain,41.9614,2.8286
+Levante,Estadio Ciutat de València,"Carrer de Sant Vicent de Paül, Valencia",26354,Valencia,Spain,39.4947,-0.3646
+Mallorca,Estadi Mallorca Son Moix,"Camí dels Reis, Palma",23142,Palma,Spain,39.5897,2.6309
+Osasuna,Estadio El Sadar,"Calle Sadar, Pamplona",23576,Pamplona,Spain,42.7967,-1.6372
+Real Oviedo,Estadio Carlos Tartiere,"Calle Isidro Lángara, Oviedo",30500,Oviedo,Spain,43.3615,-5.8709
+Rayo Vallecano,Campo de Fútbol de Vallecas,"Calle Payaso Fofó, Madrid",14708,Madrid,Spain,40.3918,-3.6586
+Real Betis,Estadio Olímpico de la Cartuja,"Isla de la Cartuja, Seville",70000,Seville,Spain,37.4165,-6.0043
+Real Madrid,Bernabéu Stadium,"Avenida de Concha Espina, Madrid",83186,Madrid,Spain,40.4531,-3.6883
+Real Sociedad,Reale Arena,"Paseo de Anoeta, San Sebastián",39313,San Sebastián,Spain,43.3014,-1.9736
+Sevilla,Estadio Ramón Sánchez-Pizjuán,"Calle Sevilla Fútbol Club, Seville",43883,Seville,Spain,37.3841,-5.9705
+Valencia,Camp de Mestalla,"Avenida de Suecia, Valencia",49430,Valencia,Spain,39.4746,-0.3581
+Villarreal,Estadio de la Cerámica,"Plaça Labrador, Villarreal",23008,Villarreal,Spain,39.944,-0.1032
+FC Augsburg,WWK Arena,"Bürgermeister-Ulrich-Straße 90, Augsburg",30660,Augsburg,Germany,48.3225,10.886
+Union Berlin,Stadion An der Alten Försterei,"An der Wuhlheide 263, Berlin",22012,Berlin,Germany,52.4576,13.5683
+Werder Bremen,Weserstadion,"Franz-Böhmert-Straße 1, Bremen",42100,Bremen,Germany,53.0664,8.8376
+Borussia Dortmund,Signal Iduna Park,"Strobelallee 50, Dortmund",81365,Dortmund,Germany,51.4926,7.4518
+Eintracht Frankfurt,Deutsche Bank Park,"Mörfelder Landstraße 362, Frankfurt am Main",59500,Frankfurt,Germany,50.0686,8.6454
+SC Freiburg,Europa-Park Stadion,"Achim-Stocker-Straße 1, Freiburg im Breisgau",34700,Freiburg im Breisgau,Germany,48.0217,7.8299
+Hamburger SV,Volksparkstadion,"Sylvesterallee 7, Hamburg",57000,Hamburg,Germany,53.5872,9.8986
+1. FC Heidenheim,Voith-Arena,"Schloßhaustraße 162, Heidenheim",15000,Heidenheim,Germany,48.6686,10.1392
+TSG Hoffenheim,PreZero Arena,"Dietmar-Hopp-Straße 1, Sinsheim",30150,Sinsheim,Germany,49.2388,8.8873
+1. FC Köln,RheinEnergieStadion,"Aachener Straße 999, Cologne",49698,Cologne,Germany,50.9335,6.8751
+RB Leipzig,Red Bull Arena,"Am Sportforum 3, Leipzig",47800,Leipzig,Germany,51.3458,12.3483
+Bayer Leverkusen,BayArena,"Bismarckstraße 122-124, Leverkusen",30210,Leverkusen,Germany,51.0382,7.0023
+Mainz 05,MEWA Arena,"Eugen-Salomon-Straße 1, Mainz",33305,Mainz,Germany,49.9842,8.2242
+Borussia Mönchengladbach,Borussia-Park,"Hennes-Weisweiler-Allee 1, Mönchengladbach",54057,Mönchengladbach,Germany,51.1746,6.3855
+Bayern Munich,Allianz Arena,"Werner-Heisenberg-Allee 25, Munich",75024,Munich,Germany,48.2188,11.6247
+FC St. Pauli,Millerntor-Stadion,"Harald-Stender-Platz 1, Hamburg",29546,Hamburg,Germany,53.5546,9.9676
+VfB Stuttgart,MHPArena,"Mercedesstraße 87, Stuttgart",60058,Stuttgart,Germany,48.7922,9.232
+VfL Wolfsburg,Volkswagen Arena,"In den Allerwiesen 1, Wolfsburg",30000,Wolfsburg,Germany,52.4319,10.8039
+Atalanta,Stadio di Bergamo,"Viale Giulio Cesare, Bergamo",23439,Bergamo,Italy,45.7093,9.6808
+Bologna,Stadio Renato Dall'Ara,"Via Andrea Costa, Bologna",38279,Bologna,Italy,44.4923,11.3099
+Cagliari,Unipol Domus,"Via Raimondo Carta Raspi, Cagliari",16416,Cagliari,Italy,39.1998,9.1379
+Como,Stadio Giuseppe Sinigaglia,"Viale Giuseppe Sinigaglia, Como",13602,Como,Italy,45.8097,9.0727
+Cremonese,Stadio Giovanni Zini,"Via Persico, Cremona",20641,Cremona,Italy,45.1303,10.0305
+Fiorentina,Stadio Artemio Franchi,"Viale Manfredo Fanti, Florence",43118,Florence,Italy,43.7808,11.2821
+Genoa,Stadio Luigi Ferraris,"Via Giovanni de Prà, Genoa",33205,Genoa,Italy,44.4164,8.9523
+Hellas Verona,Stadio Marcantonio Bentegodi,"Piazzale Olimpia, Verona",31713,Verona,Italy,45.4354,10.9681
+AC Milan,San Siro,"Piazzale Angelo Moratti, Milan",75710,Milan,Italy,45.4781,9.124
+Inter Milan,San Siro,"Piazzale Angelo Moratti, Milan",75710,Milan,Italy,45.4781,9.124
+Juventus,Allianz Stadium,"Corso Gaetano Scirea, Turin",41507,Turin,Italy,45.1096,7.6413
+Lazio,Stadio Olimpico,"Viale dei Gladiatori, Rome",70634,Rome,Italy,41.9339,12.4547
+Roma,Stadio Olimpico,"Viale dei Gladiatori, Rome",70634,Rome,Italy,41.9339,12.4547
+Lecce,Stadio Via del Mare-Ettore Giardiniero,"Via del Mare, Lecce",30354,Lecce,Italy,40.3652,18.2089
+Napoli,Stadio Diego Armando Maradona,"Piazzale Vincenzo Tecchio, Naples",54732,Naples,Italy,40.8279,14.1931
+Parma,Stadio Ennio Tardini,"Viale Partigiani d'Italia, Parma",22352,Parma,Italy,44.7959,10.338
+Pisa,Cetilar Arena,"Via Antonio Rosmini, Pisa",12508,Pisa,Italy,43.725,10.3986
+Sassuolo,Mapei Stadium – Città del Tricolore,"Piazzale Atleti Azzurri d’Italia, Reggio Emilia",21515,Reggio Emilia,Italy,44.7142,10.6497
+Torino,Stadio Olimpico Grande Torino,"Via Filadelfia, Turin",28177,Turin,Italy,45.0418,7.6504
+Udinese,Bluenergy Stadium,"Piazzale Repubblica Argentina, Udine",25132,Udine,Italy,46.0813,13.1999
+Angers,Stade Raymond Kopa,"Boulevard Pierre de Coubertin, Angers",18752,Angers,France,47.4607,-0.5306
+Auxerre,Stade Abbé Deschamps,"Route de Vaux, Auxerre",21379,Auxerre,France,47.7867,3.5889
+Brest,Stade Francis-Le Blé,"Route de Quimper, Brest",15931,Brest,France,48.4006,-4.4612
+Le Havre,Stade Océane,"Boulevard de Léningrad, Le Havre",25178,Le Havre,France,49.4989,0.1694
+Lens,Stade Bollaert-Delelis,"Avenue Alfred Maes, Lens",37705,Lens,France,50.4329,2.8142
+Lille,Stade Pierre-Mauroy,"261 Boulevard de Tournai, Villeneuve-d'Ascq",50186,Villeneuve-d'Ascq,France,50.6119,3.1305
+Lorient,Stade du Moustoir,"Rue Jean Le Coutaller, Lorient",18890,Lorient,France,47.7483,-3.3695
+Lyon,Groupama Stadium,"10 Avenue Simone Veil, Décines-Charpieu",59186,Décines-Charpieu,France,45.7653,4.982
+Marseille,Stade Vélodrome,"3 Boulevard Michelet, Marseille",67394,Marseille,France,43.2698,5.3959
+Metz,Stade Saint-Symphorien,"Île Saint-Symphorien, Longeville-lès-Metz",28786,Longeville-lès-Metz,France,49.1098,6.1597
+Monaco,Stade Louis II,"7 Avenue des Castelans, Monaco",18523,Monaco,Monaco,43.7276,7.4156
+Nantes,Stade de la Beaujoire,"Route de Saint-Joseph, Nantes",35322,Nantes,France,47.2558,-1.5247
+Nice,Allianz Riviera,"Boulevard des Jardiniers, Nice",35624,Nice,France,43.7051,7.1926
+Paris FC,Stade Jean-Bouin,"20-40 Avenue du Général Sarrail, Paris",20000,Paris,France,48.843,2.2526
+Paris Saint-Germain,Parc des Princes,"24 Rue du Commandant Guilbaud, Paris",47926,Paris,France,48.8414,2.253
+Rennes,Roazhon Park,"111 Route de Lorient, Rennes",29778,Rennes,France,48.1075,-1.7128
+Strasbourg,Stade de la Meinau,"12 Rue de l’Extenwoerth, Strasbourg",29230,Strasbourg,France,48.56,7.7549
+Toulouse,Stadium de Toulouse,"1 Allée Gabriel Biénès, Toulouse",33150,Toulouse,France,43.583,1.4341

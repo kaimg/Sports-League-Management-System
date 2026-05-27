@@ -46,7 +46,7 @@
 </p>
             <p><strong>Referee:</strong> {{ match[15] }}
     {% if match[16] %}
-        <img src="{{ match[16] }}" alt="Flag" class="flag-img mr-2">
+        <img src="{{ match[16] if match[16] and match[16] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_flag.png') }}';" alt="Flag" class="flag-img mr-2">
     {% endif %}
 </p>
         </div>
@@ -54,7 +54,7 @@
 
     <div class="d-flex justify-content-center align-items-center match-result-box p-3 bg-light rounded shadow-sm mb-4">
         <a href="{{ url_for('user.profile_team', team_id=match[17]) }}" class="d-flex align-items-center text-dark">
-            <img src="{{ match[7] }}" alt="{{ match[1] }} Logo" class="team-logo">
+            <img src="{{ match[7] if match[7] and match[7] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" alt="{{ match[1] }} Logo" class="team-logo">
             <strong class="mx-2">{{ match[1] }}</strong>
         </a>
         <span class="match-score-box mx-2">
@@ -70,7 +70,7 @@
         </span>
         <a href="{{ url_for('user.profile_team', team_id=match[18]) }}" class="d-flex align-items-center text-dark">
             <strong class="mx-2">{{ match[2] }}</strong>
-            <img src="{{ match[8] }}" alt="{{ match[2] }} Logo" class="team-logo">
+            <img src="{{ match[8] if match[8] and match[8] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" alt="{{ match[2] }} Logo" class="team-logo">
         </a>
         </div>
 

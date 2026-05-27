@@ -57,10 +57,10 @@
     {% for player in players %}
         <li class="list-group-item d-flex align-items-center">
             {% if player[3] %}
-                <img src="{{ player[3] }}" alt="{{ player[4] }} Logo" title="{{ player[4] }}" class="team-logo-tooltip mr-2" style="width: 40px;">
+                <img src="{{ player[3] if player[3] and player[3] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" alt="{{ player[4] }} Logo" title="{{ player[4] }}" class="team-logo-tooltip mr-2" style="width: 40px;">
             {% endif %}
             {% if player[5] %}
-                <img src="{{ player[5] }}" alt="Nationality Flag" class="flag-img mr-2">
+                <img src="{{ player[5] if player[5] and player[5] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_flag.png') }}';" alt="Nationality Flag" class="flag-img mr-2">
             {% endif %}
             <span class="badge {% if player[2] == 'Goalkeeper' %}badge-secondary{% elif player[2] == 'Defence' %}badge-primary{% elif player[2] == 'Midfield' %}badge-success{% elif player[2] == 'Offence' %}badge-danger{% endif %} mr-2">&bull;</span>
             <a href="{{ url_for('user.profile_player', player_id=player[0]) }}">{{ player[1] }}</a>

@@ -591,7 +591,7 @@
             <div class="team-card" data-team-name="{{ team[1].lower() }}">
                 <div class="team-logo-wrapper">
                     {% if team[2] %}
-                    <img src="{{ team[2] }}" alt="{{ team[1] }} Logo" class="team-logo">
+                    <img src="{{ team[2] if team[2] and team[2] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" alt="{{ team[1] }} Logo" class="team-logo">
                     {% else %}
                     <i class="fas fa-shield-alt" style="font-size: 3rem; color: var(--primary); opacity: 0.3;"></i>
                     {% endif %}

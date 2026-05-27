@@ -6,6 +6,7 @@ with app.app_context():
     cur = db.cursor()
     
     tables_and_seqs = [
+        ('stadiums', 'stadiums_stadium_id_seq', 'stadium_id'),
         ('standings', 'standings_standing_id_seq', 'standing_id'),
         ('scorers', 'scorers_scorer_id_seq', 'scorer_id'),
         ('seasons', 'seasons_season_id_seq', 'season_id'),

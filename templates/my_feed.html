@@ -52,7 +52,7 @@
                         <ul class="list-group list-group-flush">
                             {% for team in favorite_teams %}
                                 <li class="list-group-item px-0 d-flex align-items-center">
-                                    <img src="{{ team[2] }}" class="entity-logo mr-3" alt="Logo">
+                                    <img src="{{ team[2] if team[2] and team[2] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" class="entity-logo mr-3" alt="Logo">
                                     <a href="{{ url_for('user.profile_team', team_id=team[0]) }}" class="text-dark font-weight-bold text-decoration-none">{{ team[1] }}</a>
                                 </li>
                             {% endfor %}
@@ -72,7 +72,7 @@
                         <ul class="list-group list-group-flush">
                             {% for league in favorite_leagues %}
                                 <li class="list-group-item px-0 d-flex align-items-center">
-                                    <img src="{{ league[2] }}" class="entity-logo mr-3" alt="Logo">
+                                    <img src="{{ league[2] if league[2] and league[2] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_league.png') }}';" class="entity-logo mr-3" alt="Logo">
                                     <a href="{{ url_for('user.profile_league', league_id=league[0]) }}" class="text-dark font-weight-bold text-decoration-none">{{ league[1] }}</a>
                                 </li>
                             {% endfor %}
@@ -115,13 +115,13 @@
                                         <a href="{{ url_for('user.profile_match', match_id=match[0]) }}" class="text-decoration-none text-dark d-flex justify-content-between align-items-center">
                                             <div class="text-right flex-grow-1">
                                                 <strong class="mr-2">{{ match[1] }}</strong>
-                                                <img src="{{ match[4] }}" class="entity-logo">
+                                                <img src="{{ match[4] if match[4] and match[4] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" class="entity-logo">
                                             </div>
                                             <div class="px-4 text-center">
                                                 <div class="upcoming-time mb-1">{{ match[3] }}</div>
                                             </div>
                                             <div class="text-left flex-grow-1">
-                                                <img src="{{ match[5] }}" class="entity-logo">
+                                                <img src="{{ match[5] if match[5] and match[5] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" class="entity-logo">
                                                 <strong class="ml-2">{{ match[2] }}</strong>
                                             </div>
                                         </a>
@@ -146,13 +146,13 @@
                                         <a href="{{ url_for('user.profile_match', match_id=match[0]) }}" class="text-decoration-none text-dark d-flex justify-content-between align-items-center">
                                             <div class="text-right flex-grow-1">
                                                 <strong class="mr-2">{{ match[1] }}</strong>
-                                                <img src="{{ match[6] }}" class="entity-logo">
+                                                <img src="{{ match[6] if match[6] and match[6] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" class="entity-logo">
                                             </div>
                                             <div class="px-4">
                                                 <span class="match-score fs-5">{{ match[3] }} - {{ match[4] }}</span>
                                             </div>
                                             <div class="text-left flex-grow-1">
-                                                <img src="{{ match[7] }}" class="entity-logo">
+                                                <img src="{{ match[7] if match[7] and match[7] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" class="entity-logo">
                                                 <strong class="ml-2">{{ match[2] }}</strong>
                                             </div>
                                         </a>
