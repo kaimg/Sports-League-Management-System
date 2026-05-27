@@ -15,10 +15,10 @@
     {% for league in leagues %}
         <li class="list-group-item">
             {% if league[3] %}
-                <img src="{{ league[3] }}" alt="{{ league[1] }} Logo" style="height: 40px;">
+                <img src="{{ league[3] if league[3] and league[3] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_league.png') }}';" alt="{{ league[1] }} Logo" style="height: 40px;">
             {% endif %}
             {% if league[2] %}
-                <img src="{{ league[2] }}" alt="{{ league[1] }} Flag" class="flag-img mr-2"">
+                <img src="{{ league[2] if league[2] and league[2] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_flag.png') }}';" alt="{{ league[1] }} Flag" class="flag-img mr-2">
             {% endif %}
             <a href="{{ url_for('user.profile_league', league_id=league[0]) }}">{{ league[1] }}</a>
         </li>
