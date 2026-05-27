@@ -233,14 +233,24 @@ def my_feed():
 def stadiums_map():
     db = get_db()
     cur = db.cursor()
-    cur.execute('SELECT league_id, name FROM leagues')
+
+    cur.execute('SELECT league_id, name FROM leagues ORDER BY name ASC')
     leagues = cur.fetchall()
+
     cur.execute('SELECT DISTINCT country FROM stadiums WHERE country IS NOT NULL ORDER BY country ASC')
     countries = cur.fetchall()
+
     cur.execute('SELECT DISTINCT city FROM stadiums WHERE city IS NOT NULL ORDER BY city ASC')
     cities = cur.fetchall()
+
     cur.close()
-    return render_template('map.html', leagues=leagues, countries=countries, cities=cities)
+
+    return render_template(
+        'map.html',
+        leagues=leagues,
+        countries=countries,
+        cities=cities
+    )
 
 @user_bp.route('/user/teams')
 @login_required
@@ -310,7 +320,8 @@ def user_teams():
         count_filters.append(f"%{search}%")
 
     cur.execute(count_query, count_filters)
-    total_teams =  cur.fetchone()[0]
+    total_teams_result = cur.fetchone()
+    total_teams = total_teams_result[0] if total_teams_result else 0
     cur.close()
 
     total_pages = (total_teams + 19) // 20
@@ -377,7 +388,8 @@ def user_players():
     players = cur.fetchall()
 
     cur.execute('SELECT COUNT(*) FROM players p JOIN teams t ON p.team_id = t.team_id JOIN countries c ON p.nationality = c.name WHERE 1=1' + (' AND t.league_id = %s' if league_id else '') + (' AND c.country_id = %s' if country_id else '') + (' AND p.team_id = %s' if team_id else '') + (' AND p.position = %s' if position else ''), filters[:-2])
-    total_players = cur.fetchone()[0]
+    total_players_result = cur.fetchone()
+    total_players = total_players_result[0] if total_players_result else 0
     cur.close()
 
     total_pages = (total_players + per_page - 1) // per_page
@@ -755,29 +767,46 @@ def user_scorers():
 @login_required
 def add_favorite():
     data = request.get_json()
+
     if not data or 'entity_type' not in data or 'entity_id' not in data:
         return jsonify({"error": "Missing required fields"}), 400
-        
+
     entity_type = data['entity_type']
     entity_id = data['entity_id']
     user_id = session['user_id']
-    
+
     db = get_db()
     cur = db.cursor()
+
     try:
         cur.execute(
-            "INSERT INTO user_favorites (user_id, entity_type, entity_id) VALUES (%s, %s, %s) RETURNING id",
+            """
+            INSERT INTO user_favorites (user_id, entity_type, entity_id)
+            VALUES (%s, %s, %s)
+            RETURNING favorite_id
+            """,
             (user_id, entity_type, entity_id)
         )
-        fav_id = cur.fetchone()[0]
+
+        fav_result = cur.fetchone()
+
+        if fav_result is None:
+            db.rollback()
+            return jsonify({"error": "Could not create favorite"}), 500
+
+        fav_id = fav_result[0]
         db.commit()
+
         return jsonify({"success": True, "id": fav_id}), 201
+
     except Exception as e:
         db.rollback()
-        # Handle unique constraint violation
-        if 'unique constraint' in str(e).lower():
+
+        if "unique constraint" in str(e).lower():
             return jsonify({"error": "Already marked as favorite"}), 409
+
         return jsonify({"error": str(e)}), 500
+
     finally:
         cur.close()
 

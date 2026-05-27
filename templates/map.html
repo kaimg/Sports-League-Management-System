@@ -1,7 +1,11 @@
 {% extends "layout.html" %}
 {% block title %}Global Interactive Map - Sports League Management{% endblock %}
 {% block content %}
+
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+
 <style>
     #globalMap {
         height: 600px;
@@ -9,12 +13,62 @@
         border-radius: 10px;
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
+
     .map-controls {
         background: white;
         padding: 15px;
         border-radius: 10px;
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         margin-bottom: 20px;
+    }
+
+    .league-marker {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+    }
+
+    .league-premier {
+        background-color: #007bff;
+    }
+
+    .league-laliga {
+        background-color: #dc3545;
+    }
+
+    .league-bundesliga {
+        background-color: #ffc107;
+    }
+
+    .league-seriea {
+        background-color: #28a745;
+    }
+
+    .league-ligue1 {
+        background-color: #6f42c1;
+    }
+
+    .league-default {
+        background-color: #343a40;
+    }
+
+    .map-legend {
+        background: white;
+        padding: 10px 14px;
+        border-radius: 8px;
+        box-shadow: 0 0 8px rgba(0,0,0,0.25);
+        font-size: 14px;
+        line-height: 24px;
+    }
+
+    .map-legend i {
+        width: 14px;
+        height: 14px;
+        display: inline-block;
+        margin-right: 6px;
+        border-radius: 50%;
     }
 </style>
 
@@ -31,6 +85,7 @@
                 {% endfor %}
             </select>
         </div>
+
         <div class="col-md-3">
             <label for="countryFilter">Filter by Country:</label>
             <select id="countryFilter" class="form-control">
@@ -40,6 +95,7 @@
                 {% endfor %}
             </select>
         </div>
+
         <div class="col-md-3">
             <label for="cityFilter">Filter by City:</label>
             <select id="cityFilter" class="form-control">
@@ -49,8 +105,11 @@
                 {% endfor %}
             </select>
         </div>
+
         <div class="col-md-2 d-flex align-items-end">
-            <button id="applyFilters" class="btn btn-primary w-100"><i class="fa fa-filter"></i> Apply</button>
+            <button id="applyFilters" class="btn btn-primary w-100">
+                <i class="fa fa-filter"></i> Apply
+            </button>
         </div>
     </div>
 
@@ -58,80 +117,153 @@
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Inicializar el mapa
-        const map = L.map('globalMap').setView([48.8566, 2.3522], 4); // Centro de Europa por defecto
+        const map = L.map('globalMap').setView([48.8566, 2.3522], 4);
 
-        // Capa de mapa base (OpenStreetMap)
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        let geojsonLayer;
+        const markers = L.markerClusterGroup({
+            showCoverageOnHover: true,
+            zoomToBoundsOnClick: true,
+            spiderfyOnMaxZoom: true,
+            disableClusteringAtZoom: 18,
+            maxClusterRadius: 150
+        });
 
-        // Función para cargar los estadios
+        map.addLayer(markers);
+
+        function getLeagueClass(leagueName) {
+            if (!leagueName) {
+                return 'league-default';
+            }
+
+            const league = leagueName.toLowerCase();
+
+            if (league.includes('premier')) {
+                return 'league-premier';
+            }
+
+            if (league.includes('liga')) {
+                return 'league-laliga';
+            }
+
+            if (league.includes('bundesliga')) {
+                return 'league-bundesliga';
+            }
+
+            if (league.includes('serie')) {
+                return 'league-seriea';
+            }
+
+            if (league.includes('ligue')) {
+                return 'league-ligue1';
+            }
+
+            return 'league-default';
+        }
+
+        function createLeagueIcon(leagueName) {
+            return L.divIcon({
+                className: '',
+                html: `<div class="league-marker ${getLeagueClass(leagueName)}"></div>`,
+                iconSize: [18, 18],
+                iconAnchor: [9, 9],
+                popupAnchor: [0, -9]
+            });
+        }
+
         function loadStadiums() {
             const leagueId = document.getElementById('leagueFilter').value;
             const country = document.getElementById('countryFilter').value;
             const city = document.getElementById('cityFilter').value;
             
             let url = '/api/stadiums/geojson?';
-            if (leagueId) url += `league_id=${leagueId}&`;
-            if (country) url += `country=${encodeURIComponent(country)}&`;
-            if (city) url += `city=${encodeURIComponent(city)}`;
+
+            if (leagueId) {
+                url += `league_id=${leagueId}&`;
+            }
+
+            if (country) {
+                url += `country=${encodeURIComponent(country)}&`;
+            }
+
+            if (city) {
+                url += `city=${encodeURIComponent(city)}`;
+            }
 
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
-                    // Limpiar capa anterior si existe
-                    if (geojsonLayer) {
-                        map.removeLayer(geojsonLayer);
-                    }
+                    markers.clearLayers();
 
-                    // Ícono personalizado (puedes ajustarlo luego)
-                    const stadiumIcon = L.icon({
-                        iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-                        shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-                        iconSize: [25, 41],
-                        iconAnchor: [12, 41],
-                        popupAnchor: [1, -34],
-                        shadowSize: [41, 41]
+                    const bounds = [];
+
+                    data.features.forEach(feature => {
+                        const props = feature.properties;
+                        const lng = feature.geometry.coordinates[0];
+                        const lat = feature.geometry.coordinates[1];
+
+                        const marker = L.marker([lat, lng], {
+                            icon: createLeagueIcon(props.league_name)
+                        });
+
+                        const popupContent = `
+                            <div>
+                                <h5 class="mb-1">${props.name}</h5>
+                                <p class="mb-1 text-muted">
+                                    <i class="fa fa-map-marker-alt"></i> ${props.city || 'N/A'}, ${props.country || 'N/A'}
+                                </p>
+                                <hr class="my-2">
+                                <p class="mb-1"><strong>Home Team:</strong> ${props.team_name ? `<a href="/team/${props.team_id || ''}">${props.team_name}</a>` : 'N/A'}</p>
+                                <p class="mb-1"><strong>League:</strong> ${props.league_name || 'N/A'}</p>
+                                <p class="mb-1"><strong>Capacity:</strong> ${props.capacity ? Number(props.capacity).toLocaleString() : 'N/A'}</p>
+                                <p class="mb-0"><strong>Coordinates:</strong> ${lat}, ${lng}</p>
+                            </div>
+                        `;
+
+                        marker.bindPopup(popupContent);
+
+                        markers.addLayer(marker);
+                        bounds.push([lat, lng]);
                     });
 
-                    // Añadir nueva capa GeoJSON
-                    geojsonLayer = L.geoJSON(data, {
-                        pointToLayer: function (feature, latlng) {
-                            return L.marker(latlng, {icon: stadiumIcon});
-                        },
-                        onEachFeature: function (feature, layer) {
-                            const props = feature.properties;
-                            const popupContent = `
-                                <div>
-                                    <h5 class="mb-1">${props.name}</h5>
-                                    <p class="mb-1 text-muted"><i class="fa fa-map-marker-alt"></i> ${props.city}, ${props.country}</p>
-                                    <hr class="my-2">
-                                    <p class="mb-1"><strong>Home Team:</strong> ${props.team_name ? `<a href="/team/${props.team_id || ''}">${props.team_name}</a>` : 'N/A'}</p>
-                                    <p class="mb-1"><strong>League:</strong> ${props.league_name || 'N/A'}</p>
-                                    <p class="mb-0"><strong>Capacity:</strong> ${props.capacity ? props.capacity.toLocaleString() : 'N/A'}</p>
-                                </div>
-                            `;
-                            layer.bindPopup(popupContent);
-                        }
-                    }).addTo(map);
-
-                    // Ajustar la vista del mapa para que quepan todos los marcadores
-                    if (data.features.length > 0) {
-                        map.fitBounds(geojsonLayer.getBounds(), {padding: [50, 50]});
+                    if (bounds.length > 0) {
+                        map.fitBounds(bounds, {
+                            padding: [50, 50],
+                            maxZoom: 5
+                        });
                     }
                 })
                 .catch(error => console.error('Error loading stadiums:', error));
         }
 
-        // Carga inicial
+        const legend = L.control({ position: 'bottomright' });
+
+        legend.onAdd = function () {
+            const div = L.DomUtil.create('div', 'map-legend');
+
+            div.innerHTML = `
+                <strong>Leagues</strong><br>
+                <span><i class="league-premier"></i> Premier League</span><br>
+                <span><i class="league-laliga"></i> LaLiga</span><br>
+                <span><i class="league-bundesliga"></i> Bundesliga</span><br>
+                <span><i class="league-seriea"></i> Serie A</span><br>
+                <span><i class="league-ligue1"></i> Ligue 1</span><br>
+                <span><i class="league-default"></i> Other</span>
+            `;
+
+            return div;
+        };
+
+        legend.addTo(map);
+
         loadStadiums();
 
-        // Escuchar botón de aplicar filtros
         document.getElementById('applyFilters').addEventListener('click', loadStadiums);
     });
 </script>
