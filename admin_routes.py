@@ -720,6 +720,7 @@ def sync_api_teams():
     
     leagues = ['PL', 'PD', 'SA', 'BL1', 'FL1']
     total_updated = 0
+    total_players_updated = 0
     errors = []
     
     for league in leagues:
@@ -728,11 +729,12 @@ def sync_api_teams():
             errors.append(f"{league}: {result['error']}")
         else:
             total_updated += result.get("success", 0)
+            total_players_updated += result.get("players_success", 0)
             
     if errors:
-        flash(f"Sync completed with some errors: {', '.join(errors)}. Updated {total_updated} teams.", "warning")
+        flash(f"Sync completed with some errors: {', '.join(errors)}. Updated {total_updated} teams and {total_players_updated} players.", "warning")
     else:
-        flash(f"Successfully synced {total_updated} teams from all top 5 leagues.", "success")
+        flash(f"Successfully synced {total_updated} teams and {total_players_updated} players from all top 5 leagues.", "success")
         
     return redirect(url_for('admin.manage_teams'))
 

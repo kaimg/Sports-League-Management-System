@@ -164,6 +164,11 @@ def sync_teams_for_league(league_code):
         # Deactivate all teams for this league before syncing
         cur.execute("UPDATE teams SET is_active = FALSE WHERE league_id = %s", (league_id,))
         
+        # Unassign players from teams in this league before syncing
+        cur.execute("UPDATE players SET team_id = NULL WHERE team_id IN (SELECT team_id FROM teams WHERE league_id = %s)", (league_id,))
+        
+        players_updated_count = 0
+        
         for team in teams:
             team_id = team['id']
             name = team['name']
@@ -200,6 +205,28 @@ def sync_teams_for_league(league_code):
             if coach_id:
                 cur.execute("UPDATE coaches SET team_id = %s WHERE coach_id = %s", (team_id, coach_id))
                 
+            # Sync squad (players)
+            squad = team.get('squad', [])
+            for player in squad:
+                player_id = player['id']
+                p_name = player.get('name', 'Unknown')
+                p_position = player.get('position', 'Unknown')
+                p_dob = player.get('dateOfBirth')
+                p_nat = player.get('nationality', 'Unknown')
+                
+                cur.execute("SELECT player_id FROM players WHERE player_id = %s", (player_id,))
+                if cur.fetchone():
+                    cur.execute("""
+                        UPDATE players SET name = %s, position = %s, date_of_birth = %s, nationality = %s, team_id = %s
+                        WHERE player_id = %s
+                    """, (p_name, p_position, p_dob, p_nat, team_id, player_id))
+                else:
+                    cur.execute("""
+                        INSERT INTO players (player_id, name, position, date_of_birth, nationality, team_id)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                    """, (player_id, p_name, p_position, p_dob, p_nat, team_id))
+                players_updated_count += 1
+                
             updated_count += 1
             
         db.commit()
@@ -209,7 +236,7 @@ def sync_teams_for_league(league_code):
     finally:
         cur.close()
         
-    return {"success": updated_count}
+    return {"success": updated_count, "players_success": players_updated_count}
 
 def sync_scorers_for_league(league_code):
     if not Config.FOOTBALL_DATA_API_KEY:

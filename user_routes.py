@@ -377,8 +377,8 @@ def profile_team(team_id):
         SELECT t.name, t.founded_year, s.name AS stadium_name, c.name AS coach_name, l.name AS league_name, t.crestURL, co.flag_url, s.latitude, s.longitude, s.city, s.country
         FROM teams t 
         LEFT JOIN stadiums s ON t.stadium_id = s.stadium_id
-        JOIN coaches c ON t.coach_id = c.coach_id 
-        JOIN countries co ON c.nationality = co.name
+        LEFT JOIN coaches c ON t.coach_id = c.coach_id 
+        LEFT JOIN countries co ON c.nationality = co.name
         JOIN leagues l ON t.league_id = l.league_id
         WHERE t.team_id = %s
     """, (team_id,))
