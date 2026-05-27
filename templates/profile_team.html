@@ -430,7 +430,7 @@
 <!-- Hero Section -->
 <div class="profile-hero">
     {% if logo_url %}
-        <img src="{{ logo_url }}" alt="{{ team[0] }} Logo" class="team-logo-large">
+        <img src="{{ logo_url if logo_url and logo_url != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" alt="{{ team[0] }} Logo" class="team-logo-large">
     {% else %}
         <div class="team-logo-large" style="display: flex; align-items: center; justify-content: center;">
             <i class="fas fa-shield-alt" style="font-size: 4rem; color: var(--primary); opacity: 0.3;"></i>
@@ -473,7 +473,7 @@
                         <div class="player-name">{{ player[1] }}</div>
                         <div class="player-nat">
                             {% if player[5] %}
-                                <img src="{{ player[5] }}" alt="{{ player[4] }} Flag" class="flag-icon">
+                                <img src="{{ player[5] if player[5] and player[5] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_flag.png') }}';" alt="{{ player[4] }} Flag" class="flag-icon">
                             {% endif %}
                             {{ player[4] }}
                         </div>
@@ -502,13 +502,13 @@
                         <div class="match-teams">
                             <div class="match-team home">
                                 <span class="match-team-name" title="{{ score[2] }}">{{ score[2] }}</span>
-                                <img src="{{ score[6] }}" alt="Home Logo" class="match-team-logo">
+                                <img src="{{ score[6] if score[6] and score[6] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" alt="Home Logo" class="match-team-logo">
                             </div>
                             <div class="match-score">
                                 {{ score[4] }} - {{ score[5] }}
                             </div>
                             <div class="match-team away">
-                                <img src="{{ score[7] }}" alt="Away Logo" class="match-team-logo">
+                                <img src="{{ score[7] if score[7] and score[7] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" alt="Away Logo" class="match-team-logo">
                                 <span class="match-team-name" title="{{ score[3] }}">{{ score[3] }}</span>
                             </div>
                         </div>
@@ -542,7 +542,7 @@
                     <p>
                         Manager 
                         {% if team[6] %}
-                            <img src="{{ team[6] }}" class="flag-icon ml-1" alt="Coach Nationality">
+                            <img src="{{ team[6] if team[6] and team[6] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_flag.png') }}';" class="flag-icon ml-1" alt="Coach Nationality">
                         {% endif %}
                     </p>
                 </div>

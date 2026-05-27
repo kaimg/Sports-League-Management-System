@@ -9,10 +9,7 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-4 text-center">
-                    {% if player[5] %}
-                        <img src="{{ player[5] }}" alt="{{ player[0] }}'s Picture" class="img-fluid rounded mb-3" style="max-height: 200px;">
-                        <img src="/static/images/default_player.png" alt="Default Player Picture" class="img-fluid rounded mb-3" style="max-height: 200px;">
-                    {% endif %}
+                    <img src="{{ player[5] if player[5] and player[5] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_player.png') }}';" alt="{{ player[0] }}'s Picture" class="img-fluid rounded mb-3" style="max-height: 200px;">
                 </div>
                 <div class="col-md-8">
                     <p><strong>Age:</strong> <span id="age"></span></p>
