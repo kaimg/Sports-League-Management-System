@@ -1,109 +1,393 @@
 {% extends "user_dashboard.html" %}
+{% block page_icon %}<i class="fas fa-futbol"></i>{% endblock %}
+{% block page_title %}{% endblock %}
 {% block user_content %}
-<h2>Match Profiles</h2>
-<form method="get" action="{{ url_for('user.user_matches') }}">
-    <div class="form-row">
-        <div class="form-group col-md-3">
-            <label for="league_id">League</label>
-            <select id="league_id" name="league_id" class="form-control">
-                <option value="">All Leagues</option>
-                {% for league in leagues %}
-                    <option value="{{ league[0] }}" {% if request.args.get('league_id') == str(league[0]) %}selected{% endif %}>{{ league[1] }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group col-md-3">
-            <label for="country_id">Country</label>
-            <select id="country_id" name="country_id" class="form-control">
-                <option value="">All Countries</option>
-                {% for country in countries %}
-                    <option value="{{ country[0] }}" {% if request.args.get('country_id') == str(country[0]) %}selected{% endif %}>{{ country[1] }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group col-md-3">
-            <label for="team_id">Team</label>
-            <select id="team_id" name="team_id" class="form-control">
-                <option value="">All Teams</option>
-                {% for team in teams %}
-                    <option value="{{ team[0] }}" {% if request.args.get('team_id') == str(team[0]) %}selected{% endif %}>{{ team[1] }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group col-md-3">
-            <label for="matchday">Matchday</label>
-            <select id="matchday" name="matchday" class="form-control">
-                <option value="">All Matchdays</option>
-                {% for day in matchdays %}
-                    <option value="{{ day }}" {% if request.args.get('matchday') == str(day) %}selected{% endif %}>{{ day }}</option>
-                {% endfor %}
-            </select>
-        </div>
-    </div>
-    <button type="submit" class="btn btn-primary">Filter</button>
-</form>
-
-<ul class="list-group mt-3">
-    {% for match in matches %}
-        <li class="list-group-item d-flex flex-column">
-            <div class="d-flex justify-content-between w-100 mb-2">
-                <div class="font-weight-bold">
-                    <small>{{ match[5] }} | Matchday: {{ match[8] }}</small>
-                </div>
-            </div>
-            <div class="d-flex justify-content-center align-items-center match-result-box p-3 bg-light rounded shadow-sm">
-                <a href="{{ url_for('user.profile_match', match_id=match[0]) }}" class="d-flex align-items-center text-dark w-100" style="justify-content: space-around;">
-                    <div class="d-flex align-items-center">
-                        <img src="{{ match[6] if match[6] and match[6] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" alt="{{ match[1] }} Logo" style="height: 30px; margin-right: 10px;">
-                        <strong>{{ match[1] }}</strong>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        {% if match[9] == 'FINISHED' %}
-                            <span class="match-score-box bg-primary text-white px-2 py-1 rounded">{{ match[3] }} - {{ match[4] }}</span>
-                        {% elif match[9] in ['SCHEDULED', 'TIMED'] %}
-                            <span class="match-score-box bg-secondary text-white px-2 py-1 rounded">Scheduled</span>
-                        {% elif match[9] in ['POSTPONED', 'CANCELED', 'SUSPENDED'] %}
-                            <span class="match-score-box bg-danger text-white px-2 py-1 rounded">{{ match[9].title() }}</span>
-                        {% else %}
-                            <span class="match-score-box bg-info text-white px-2 py-1 rounded">{{ match[9].replace('_', ' ').title() }}</span>
-                        {% endif %}
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <strong>{{ match[2] }}</strong>
-                        <img src="{{ match[7] if match[7] and match[7] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" alt="{{ match[2] }} Logo" style="height: 30px; margin-left: 10px;">
-                    </div>
-                </a>
-            </div>
-        </li>
-    {% endfor %}
-</ul>
-{% endblock %}
-
 <style>
-    .match-result-box a {
+    :root {
+        --primary: #0066cc;
+        --primary-dark: #004999;
+        --secondary: #f0f2f5;
+        --accent: #00d4ff;
+        --text-dark: #1a1a1a;
+        --text-light: #666666;
+    }
+
+    .page-header {
+        display: none !important;
+    }
+
+    .main-content {
+        padding-left: 0.5rem !important;
+    }
+
+    .filter-panel {
+        background: linear-gradient(135deg, var(--secondary) 0%, #ffffff 100%);
+        border-radius: 12px;
+        padding: 0.85rem 1.25rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 102, 204, 0.05);
+        border: 1px solid #e0e0e0;
+    }
+
+    .filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.8rem;
+    }
+
+    .form-group-modern {
         display: flex;
         align-items: center;
-        justify-content: space-around;
-        width: 100%;
+        gap: 0.5rem;
+        white-space: nowrap;
     }
 
-    .match-result-box img {
-        height: 30px;
-        margin: 0 10px;
+    .form-group-modern label {
+        font-weight: 600;
+        color: var(--text-dark);
+        font-size: 0.95rem;
+        margin: 0;
     }
 
-    .match-score-box {
-        background-color: #007bff;
+    .form-select-modern {
+        padding: 0.42rem 0.75rem;
+        border: 2px solid var(--secondary);
+        border-radius: 8px;
+        background-color: white;
+        color: var(--text-dark);
+        font-weight: 500;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        font-size: 0.9rem;
+        min-width: 145px;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        padding-right: 2.2rem;
+        background-image: linear-gradient(45deg, transparent 50%, var(--primary) 50%),
+            linear-gradient(135deg, var(--primary) 50%, transparent 50%),
+            linear-gradient(to right, #dde5ef, #dde5ef);
+        background-position: calc(100% - 16px) calc(50% - 2px),
+            calc(100% - 11px) calc(50% - 2px),
+            calc(100% - 2.1rem) 50%;
+        background-size: 5px 5px, 5px 5px, 1px 1.4rem;
+        background-repeat: no-repeat;
+    }
+
+    .form-select-modern:hover {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    }
+
+    .form-select-modern:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.2);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        margin-left: auto;
+    }
+
+    .btn-modern {
+        padding: 0.42rem 0.9rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        text-decoration: none;
+    }
+
+    .btn-primary-modern {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
         color: white;
-        padding: 5px 10px;
-        border-radius: 5px;
-        font-weight: bold;
-        min-width: 50px;
-        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 102, 204, 0.3);
     }
 
-    .match-result-box strong {
+    .btn-primary-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0, 102, 204, 0.4);
+        color: white;
+    }
+
+    .btn-secondary-modern {
+        background: var(--secondary);
+        color: var(--text-dark);
+        border: 2px solid transparent;
+    }
+
+    .btn-secondary-modern:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .matches-wrapper {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e0e0e0;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 102, 204, 0.05);
+    }
+
+    .matches-container {
+        padding: 1rem;
+        display: grid;
+        gap: 0.9rem;
+    }
+
+    .match-card {
+        border: 2px solid transparent;
+        border-radius: 12px;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        padding: 0.9rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .match-card:hover {
+        border-color: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 102, 204, 0.16);
+    }
+
+    .match-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.8rem;
+        margin-bottom: 0.75rem;
+        color: var(--text-light);
+        font-weight: 600;
+        font-size: 0.88rem;
+    }
+
+    .matchday-pill {
+        background: var(--secondary);
+        color: var(--text-dark);
+        border-radius: 999px;
+        padding: 0.2rem 0.55rem;
+        font-size: 0.78rem;
+    }
+
+    .match-link {
+        text-decoration: none;
+        color: inherit;
         display: block;
+    }
+
+    .match-teams-row {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 0.85rem;
+    }
+
+    .team-side {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        min-width: 0;
+    }
+
+    .team-side.away {
+        justify-content: flex-end;
+    }
+
+    .team-logo {
+        width: 34px;
+        height: 34px;
+        object-fit: contain;
+        border-radius: 7px;
+        border: 1px solid #dddddd;
+        background: var(--secondary);
+        flex-shrink: 0;
+    }
+
+    .team-name {
+        font-weight: 700;
+        color: var(--text-dark);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .status-pill {
+        min-width: 110px;
         text-align: center;
+        border-radius: 999px;
+        padding: 0.3rem 0.65rem;
+        color: white;
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        text-transform: uppercase;
+    }
+
+    .status-finished {
+        background: var(--primary);
+    }
+
+    .status-scheduled {
+        background: #6c757d;
+    }
+
+    .status-alert {
+        background: #dc3545;
+    }
+
+    .status-other {
+        background: #0dcaf0;
+    }
+
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    .empty-state i {
+        font-size: 3.5rem;
+        color: var(--secondary);
+        margin-bottom: 0.8rem;
+    }
+
+    .empty-state h3 {
+        color: var(--text-dark);
+        margin-bottom: 0.4rem;
+    }
+
+    .empty-state p {
+        color: var(--text-light);
+        margin: 0;
+    }
+
+    @media (max-width: 900px) {
+        .action-buttons {
+            margin-left: 0;
+        }
+    }
+
+    @media (max-width: 700px) {
+        .match-teams-row {
+            grid-template-columns: 1fr;
+            gap: 0.7rem;
+        }
+
+        .team-side,
+        .team-side.away {
+            justify-content: center;
+        }
+
+        .status-pill {
+            margin: 0 auto;
+        }
     }
 </style>
+
+<div class="filter-panel">
+    <form method="get" action="{{ url_for('user.user_matches') }}">
+        <div class="filter-row">
+            <div class="form-group-modern">
+                <label for="league_id"><i class="fas fa-trophy"></i> League</label>
+                <select id="league_id" name="league_id" class="form-select-modern">
+                    <option value="">All Leagues</option>
+                    {% for league in leagues %}
+                    <option value="{{ league[0] }}" {% if request.args.get('league_id') == str(league[0]) %}selected{% endif %}>{{ league[1] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group-modern">
+                <label for="country_id"><i class="fas fa-globe"></i> Country</label>
+                <select id="country_id" name="country_id" class="form-select-modern">
+                    <option value="">All Countries</option>
+                    {% for country in countries %}
+                    <option value="{{ country[0] }}" {% if request.args.get('country_id') == str(country[0]) %}selected{% endif %}>{{ country[1] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group-modern">
+                <label for="team_id"><i class="fas fa-shield-alt"></i> Team</label>
+                <select id="team_id" name="team_id" class="form-select-modern">
+                    <option value="">All Teams</option>
+                    {% for team in teams %}
+                    <option value="{{ team[0] }}" {% if request.args.get('team_id') == str(team[0]) %}selected{% endif %}>{{ team[1] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group-modern">
+                <label for="matchday"><i class="fas fa-calendar-day"></i> Matchday</label>
+                <select id="matchday" name="matchday" class="form-select-modern">
+                    <option value="">All Matchdays</option>
+                    {% for day in matchdays %}
+                    <option value="{{ day }}" {% if request.args.get('matchday') == str(day) %}selected{% endif %}>{{ day }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="action-buttons">
+                <button type="submit" class="btn-modern btn-primary-modern">
+                    <i class="fas fa-filter"></i> Apply
+                </button>
+                <a href="{{ url_for('user.user_matches') }}" class="btn-modern btn-secondary-modern">
+                    <i class="fas fa-times"></i> Clear
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="matches-wrapper">
+    {% if matches %}
+    <div class="matches-container">
+        {% for match in matches %}
+        <div class="match-card">
+            <div class="match-meta">
+                <span><i class="fas fa-calendar-alt"></i> {{ match[5] }}</span>
+                <span class="matchday-pill">Matchday {{ match[8] }}</span>
+            </div>
+            <a href="{{ url_for('user.profile_match', match_id=match[0]) }}" class="match-link">
+                <div class="match-teams-row">
+                    <div class="team-side">
+                        <img src="{{ match[6] if match[6] and match[6] != 'None' else url_for('static', filename='images/default_team.png') }}" alt="{{ match[1] }} Logo" class="team-logo">
+                        <span class="team-name">{{ match[1] }}</span>
+                    </div>
+
+                    {% if match[9] == 'FINISHED' %}
+                    <span class="status-pill status-finished">{{ match[3] }} - {{ match[4] }}</span>
+                    {% elif match[9] in ['SCHEDULED', 'TIMED'] %}
+                    <span class="status-pill status-scheduled">Scheduled</span>
+                    {% elif match[9] in ['POSTPONED', 'CANCELED', 'SUSPENDED'] %}
+                    <span class="status-pill status-alert">{{ match[9].replace('_', ' ').title() }}</span>
+                    {% else %}
+                    <span class="status-pill status-other">{{ match[9].replace('_', ' ').title() }}</span>
+                    {% endif %}
+
+                    <div class="team-side away">
+                        <span class="team-name">{{ match[2] }}</span>
+                        <img src="{{ match[7] if match[7] and match[7] != 'None' else url_for('static', filename='images/default_team.png') }}" alt="{{ match[2] }} Logo" class="team-logo">
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-search"></i>
+        <h3>No Matches Found</h3>
+        <p>Try changing your filter settings to find matches.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
