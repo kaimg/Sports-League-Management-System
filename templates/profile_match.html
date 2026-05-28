@@ -2,127 +2,310 @@
 {% block title %}Match Profile{% endblock %}
 {% block content %}
 <style>
-    .flag-img {
-        width: 40px;
-        height: auto;
-        max-height: 30px;
-        object-fit: cover;
-        border-radius: 5px;
-        margin-right: 10px;
+    :root {
+        --primary: #0066cc;
+        --primary-dark: #004999;
+        --secondary: #f0f2f5;
+        --accent: #00d4ff;
+        --text-dark: #1a1a1a;
+        --text-light: #666666;
     }
-    .team-logo {
-        height: 30px;
-        margin-right: 10px;
+
+    .profile-shell {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e0e0e0;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 102, 204, 0.05);
     }
-    .match-result-box {
+
+    .profile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.25rem;
+        background: linear-gradient(135deg, var(--secondary) 0%, #ffffff 100%);
+        border-bottom: 1px solid #e7e7e7;
+    }
+
+    .profile-header h1 {
+        margin: 0;
+        color: var(--primary);
+        font-size: 1.25rem;
+        font-weight: 700;
         display: flex;
         align-items: center;
-        justify-content: center;
-        background-color: #f8f9fa;
-        padding: 10px;
-        border-radius: 5px;
+        gap: 0.5rem;
     }
-    .match-score-box {
-        background-color: #007bff;
+
+    .profile-body {
+        padding: 1.1rem;
+        display: grid;
+        gap: 1rem;
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 0.9rem;
+    }
+
+    .detail-card {
+        border: 1px solid #e5e5e5;
+        border-radius: 10px;
+        padding: 0.85rem 1rem;
+        background: #fff;
+    }
+
+    .detail-title {
+        margin: 0 0 0.45rem 0;
+        color: var(--primary);
+        font-size: 0.95rem;
+        font-weight: 700;
+    }
+
+    .detail-line {
+        margin: 0.2rem 0;
+        color: var(--text-dark);
+        font-size: 0.92rem;
+    }
+
+    .flag-img {
+        width: 28px;
+        height: 20px;
+        object-fit: cover;
+        border-radius: 4px;
+        border: 1px solid #dadada;
+        margin-left: 0.45rem;
+        vertical-align: middle;
+    }
+
+    .match-card {
+        border: 2px solid transparent;
+        border-radius: 12px;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        padding: 0.9rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .match-card:hover {
+        border-color: var(--accent);
+        box-shadow: 0 8px 20px rgba(0, 102, 204, 0.16);
+    }
+
+    .match-row {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 0.8rem;
+    }
+
+    .team-side {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        min-width: 0;
+        color: var(--text-dark);
+        text-decoration: none;
+    }
+
+    .team-side.away {
+        justify-content: flex-end;
+    }
+
+    .team-side:hover .team-name {
+        color: var(--primary);
+        text-decoration: underline;
+    }
+
+    .team-logo {
+        width: 36px;
+        height: 36px;
+        object-fit: contain;
+        border-radius: 7px;
+        border: 1px solid #dddddd;
+        background: var(--secondary);
+        flex-shrink: 0;
+    }
+
+    .team-name {
+        font-weight: 700;
+        color: var(--text-dark);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .status-pill {
+        min-width: 120px;
+        text-align: center;
+        border-radius: 999px;
+        padding: 0.3rem 0.7rem;
         color: white;
-        padding: 5px 10px;
-        border-radius: 5px;
-        font-weight: bold;
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        text-transform: uppercase;
+    }
+
+    .status-finished { background: var(--primary); }
+    .status-scheduled { background: #6c757d; }
+    .status-alert { background: #dc3545; }
+    .status-other { background: #0dcaf0; }
+
+    .section-card {
+        border: 1px solid #e5e5e5;
+        border-radius: 10px;
+        padding: 1rem;
+        background: #fff;
+    }
+
+    .section-title {
+        margin: 0 0 0.75rem 0;
+        color: var(--primary);
+        font-size: 1.05rem;
+        font-weight: 700;
+    }
+
+    #matchMap {
+        height: 400px;
+        width: 100%;
+        border-radius: 10px;
+    }
+
+    .score-list .list-group-item {
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        border-left: 4px solid var(--primary);
+    }
+
+    @media (max-width: 768px) {
+        .profile-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .match-row {
+            grid-template-columns: 1fr;
+            gap: 0.7rem;
+        }
+
+        .team-side,
+        .team-side.away {
+            justify-content: center;
+        }
+
+        .status-pill {
+            margin: 0 auto;
+        }
     }
 </style>
 <div class="container mt-4">
-    <h1>Match Profile</h1>
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <p><strong>Date:</strong> {{ match[5] }}</p>
-            <p><strong>Matchday:</strong> {{ match[6] }}</p>
+    <div class="profile-shell">
+        <div class="profile-header">
+            <h1><i class="fas fa-futbol"></i> Match Profile</h1>
         </div>
-        <div class="text-right">
-            <p>
-    <strong>Venue:</strong> {{ match[9] or 'N/A' }} -
-    {{ match[10] or 'N/A' }},
-    {{ match[11] or 'N/A' }},
-    {{ match[12] or 'N/A' }}
-</p>
-            <p><strong>Referee:</strong> {{ match[15] }}
-    {% if match[16] %}
-        <img src="{{ match[16] if match[16] and match[16] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_flag.png') }}';" alt="Flag" class="flag-img mr-2">
-    {% endif %}
-</p>
-        </div>
-    </div>
 
-    <div class="d-flex justify-content-center align-items-center match-result-box p-3 bg-light rounded shadow-sm mb-4">
-        <a href="{{ url_for('user.profile_team', team_id=match[17]) }}" class="d-flex align-items-center text-dark">
-            <img src="{{ match[7] if match[7] and match[7] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" alt="{{ match[1] }} Logo" class="team-logo">
-            <strong class="mx-2">{{ match[1] }}</strong>
-        </a>
-        <span class="match-score-box mx-2">
-            {% if match[19] == 'FINISHED' %}
-                {{ match[3] }} - {{ match[4] }}
-            {% elif match[19] in ['SCHEDULED', 'TIMED'] %}
-                Scheduled
-            {% elif match[19] in ['POSTPONED', 'CANCELED', 'SUSPENDED'] %}
-                {{ match[19].title() }}
-            {% else %}
-                {{ match[19].replace('_', ' ').title() }}
-            {% endif %}
-        </span>
-        <a href="{{ url_for('user.profile_team', team_id=match[18]) }}" class="d-flex align-items-center text-dark">
-            <strong class="mx-2">{{ match[2] }}</strong>
-            <img src="{{ match[8] if match[8] and match[8] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" alt="{{ match[2] }} Logo" class="team-logo">
-        </a>
-        </div>
+        <div class="profile-body">
+            <div class="detail-grid">
+                <div class="detail-card">
+                    <p class="detail-title"><i class="fas fa-calendar-alt"></i> Match Details</p>
+                    <p class="detail-line"><strong>Date:</strong> {{ match[5] }}</p>
+                    <p class="detail-line"><strong>Matchday:</strong> {{ match[6] }}</p>
+                </div>
+                <div class="detail-card">
+                    <p class="detail-title"><i class="fas fa-map-marker-alt"></i> Venue & Officials</p>
+                    <p class="detail-line"><strong>Venue:</strong> {{ match[9] or 'N/A' }} - {{ match[10] or 'N/A' }}, {{ match[11] or 'N/A' }}, {{ match[12] or 'N/A' }}</p>
+                    <p class="detail-line">
+                        <strong>Referee:</strong> {{ match[15] or 'N/A' }}
+                        {% if match[16] %}
+                        <img src="{{ match[16] if match[16] and match[16] != 'None' else url_for('static', filename='images/default_flag.png') }}" alt="Referee Flag" class="flag-img">
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <div class="match-card">
+                <div class="match-row">
+                    <a href="{{ url_for('user.profile_team', team_id=match[17]) }}" class="team-side">
+                        <img src="{{ match[7] if match[7] and match[7] != 'None' else url_for('static', filename='images/default_team.png') }}" alt="{{ match[1] }} Logo" class="team-logo">
+                        <span class="team-name">{{ match[1] }}</span>
+                    </a>
+                    {% if match[19] == 'FINISHED' %}
+                    <span class="status-pill status-finished">{{ match[3] }} - {{ match[4] }}</span>
+                    {% elif match[19] in ['SCHEDULED', 'TIMED'] %}
+                    <span class="status-pill status-scheduled">Scheduled</span>
+                    {% elif match[19] in ['POSTPONED', 'CANCELED', 'SUSPENDED'] %}
+                    <span class="status-pill status-alert">{{ match[19].replace('_', ' ').title() }}</span>
+                    {% else %}
+                    <span class="status-pill status-other">{{ match[19].replace('_', ' ').title() }}</span>
+                    {% endif %}
+                    <a href="{{ url_for('user.profile_team', team_id=match[18]) }}" class="team-side away">
+                        <span class="team-name">{{ match[2] }}</span>
+                        <img src="{{ match[8] if match[8] and match[8] != 'None' else url_for('static', filename='images/default_team.png') }}" alt="{{ match[2] }} Logo" class="team-logo">
+                    </a>
+                </div>
+            </div>
 
 {% if match[13] and match[14] %}
-    <h2>Match Location</h2>
-    <div id="matchMap" style="height: 400px; width: 100%; border-radius: 10px;" class="mb-4"></div>
+            <div class="section-card">
+                <h2 class="section-title"><i class="fas fa-map"></i> Match Location</h2>
+                <div id="matchMap" class="mb-2"></div>
+            </div>
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+            <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+            <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-    <script>
-        const matchLat = Number("{{ match[13] }}");
-        const matchLon = Number("{{ match[14] }}");
+            <script>
+                const matchLat = Number("{{ match[13] }}");
+                const matchLon = Number("{{ match[14] }}");
 
-        const matchMap = L.map('matchMap').setView([matchLat, matchLon], 13);
+                const matchMap = L.map('matchMap').setView([matchLat, matchLon], 13);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(matchMap);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(matchMap);
 
-        L.marker([matchLat, matchLon])
-            .addTo(matchMap)
-            .bindPopup(`
-    <strong>{{ match[9] or 'N/A' }}</strong><br>
-    <strong>Location:</strong> {{ match[10] or 'N/A' }}<br>
-    <strong>City:</strong> {{ match[11] or 'N/A' }}<br>
-    <strong>Country:</strong> {{ match[12] or 'N/A' }}<br>
-    <strong>Latitude:</strong> {{ match[13] or 'N/A' }}<br>
-    <strong>Longitude:</strong> {{ match[14] or 'N/A' }}
-`)
-            .openPopup();
-    </script>
+                L.marker([matchLat, matchLon])
+                    .addTo(matchMap)
+                    .bindPopup(`
+            <strong>{{ match[9] or 'N/A' }}</strong><br>
+            <strong>Location:</strong> {{ match[10] or 'N/A' }}<br>
+            <strong>City:</strong> {{ match[11] or 'N/A' }}<br>
+            <strong>Country:</strong> {{ match[12] or 'N/A' }}<br>
+            <strong>Latitude:</strong> {{ match[13] or 'N/A' }}<br>
+            <strong>Longitude:</strong> {{ match[14] or 'N/A' }}
+        `)
+                    .openPopup();
+            </script>
 {% endif %}
 
-    {% if match[19] == 'FINISHED' %}
-        <h2>Scores</h2>
-        {% if scores %}
-            <ul class="list-group">
-                {% for score in scores %}
-                    <li class="list-group-item">
-                        Full Time: {{ score[0] }} - {{ score[1] }}, Half Time: {{ score[2] }} - {{ score[3] }}
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>No scores found.</p>
-        {% endif %}
-    {% else %}
-        <h2>Status</h2>
-        <div class="alert alert-info">
-            <i class="fa fa-calendar"></i> This match has not been played yet. Status: <strong>{{ match[19].replace('_', ' ').title() }}</strong>
+            {% if match[19] == 'FINISHED' %}
+                <div class="section-card">
+                    <h2 class="section-title"><i class="fas fa-chart-line"></i> Scores</h2>
+                    {% if scores %}
+                        <ul class="list-group score-list">
+                            {% for score in scores %}
+                                <li class="list-group-item">
+                                    Full Time: {{ score[0] }} - {{ score[1] }}, Half Time: {{ score[2] }} - {{ score[3] }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="mb-0">No scores found.</p>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="section-card">
+                    <h2 class="section-title"><i class="fas fa-info-circle"></i> Status</h2>
+                    <div class="alert alert-info mb-0">
+                        <i class="fa fa-calendar"></i> This match has not been played yet. Status: <strong>{{ match[19].replace('_', ' ').title() }}</strong>
+                    </div>
+                </div>
+            {% endif %}
         </div>
-    {% endif %}
+    </div>
 </div>
 {% endblock %}
