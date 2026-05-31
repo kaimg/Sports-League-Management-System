@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, session, url_for, flash, jsonify
 from functools import wraps
 
-from pip._vendor.distlib.util import OR
 from db import get_db
+from notification_service import notification_row_to_dict, run_notification_detection
 
 user_bp = Blueprint('user', __name__)
 
@@ -12,6 +12,15 @@ def login_required(f):
         if 'user_id' not in session:
             flash('You need to be logged in to access this page', 'error')
             return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return wrap
+
+
+def login_required_api(f):
+    @wraps(f)
+    def wrap(*args, **kwargs):
+        if 'user_id' not in session:
+            return jsonify({"error": "Authentication required"}), 401
         return f(*args, **kwargs)
     return wrap
 
@@ -835,3 +844,142 @@ def get_favorites():
         })
         
     return jsonify(result), 200
+
+
+def _fetch_user_notifications(user_id, unread_only=False, limit=None):
+    db = get_db()
+    cur = db.cursor()
+
+    query = """
+        SELECT id, type, message, related_match_id, is_read, created_at
+        FROM notifications
+        WHERE user_id = %s
+    """
+    params = [user_id]
+
+    if unread_only:
+        query += " AND is_read = FALSE"
+
+    query += " ORDER BY created_at DESC"
+
+    if limit is not None:
+        query += " LIMIT %s"
+        params.append(limit)
+
+    cur.execute(query, tuple(params))
+    rows = cur.fetchall()
+    cur.close()
+    return [notification_row_to_dict(row) for row in rows]
+
+
+@user_bp.route('/api/notifications/detect', methods=['POST'])
+@login_required_api
+def trigger_notification_detection():
+    """Run upcoming-match detection on demand (e.g. after login or cron)."""
+    db = get_db()
+    try:
+        counts = run_notification_detection(db)
+        return jsonify({"success": True, "created": counts}), 200
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@user_bp.route('/api/notifications/history', methods=['GET'])
+@login_required_api
+def get_notification_history():
+    user_id = session['user_id']
+    return jsonify(_fetch_user_notifications(user_id)), 200
+
+
+@user_bp.route('/api/notifications/read-all', methods=['PATCH'])
+@login_required_api
+def mark_all_notifications_read():
+    user_id = session['user_id']
+    db = get_db()
+    cur = db.cursor()
+    try:
+        cur.execute(
+            """
+            UPDATE notifications
+            SET is_read = TRUE
+            WHERE user_id = %s AND is_read = FALSE
+            RETURNING id
+            """,
+            (user_id,),
+        )
+        updated = cur.rowcount
+        db.commit()
+        return jsonify({"success": True, "updated": updated}), 200
+    except Exception as exc:
+        db.rollback()
+        return jsonify({"error": str(exc)}), 500
+    finally:
+        cur.close()
+
+
+@user_bp.route('/api/notifications/<int:notification_id>/read', methods=['PATCH'])
+@login_required_api
+def mark_notification_read(notification_id):
+    user_id = session['user_id']
+    db = get_db()
+    cur = db.cursor()
+    try:
+        cur.execute(
+            """
+            UPDATE notifications
+            SET is_read = TRUE
+            WHERE id = %s AND user_id = %s
+            RETURNING id
+            """,
+            (notification_id, user_id),
+        )
+        updated = cur.fetchone()
+        db.commit()
+        if not updated:
+            return jsonify({"error": "Notification not found or unauthorized"}), 404
+        return jsonify({"success": True, "id": notification_id}), 200
+    except Exception as exc:
+        db.rollback()
+        return jsonify({"error": str(exc)}), 500
+    finally:
+        cur.close()
+
+
+@user_bp.route('/api/notifications', methods=['GET'])
+@login_required_api
+def get_notifications():
+    user_id = session['user_id']
+    unread_only = request.args.get('unread_only', '').lower() in ('1', 'true', 'yes')
+    limit = request.args.get('limit', type=int)
+
+    if limit is None:
+        limit = 50
+
+    notifications = _fetch_user_notifications(user_id, unread_only=unread_only, limit=limit)
+
+    db = get_db()
+    cur = db.cursor()
+    cur.execute(
+        "SELECT COUNT(*) FROM notifications WHERE user_id = %s AND is_read = FALSE",
+        (user_id,),
+    )
+    unread_count = cur.fetchone()[0]
+    cur.close()
+
+    return jsonify({
+        "notifications": notifications,
+        "unread_count": unread_count,
+    }), 200
+
+
+@user_bp.route('/notifications')
+@login_required
+def notifications_page():
+    return render_template('notifications.html')
+
+
+@user_bp.route('/notifications/history')
+@login_required
+def notifications_history_page():
+    return render_template('notifications_history.html')
+

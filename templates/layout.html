@@ -202,6 +202,131 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--primary-dark);
         }
+
+        /* Notification center */
+        .notification-nav-link {
+            position: relative;
+            padding: 0.75rem 1rem !important;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 4px;
+            right: 2px;
+            font-size: 0.65rem;
+            min-width: 1.1rem;
+            padding: 0.2em 0.45em;
+        }
+
+        .notification-panel {
+            width: min(380px, 92vw);
+            max-height: 420px;
+            overflow: hidden;
+            padding: 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+        }
+
+        .notification-panel-header {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .notification-panel-body {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            display: block;
+            width: 100%;
+            text-align: left;
+            border: none;
+            background: transparent;
+            color: inherit;
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            transition: background 0.2s ease;
+            cursor: pointer;
+        }
+
+        .notification-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .notification-item.unread {
+            background: rgba(0, 212, 255, 0.08);
+            border-left: 3px solid var(--accent);
+        }
+
+        .notification-item.read {
+            opacity: 0.75;
+        }
+
+        .notification-type {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .notification-message {
+            font-size: 0.9rem;
+            margin: 0.25rem 0;
+            line-height: 1.35;
+        }
+
+        .notification-date {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        .notification-empty {
+            padding: 1.5rem 1rem;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        .notification-panel-footer {
+            padding: 0.65rem 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .notification-page-card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .notification-page-item {
+            border: none;
+            border-bottom: 1px solid var(--border-light);
+            padding: 1rem 1.25rem;
+            transition: background 0.2s ease;
+            cursor: pointer;
+        }
+
+        .notification-page-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-page-item.unread {
+            background: rgba(0, 102, 204, 0.06);
+            border-left: 4px solid var(--primary);
+        }
+
+        .notification-page-item:hover {
+            background: rgba(0, 102, 204, 0.04);
+        }
     </style>
 </head>
 
@@ -234,6 +359,33 @@
                         <a class="nav-link" href="{{ url_for('user.stadiums_map') }}" title="Stadiums Map">
                             <i class="fas fa-map-location-dot"></i> Map
                         </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link notification-nav-link" href="#" id="notificationsDropdown"
+                            role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge badge bg-danger rounded-pill d-none" id="notificationBadge">0</span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-dark dropdown-menu-end notification-panel"
+                            aria-labelledby="notificationsDropdown">
+                            <div class="notification-panel-header">
+                                <strong><i class="fas fa-bell"></i> Notifications</strong>
+                                <button type="button" class="btn btn-sm btn-outline-light" id="markAllReadBtn" title="Mark all as read">
+                                    <i class="fas fa-check-double"></i>
+                                </button>
+                            </div>
+                            <div class="notification-panel-body" id="notificationPanelList">
+                                <div class="notification-empty">Loading...</div>
+                            </div>
+                            <div class="notification-panel-footer">
+                                <a href="{{ url_for('user.notifications_page') }}" class="btn btn-sm btn-link text-decoration-none text-info p-0">
+                                    View all
+                                </a>
+                                <a href="{{ url_for('user.notifications_history_page') }}" class="btn btn-sm btn-link text-decoration-none text-info p-0">
+                                    History
+                                </a>
+                            </div>
+                        </div>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button"
@@ -312,6 +464,173 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% if 'user_id' in session %}
+    <script>
+        (function () {
+            const TYPE_LABELS = {
+                upcoming_match: { label: 'Upcoming match', icon: 'fa-calendar-day' },
+                score_change: { label: 'Score update', icon: 'fa-futbol' },
+                final_result: { label: 'Final result', icon: 'fa-flag-checkered' }
+            };
+
+            function formatNotificationDate(iso) {
+                if (!iso) return '';
+                const date = new Date(iso);
+                return date.toLocaleString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text || '';
+                return div.innerHTML;
+            }
+
+            function renderNotificationItem(notification, compact) {
+                const meta = TYPE_LABELS[notification.type] || { label: notification.type, icon: 'fa-bell' };
+                const readClass = notification.is_read ? 'read' : 'unread';
+                const message = escapeHtml(notification.message);
+                const matchAttr = notification.related_match_id
+                    ? `data-match-id="${notification.related_match_id}"`
+                    : '';
+
+                if (compact) {
+                    return `
+                        <button type="button" class="notification-item ${readClass}"
+                            data-id="${notification.id}" ${matchAttr}>
+                            <div class="notification-type">
+                                <i class="fas ${meta.icon}"></i> ${meta.label}
+                            </div>
+                            <div class="notification-message">${message}</div>
+                            <div class="notification-date">${formatNotificationDate(notification.created_at)}</div>
+                        </button>`;
+                }
+
+                return `
+                    <div class="notification-page-item ${readClass}" data-id="${notification.id}" ${matchAttr} role="button">
+                        <div class="d-flex justify-content-between align-items-start gap-2">
+                            <span class="badge bg-primary">${meta.label}</span>
+                            <small class="text-muted">${formatNotificationDate(notification.created_at)}</small>
+                        </div>
+                        <p class="mb-0 mt-2 ${notification.is_read ? 'text-muted' : 'fw-semibold'}">${message}</p>
+                    </div>`;
+            }
+
+            function updateBadge(count) {
+                const badge = document.getElementById('notificationBadge');
+                if (!badge) return;
+                if (count > 0) {
+                    badge.textContent = count > 99 ? '99+' : count;
+                    badge.classList.remove('d-none');
+                } else {
+                    badge.classList.add('d-none');
+                }
+            }
+
+            async function markNotificationRead(id) {
+                const response = await fetch(`/api/notifications/${id}/read`, { method: 'PATCH' });
+                return response.ok;
+            }
+
+            async function handleNotificationClick(id, matchId) {
+                await markNotificationRead(id);
+                if (matchId) {
+                    window.location.href = `/match/${matchId}`;
+                    return;
+                }
+                if (typeof window.refreshNotificationsPage === 'function') {
+                    window.refreshNotificationsPage();
+                }
+                await loadNotificationDropdown(true);
+            }
+
+            function bindNotificationClicks(container, compact) {
+                const selector = compact ? '.notification-item' : '.notification-page-item';
+                container.querySelectorAll(selector).forEach(function (el) {
+                    el.addEventListener('click', function () {
+                        const id = el.dataset.id;
+                        const matchId = el.dataset.matchId;
+                        handleNotificationClick(id, matchId);
+                    });
+                });
+            }
+
+            async function loadNotificationDropdown(skipDetect) {
+                const list = document.getElementById('notificationPanelList');
+                if (!list) return;
+
+                if (!skipDetect && !sessionStorage.getItem('notificationsDetectRan')) {
+                    try {
+                        await fetch('/api/notifications/detect', { method: 'POST' });
+                        sessionStorage.setItem('notificationsDetectRan', '1');
+                    } catch (e) { /* ignore */ }
+                }
+
+                try {
+                    const response = await fetch('/api/notifications?limit=8');
+                    if (!response.ok) throw new Error('Failed to load');
+                    const data = await response.json();
+                    updateBadge(data.unread_count || 0);
+
+                    if (!data.notifications || data.notifications.length === 0) {
+                        list.innerHTML = '<div class="notification-empty"><i class="fas fa-inbox"></i><br>No notifications yet.<br><small>Follow teams or leagues to receive updates.</small></div>';
+                        return;
+                    }
+
+                    list.innerHTML = data.notifications.map(function (n) {
+                        return renderNotificationItem(n, true);
+                    }).join('');
+                    bindNotificationClicks(list, true);
+                } catch (e) {
+                    list.innerHTML = '<div class="notification-empty text-danger">Could not load notifications.</div>';
+                }
+            }
+
+            async function markAllNotificationsRead() {
+                const response = await fetch('/api/notifications/read-all', { method: 'PATCH' });
+                if (response.ok) {
+                    await loadNotificationDropdown(true);
+                    if (typeof window.refreshNotificationsPage === 'function') {
+                        window.refreshNotificationsPage();
+                    }
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                const dropdown = document.getElementById('notificationsDropdown');
+                const markAllBtn = document.getElementById('markAllReadBtn');
+
+                if (dropdown) {
+                    loadNotificationDropdown(false);
+                    dropdown.addEventListener('shown.bs.dropdown', function () {
+                        loadNotificationDropdown(true);
+                    });
+                }
+
+                if (markAllBtn) {
+                    markAllBtn.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        markAllNotificationsRead();
+                    });
+                }
+            });
+
+            window.NotificationCenter = {
+                renderNotificationItem: renderNotificationItem,
+                bindNotificationClicks: bindNotificationClicks,
+                updateBadge: updateBadge,
+                formatNotificationDate: formatNotificationDate,
+                markAllNotificationsRead: markAllNotificationsRead,
+                loadNotificationDropdown: loadNotificationDropdown
+            };
+        })();
+    </script>
+    {% endif %}
     {% block scripts %}{% endblock %}
 </body>
 
