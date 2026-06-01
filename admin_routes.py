@@ -537,6 +537,19 @@ def manage_matches():
     return render_template('manage_matches.html', matches=matches, teams=teams, seasons=seasons, leagues=leagues)
 
 
+def normalize_flag_url(flag_value):
+    if not flag_value:
+        return None
+
+    flag_value = flag_value.strip()
+
+    if flag_value == "":
+        return None
+
+    if flag_value.startswith("http://") or flag_value.startswith("https://"):
+        return flag_value
+
+    return f"https://flagcdn.com/{flag_value.lower()}.svg"
 
 @admin_bp.route('/manage_countries', methods=['GET', 'POST'])
 @admin_required
@@ -546,34 +559,120 @@ def manage_countries():
 
     if request.method == 'POST':
         try:
-            country_id = request.form.get('country_id')
-            name = request.form['name']
-            flag_url = request.form['flag_url']
+            if 'delete' in request.form:
+                country_id = request.form.get('deleteEntityId')
 
-            if 'submit' in request.form:
-                if country_id:
-                    cur.execute('UPDATE countries SET name = %s, flag_url = %s WHERE country_id = %s', 
-                                (name, flag_url, country_id))
-                    flash('Country updated successfully', 'success')
-                else:
-                    cur.execute('INSERT INTO countries (name, flag_url) VALUES (%s, %s)', 
-                                (name, flag_url))
-                    flash('Country added successfully', 'success')
-            elif 'delete' in request.form:
-                country_id = request.form['deleteEntityId']
-                cur.execute('DELETE FROM countries WHERE country_id = %s', (country_id,))
+                if not country_id:
+                    flash('No country selected for deletion', 'error')
+                    return redirect(url_for('admin.manage_countries'))
+
+                cur.execute(
+                    'DELETE FROM countries WHERE country_id = %s',
+                    (country_id,)
+                )
+
+                db.commit()
                 flash('Country deleted successfully', 'success')
-            db.commit()
+
+            else:
+                country_id = request.form.get('country_id')
+                name = clean_value(request.form.get('name'))
+                flag_url = normalize_flag_url(request.form.get('flag_url'))
+
+                if not name:
+                    flash('Country name is required', 'error')
+                    return redirect(url_for('admin.manage_countries'))
+
+                if country_id:
+                    cur.execute(
+                        """
+                        SELECT country_id
+                        FROM countries
+                        WHERE (
+                            LOWER(name) = LOWER(%s)
+                            OR flag_url = %s
+                        )
+                        AND country_id <> %s
+                        LIMIT 1
+                        """,
+                        (name, flag_url, country_id)
+                    )
+
+                    existing_country = cur.fetchone()
+
+                    if existing_country:
+                        flash('Another country with this name or flag already exists.', 'warning')
+                        return redirect(url_for('admin.manage_countries'))
+
+                    cur.execute(
+                        """
+                        UPDATE countries
+                        SET name = %s,
+                            flag_url = %s
+                        WHERE country_id = %s
+                        """,
+                        (name, flag_url, country_id)
+                    )
+
+                    db.commit()
+                    flash('Country updated successfully', 'success')
+
+                else:
+                    cur.execute(
+                        """
+                        SELECT country_id
+                        FROM countries
+                        WHERE LOWER(name) = LOWER(%s)
+                        OR flag_url = %s
+                        LIMIT 1
+                        """,
+                        (name, flag_url)
+                    )
+
+                    existing_country = cur.fetchone()
+
+                    if existing_country:
+                        flash('This country or flag already exists.', 'warning')
+                        return redirect(url_for('admin.manage_countries'))
+
+                    cur.execute(
+                        """
+                        INSERT INTO countries (name, flag_url)
+                        VALUES (%s, %s)
+                        """,
+                        (name, flag_url)
+                    )
+
+                    db.commit()
+                    flash('Country added successfully', 'success')
+
         except Exception as e:
             db.rollback()
-            flash('An error occurred: ' + str(e), 'error')
+            error_message = str(e).lower()
+
+            if 'foreign key' in error_message:
+                flash(
+                    'This country cannot be deleted because it is being used by leagues, teams, players, referees, or other records.',
+                    'warning'
+                )
+            elif 'duplicate key value' in error_message or 'unique constraint' in error_message:
+                flash('Country already exists or the country ID sequence is out of sync.', 'warning')
+            else:
+                flash('An error occurred: ' + str(e), 'error')
+
         finally:
             cur.close()
+
         return redirect(url_for('admin.manage_countries'))
 
-    cur.execute('SELECT country_id, name, flag_url FROM countries')
+    cur.execute("""
+        SELECT country_id, name, flag_url
+        FROM countries
+        ORDER BY country_id ASC
+    """)
     countries = cur.fetchall()
     cur.close()
+
     return render_template('manage_countries.html', countries=countries)
 
 

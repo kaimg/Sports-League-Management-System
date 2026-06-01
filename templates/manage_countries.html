@@ -13,9 +13,17 @@
                     <input type="text" class="form-control" id="name" name="name" required>
                 </div>
                 <div class="form-group">
-                    <label for="flag_url">Flag URL:</label>
-                    <input type="text" class="form-control" id="flag_url" name="flag_url">
-                </div>
+    <label for="flag_url">Flag Code or Flag URL:</label>
+    <input 
+        type="text" 
+        class="form-control" 
+        id="flag_url" 
+        name="flag_url"
+        placeholder="Example: sv, es, us, gb-eng or https://flagcdn.com/sv.svg">
+    <small class="form-text text-muted">
+        You can enter a FlagCDN country code such as <strong>sv</strong>, <strong>es</strong>, <strong>us</strong>, or a full image URL.
+    </small>
+</div>
                 <button type="submit" name="submit" class="btn btn-primary" id="submit-button">Add Country</button>
             </form>
         </div>
@@ -26,7 +34,7 @@
                     <tr>
                         <th>ID</th>
                         <th>Name</th>
-                        <th>Flag URL</th>
+                        <th>Flag Code</th>
                         <th>Edit</th>
                         <th>Delete</th>
                     </tr>
@@ -36,16 +44,34 @@
                     <tr>
                         <td>{{ country[0] }}</td>
                         <td>{{ country[1] }}</td>
-                        <td>{{ country[2] }}</td>
                         <td>
-                            <button class="btn btn-success btn-sm" onclick="editCountry('{{ country[0] }}', '{{ country[1] }}', '{{ country[2] }}')">
-                                <i class="fa fa-pencil-alt"></i>
-                            </button>
+    {% if country[2] %}
+        <img src="{{ country[2] }}" alt="{{ country[1] }} flag" style="width: 32px; height: auto; margin-right: 8px;">
+        <small>{{ country[2] }}</small>
+    {% else %}
+        <span class="text-muted">No flag</span>
+    {% endif %}
+</td>
+                        <td>
+                            <button 
+    type="button"
+    class="btn btn-success btn-sm edit-country-btn"
+    data-id="{{ country[0] }}"
+    data-name="{{ country[1] }}"
+    data-flag-url="{{ country[2] or '' }}">
+    <i class="fa fa-pencil-alt"></i>
+</button>
                         </td>
                         <td>
-                            <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal" data-id="{{ country[0] }}" data-action="{{ url_for('admin.manage_countries') }}">
-                                <i class="fa fa-minus"></i>
-                            </button>
+                            <button 
+    type="button"
+    class="btn btn-danger btn-sm"
+    data-bs-toggle="modal"
+    data-bs-target="#deleteModal"
+    data-id="{{ country[0] }}"
+    data-action="{{ url_for('admin.manage_countries') }}">
+    <i class="fa fa-minus"></i>
+</button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -62,16 +88,14 @@
             <form id="deleteForm" method="POST" action="">
                 <div class="modal-header">
                     <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     Are you sure you want to delete this item?
                     <input type="hidden" id="deleteItemId" name="deleteEntityId">
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" name="delete" class="btn btn-danger">Delete</button>
                 </div>
             </form>
@@ -80,20 +104,31 @@
 </div>
 
 <script>
-    function editCountry(id, name, flag_url) {
-        document.getElementById('country_id').value = id;
-        document.getElementById('name').value = name;
-        document.getElementById('flag_url').value = flag_url;
-        document.getElementById('submit-button').innerText = 'Update Country';
-        document.getElementById('form-title').innerText = 'Edit Country';
-    }
+    document.querySelectorAll('.edit-country-btn').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const name = this.getAttribute('data-name');
+            const flagUrl = this.getAttribute('data-flag-url');
 
-    $('#deleteModal').on('show.bs.modal', function (event) {
-        var button = $(event.relatedTarget);
-        var id = button.data('id');
-        var action = button.data('action');
-        document.getElementById('deleteItemId').value = id;
-        document.getElementById('deleteForm').action = action;
+            document.getElementById('country_id').value = id;
+            document.getElementById('name').value = name;
+            document.getElementById('flag_url').value = flagUrl || '';
+            document.getElementById('submit-button').innerText = 'Update Country';
+            document.getElementById('form-title').innerText = 'Edit Country';
+        });
     });
+
+    const deleteModal = document.getElementById('deleteModal');
+
+    if (deleteModal) {
+        deleteModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const id = button.getAttribute('data-id');
+            const action = button.getAttribute('data-action');
+
+            document.getElementById('deleteItemId').value = id;
+            document.getElementById('deleteForm').action = action;
+        });
+    }
 </script>
 {% endblock %}
