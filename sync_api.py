@@ -52,10 +52,13 @@ def sync_matches_for_league(league_code):
     if not league_id:
         return {"error": "Invalid league code"}
         
+    from notification_service import process_match_notification_events
+
     db = get_db()
     cur = db.cursor()
     
     updated_count = 0
+    notification_counts = {"score_change": 0, "final_result": 0}
     try:
         for match in matches:
             match_id = match['id']
@@ -65,6 +68,20 @@ def sync_matches_for_league(league_code):
             home_team_id = match['homeTeam']['id']
             away_team_id = match['awayTeam']['id']
             winner = match['score'].get('winner')
+
+            cur.execute(
+                """
+                SELECT m.status, s.full_time_home, s.full_time_away
+                FROM matches m
+                LEFT JOIN scores s ON m.match_id = s.match_id
+                WHERE m.match_id = %s
+                """,
+                (match_id,),
+            )
+            previous = cur.fetchone()
+            old_status = previous[0] if previous else None
+            old_home = previous[1] if previous else None
+            old_away = previous[2] if previous else None
             
             # Get or create season
             season_info = match.get('season')
@@ -109,6 +126,22 @@ def sync_matches_for_league(league_code):
                     INSERT INTO scores (match_id, full_time_home, full_time_away, half_time_home, half_time_away)
                     VALUES (%s, %s, %s, %s, %s)
                 """, (match_id, full_home, full_away, half_home, half_away))
+
+            event_counts = process_match_notification_events(
+                cur,
+                match_id,
+                home_team_id,
+                away_team_id,
+                league_id,
+                old_status,
+                status,
+                old_home,
+                old_away,
+                full_home,
+                full_away,
+            )
+            notification_counts["score_change"] += event_counts["score_change"]
+            notification_counts["final_result"] += event_counts["final_result"]
                 
             # Upsert referees
             referees = match.get('referees', [])
@@ -140,7 +173,7 @@ def sync_matches_for_league(league_code):
     finally:
         cur.close()
         
-    return {"success": updated_count}
+    return {"success": updated_count, "notifications": notification_counts}
 
 def sync_teams_for_league(league_code):
     if not Config.FOOTBALL_DATA_API_KEY:
@@ -425,6 +458,13 @@ def sync_all_data(app):
                     results["standings"]["success"] += res.get("success", 0)
                 time.sleep(6.5)
                 
+            from db import get_db
+            from notification_service import run_notification_detection
+
+            db = get_db()
+            upcoming_counts = run_notification_detection(db)
+            results["notifications"] = upcoming_counts
+
             # Store results in config for flash message reading if desired
             app.config['SYNC_RESULTS'] = results
             return results

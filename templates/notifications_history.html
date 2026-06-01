@@ -1,0 +1,62 @@
+{% extends "layout.html" %}
+{% block title %}Notification History - Sports League Management{% endblock %}
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h1 class="mb-1"><i class="fas fa-history text-primary"></i> Notification History</h1>
+            <p class="text-muted mb-0">Complete record of all your notifications.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="{{ url_for('user.notifications_page') }}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-bell"></i> Back to notifications
+            </a>
+        </div>
+    </div>
+
+    <div class="card notification-page-card bg-white">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-archive"></i> All notifications</h5>
+            <span class="badge bg-secondary" id="historyTotalBadge">0</span>
+        </div>
+        <div id="notificationsHistoryList">
+            <div class="p-4 text-center text-muted">Loading history...</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function loadNotificationHistory() {
+        const list = document.getElementById('notificationsHistoryList');
+        const totalBadge = document.getElementById('historyTotalBadge');
+
+        try {
+            const response = await fetch('/api/notifications/history');
+            if (!response.ok) throw new Error('Failed to load');
+
+            const notifications = await response.json();
+            totalBadge.textContent = notifications.length;
+
+            if (!notifications.length) {
+                list.innerHTML = `
+                    <div class="p-5 text-center text-muted">
+                        <i class="fas fa-archive fa-2x mb-3 d-block"></i>
+                        No notification history yet.
+                    </div>`;
+                return;
+            }
+
+            list.innerHTML = notifications.map(function (n) {
+                return window.NotificationCenter.renderNotificationItem(n, false);
+            }).join('');
+            window.NotificationCenter.bindNotificationClicks(list, false);
+        } catch (e) {
+            list.innerHTML = '<div class="p-4 text-center text-danger">Could not load history.</div>';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadNotificationHistory);
+</script>
+{% endblock %}

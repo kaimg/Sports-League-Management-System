@@ -115,21 +115,21 @@
 
 ### Lógica de detección de eventos
 
-- [ ] `6.1` Desarrollar la función que detecta partidos próximos (ej. dentro de las próximas 24 horas) para los equipos/ligas seguidos por cada usuario `[ACA]`
-- [ ] `6.2` Desarrollar la función que detecta cambios de marcador en partidos en curso `[ACA]`
-- [ ] `6.3` Desarrollar la función que detecta resultados finales de partidos `[ACA]`
+- [x] `6.1` Desarrollar la función que detecta partidos próximos (ej. dentro de las próximas 24 horas) para los equipos/ligas seguidos por cada usuario `[ACA]`
+- [x] `6.2` Desarrollar la función que detecta cambios de marcador en partidos en curso `[ACA]`
+- [x] `6.3` Desarrollar la función que detecta resultados finales de partidos `[ACA]`
 
 ### Generación de notificaciones
 
-- [ ] `6.4` Al detectar un evento, generar un registro en la tabla `notifications` para cada usuario seguidor afectado `[ACA]`
-- [ ] `6.5` Evitar duplicación: no generar la misma notificación dos veces para el mismo usuario y partido `[ACA]`
+- [x] `6.4` Al detectar un evento, generar un registro en la tabla `notifications` para cada usuario seguidor afectado `[ACA]`
+- [x] `6.5` Evitar duplicación: no generar la misma notificación dos veces para el mismo usuario y partido `[ACA]`
 
 ### Endpoints de notificaciones
 
-- [ ] `6.6` Crear `GET /api/notifications` → retorna las notificaciones del usuario autenticado (más recientes primero) `[ACA]`
-- [ ] `6.7` Crear `PATCH /api/notifications/<id>/read` → marca una notificación como leída `[ACA]`
-- [ ] `6.8` Crear `PATCH /api/notifications/read-all` → marca todas las notificaciones del usuario como leídas `[ACA]`
-- [ ] `6.9` Crear `GET /api/notifications/history` → retorna el historial completo de notificaciones del usuario `[ACA]`
+- [x] `6.6` Crear `GET /api/notifications` → retorna las notificaciones del usuario autenticado (más recientes primero) `[ACA]`
+- [x] `6.7` Crear `PATCH /api/notifications/<id>/read` → marca una notificación como leída `[ACA]`
+- [x] `6.8` Crear `PATCH /api/notifications/read-all` → marca todas las notificaciones del usuario como leídas `[ACA]`
+- [x] `6.9` Crear `GET /api/notifications/history` → retorna el historial completo de notificaciones del usuario `[ACA]`
 
 ---
 
@@ -187,11 +187,11 @@
 
 ### Centro de notificaciones
 
-- [ ] `9.8` Agregar un ícono de notificaciones en el header con contador de notificaciones no leídas `[ACA]`
-- [ ] `9.9` Implementar un panel desplegable o vista `/notifications` que liste las notificaciones del usuario `[ACA]`
-- [ ] `9.10` Mostrar tipo, mensaje y fecha de cada notificación; diferenciar visualmente las leídas de las no leídas `[ACA]`
-- [ ] `9.11` Al hacer clic en una notificación, marcarla como leída y redirigir al partido o evento relacionado `[ACA]`
-- [ ] `9.12` Implementar la vista `/notifications/history` con el historial completo del usuario `[ACA]`
+- [x] `9.8` Agregar un ícono de notificaciones en el header con contador de notificaciones no leídas `[ACA]`
+- [x] `9.9` Implementar un panel desplegable o vista `/notifications` que liste las notificaciones del usuario `[ACA]`
+- [x] `9.10` Mostrar tipo, mensaje y fecha de cada notificación; diferenciar visualmente las leídas de las no leídas `[ACA]`
+- [x] `9.11` Al hacer clic en una notificación, marcarla como leída y redirigir al partido o evento relacionado `[ACA]`
+- [x] `9.12` Implementar la vista `/notifications/history` con el historial completo del usuario `[ACA]`
 
 ---
 

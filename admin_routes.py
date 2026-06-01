@@ -688,6 +688,20 @@ def manage_scores():
             full_time_away = request.form['full_time_away']
             half_time_home = request.form['half_time_home']
             half_time_away = request.form['half_time_away']
+            new_home = int(full_time_home) if full_time_home != '' else None
+            new_away = int(full_time_away) if full_time_away != '' else None
+
+            cur.execute(
+                """
+                SELECT m.status, s.full_time_home, s.full_time_away,
+                       m.home_team_id, m.away_team_id, m.league_id
+                FROM matches m
+                LEFT JOIN scores s ON m.match_id = s.match_id
+                WHERE m.match_id = %s
+                """,
+                (match_id,),
+            )
+            match_row = cur.fetchone()
 
             if 'submit' in request.form:
                 if score_id:
@@ -698,6 +712,23 @@ def manage_scores():
                     cur.execute('INSERT INTO scores (match_id, full_time_home, full_time_away, half_time_home, half_time_away) VALUES (%s, %s, %s, %s, %s)',
                                 (match_id, full_time_home, full_time_away, half_time_home, half_time_away))
                     flash('Score added successfully', 'success')
+
+                if match_row:
+                    from notification_service import process_match_notification_events
+
+                    process_match_notification_events(
+                        cur,
+                        int(match_id),
+                        match_row[3],
+                        match_row[4],
+                        match_row[5],
+                        match_row[0],
+                        match_row[0],
+                        match_row[1],
+                        match_row[2],
+                        new_home,
+                        new_away,
+                    )
             elif 'delete' in request.form:
                 score_id = request.form['deleteEntityId']
                 cur.execute('DELETE FROM scores WHERE score_id = %s', (score_id,))
