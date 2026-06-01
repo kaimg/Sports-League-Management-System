@@ -876,42 +876,154 @@ def manage_players():
 
     if request.method == 'POST':
         try:
-            player_id = request.form.get('player_id')
-            team_id = request.form['team_id']
-            name = request.form['name']
-            position = request.form['position']
-            date_of_birth = request.form['date_of_birth']
-            nationality = request.form['nationality']
+            if 'delete' in request.form:
+                player_id = (
+                    request.form.get('deleteItemId')
+                    or request.form.get('deleteEntityId')
+                    or request.form.get('item_id')
+                    or request.form.get('player_id')
+                )
 
-            if 'submit' in request.form:
+                if not player_id:
+                    flash('No player selected for deletion', 'error')
+                    return redirect(url_for('admin.manage_players'))
+
+                cur.execute("SELECT COUNT(*) FROM scorers WHERE player_id = %s", (player_id,))
+                scorers_result = cur.fetchone()
+                scorers_count = scorers_result[0] if scorers_result else 0
+
+                if scorers_count > 0:
+                    flash(
+                        f'This player cannot be deleted because it is being used in {scorers_count} scorer record(s).',
+                        'warning'
+                    )
+                else:
+                    cur.execute("DELETE FROM players WHERE player_id = %s", (player_id,))
+                    flash('Player deleted successfully', 'success')
+
+            else:
+                player_id = request.form.get('player_id')
+                team_id = clean_value(request.form.get('team_id'))
+                name = clean_value(request.form.get('name'))
+                position = clean_value(request.form.get('position'))
+                date_of_birth = clean_value(request.form.get('date_of_birth'))
+                nationality = clean_value(request.form.get('nationality'))
+
+                if not team_id:
+                    flash('Team is required', 'error')
+                    return redirect(url_for('admin.manage_players'))
+
+                if not name:
+                    flash('Player name is required', 'error')
+                    return redirect(url_for('admin.manage_players'))
+
+                if not position:
+                    flash('Position is required', 'error')
+                    return redirect(url_for('admin.manage_players'))
+
+                if not date_of_birth:
+                    flash('Date of birth is required', 'error')
+                    return redirect(url_for('admin.manage_players'))
+
+                if not nationality:
+                    flash('Nationality is required', 'error')
+                    return redirect(url_for('admin.manage_players'))
+
                 if player_id:
-                    cur.execute('UPDATE players SET team_id = %s, name = %s, position = %s, date_of_birth = %s, nationality = %s WHERE player_id = %s', 
-                                (team_id, name, position, date_of_birth, nationality, player_id))
+                    cur.execute("""
+                        SELECT player_id
+                        FROM players
+                        WHERE LOWER(name) = LOWER(%s)
+                          AND team_id = %s
+                          AND player_id <> %s
+                    """, (name, team_id, player_id))
+                else:
+                    cur.execute("""
+                        SELECT player_id
+                        FROM players
+                        WHERE LOWER(name) = LOWER(%s)
+                          AND team_id = %s
+                    """, (name, team_id))
+
+                existing = cur.fetchone()
+
+                if existing:
+                    flash('This player already exists in the selected team.', 'warning')
+                    return redirect(url_for('admin.manage_players'))
+
+                if player_id:
+                    cur.execute("""
+                        UPDATE players
+                        SET team_id = %s,
+                            name = %s,
+                            position = %s,
+                            date_of_birth = %s,
+                            nationality = %s
+                        WHERE player_id = %s
+                    """, (
+                        team_id,
+                        name,
+                        position,
+                        date_of_birth,
+                        nationality,
+                        player_id
+                    ))
                     flash('Player updated successfully', 'success')
                 else:
-                    cur.execute('INSERT INTO players (team_id, name, position, date_of_birth, nationality) VALUES (%s, %s, %s, %s, %s)', 
-                                (team_id, name, position, date_of_birth, nationality))
+                    cur.execute("""
+                        INSERT INTO players
+                            (team_id, name, position, date_of_birth, nationality)
+                        VALUES
+                            (%s, %s, %s, %s, %s)
+                    """, (
+                        team_id,
+                        name,
+                        position,
+                        date_of_birth,
+                        nationality
+                    ))
                     flash('Player added successfully', 'success')
-            elif 'delete' in request.form:
-                player_id = request.form['deleteEntityId']
-                cur.execute('DELETE FROM players WHERE player_id = %s', (player_id,))
-                flash('Player deleted successfully', 'success')
+
             db.commit()
+
         except Exception as e:
             db.rollback()
             flash('An error occurred: ' + str(e), 'error')
+
         finally:
             cur.close()
+
         return redirect(url_for('admin.manage_players'))
 
-    cur.execute('SELECT p.player_id, t.name AS team, p.name, p.position, p.date_of_birth, p.nationality, p.team_id FROM players p JOIN teams t ON p.team_id = t.team_id')
+    cur.execute("""
+        SELECT
+            p.player_id,
+            t.name AS team_name,
+            p.name,
+            p.position,
+            p.date_of_birth,
+            p.nationality,
+            p.team_id
+        FROM players p
+        JOIN teams t ON p.team_id = t.team_id
+        ORDER BY p.player_id
+    """)
     players = cur.fetchall()
-    cur.execute('SELECT team_id, name FROM teams')
+
+    cur.execute("""
+        SELECT team_id, name
+        FROM teams
+        ORDER BY name ASC
+    """)
     teams = cur.fetchall()
+
     cur.close()
-    return render_template('manage_players.html', players=players, teams=teams)
 
-
+    return render_template(
+        'manage_players.html',
+        players=players,
+        teams=teams
+    )
 
 
 @admin_bp.route('/manage_matches', methods=['GET', 'POST'])

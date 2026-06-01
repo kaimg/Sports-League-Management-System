@@ -527,10 +527,17 @@ def profile_team(team_id):
 
     # Get players
     cur.execute("""
-        SELECT p.player_id, p.name, p.date_of_birth, p.position, p.nationality, c.flag_url
-        FROM players p 
-        JOIN countries c ON p.nationality = c.name
+        SELECT 
+            p.player_id,
+            p.name,
+            p.date_of_birth,
+            p.position,
+            p.nationality,
+            c.flag_url
+        FROM players p
+        LEFT JOIN countries c ON LOWER(p.nationality) = LOWER(c.name)
         WHERE p.team_id = %s
+        ORDER BY p.position, p.name
     """, (team_id,))
     players = cur.fetchall()
 
