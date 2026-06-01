@@ -1,30 +1,222 @@
 {% extends "layout.html" %}
 {% block title %}{{ player[0] }} - Player Profile{% endblock %}
 {% block content %}
+<style>
+    :root {
+        --primary: #0066cc;
+        --primary-dark: #004999;
+        --secondary: #f0f2f5;
+        --accent: #00d4ff;
+        --text-dark: #1a1a1a;
+        --text-light: #666666;
+    }
+
+    .profile-shell {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e0e0e0;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 102, 204, 0.05);
+    }
+
+    .profile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.25rem;
+        background: linear-gradient(135deg, var(--secondary) 0%, #ffffff 100%);
+        border-bottom: 1px solid #e7e7e7;
+    }
+
+    .profile-header h1 {
+        margin: 0;
+        color: var(--primary);
+        font-size: 1.25rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .profile-body {
+        padding: 1.1rem;
+        display: grid;
+        gap: 1rem;
+    }
+
+    .player-summary {
+        display: grid;
+        grid-template-columns: 220px minmax(0, 1fr);
+        gap: 1rem;
+        align-items: start;
+    }
+
+    .photo-card {
+        border: 1px solid #e5e5e5;
+        border-radius: 10px;
+        padding: 0.75rem;
+        background: white;
+        text-align: center;
+    }
+
+    .player-photo {
+        width: 100%;
+        max-height: 220px;
+        object-fit: cover;
+        border-radius: 10px;
+        background: var(--secondary);
+        border: 1px solid #e3e3e3;
+    }
+
+    .details-card {
+        border: 1px solid #e5e5e5;
+        border-radius: 10px;
+        padding: 0.9rem 1rem;
+        background: white;
+    }
+
+    .detail-title {
+        margin: 0 0 0.6rem 0;
+        color: var(--primary);
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    .detail-line {
+        margin: 0.28rem 0;
+        color: var(--text-dark);
+        font-size: 0.93rem;
+    }
+
+    .team-link {
+        color: var(--primary);
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .team-link:hover {
+        color: var(--primary-dark);
+        text-decoration: underline;
+    }
+
+    .position-pill {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 0.2rem 0.65rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: white;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        margin-left: 0.35rem;
+    }
+
+    .pos-goalkeeper { background: #6c757d; }
+    .pos-defence { background: #0d6efd; }
+    .pos-midfield { background: #198754; }
+    .pos-offence { background: #dc3545; }
+    .pos-default { background: #495057; }
+
+    .stats-card {
+        border: 1px solid #e5e5e5;
+        border-radius: 10px;
+        padding: 1rem;
+        background: white;
+    }
+
+    .stats-title {
+        margin: 0 0 0.8rem 0;
+        color: var(--primary);
+        font-size: 1.05rem;
+        font-weight: 700;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .stat-pill {
+        border-radius: 10px;
+        padding: 0.65rem 0.8rem;
+        color: white;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+
+    .goals-pill { background: #0d6efd; }
+    .assists-pill { background: #198754; }
+    .penalties-pill { background: #fd7e14; }
+
+    .empty-note {
+        color: var(--text-light);
+        margin: 0;
+    }
+
+    @media (max-width: 768px) {
+        .player-summary {
+            grid-template-columns: 1fr;
+        }
+
+        .photo-card {
+            max-width: 280px;
+            margin: 0 auto;
+        }
+    }
+</style>
 <div class="container mt-4">
-    <div class="card mb-4">
-        <div class="card-header text-center">
-            <h1>{{ player[0] }}'s Profile</h1>
+    <div class="profile-shell">
+        <div class="profile-header">
+            <h1><i class="fas fa-id-badge"></i> {{ player[0] }}'s Profile</h1>
         </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4 text-center">
-                    <img src="{{ player[5] if player[5] and player[5] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_player.png') }}';" alt="{{ player[0] }}'s Picture" class="img-fluid rounded mb-3" style="max-height: 200px;">
+
+        <div class="profile-body">
+            <div class="player-summary">
+                <div class="photo-card">
+                    <img src="{{ player[5] if player[5] and player[5] != 'None' else url_for('static', filename='images/default_player.png') }}"
+                         alt="{{ player[0] }} Picture"
+                         class="player-photo">
                 </div>
-                <div class="col-md-8">
-                    <p><strong>Age:</strong> <span id="age"></span></p>
-                    <p><strong>Position:</strong> {{ player[2] }}</p>
-                    <p><strong>Team:</strong> <a href="{{ url_for('user.profile_team', team_id=player[3]) }}">{{ player[4] }}</a></p>
-                    <p><strong>Nationality:</strong> 
-                        {{ player[6] }}
+
+                <div class="details-card">
+                    <p class="detail-title"><i class="fas fa-user"></i> Player Details</p>
+                    <p class="detail-line"><strong>Age:</strong> <span id="age"></span></p>
+                    <p class="detail-line">
+                        <strong>Position:</strong> {{ player[2] }}
+                        <span class="position-pill {% if player[2] == 'Goalkeeper' %}pos-goalkeeper{% elif player[2] == 'Defence' %}pos-defence{% elif player[2] == 'Midfield' %}pos-midfield{% elif player[2] == 'Offence' %}pos-offence{% else %}pos-default{% endif %}">
+                            {{ player[2] }}
+                        </span>
                     </p>
-                    {% if statistics %}
-                        <h3>Statistics</h3>
-                        <p><strong>Goals:</strong> {{ statistics[0] }}</p>
-                        <p><strong>Assists:</strong> {{ statistics[1] }}</p>
-                        <p><strong>Penalties:</strong> {{ statistics[2] }}</p>
-                    {% endif %}
+                    <p class="detail-line"><strong>Team:</strong> <a class="team-link" href="{{ url_for('user.profile_team', team_id=player[3]) }}">{{ player[4] }}</a></p>
+                    <p class="detail-line"><strong>Nationality:</strong> {{ player[6] }}</p>
                 </div>
+            </div>
+
+            <div class="stats-card">
+                <h2 class="stats-title"><i class="fas fa-chart-line"></i> Statistics</h2>
+                {% if statistics %}
+                <div class="stats-grid">
+                    <div class="stat-pill goals-pill">
+                        <span><i class="fas fa-futbol"></i> Goals</span>
+                        <span>{{ statistics[0] }}</span>
+                    </div>
+                    <div class="stat-pill assists-pill">
+                        <span><i class="fas fa-hands-helping"></i> Assists</span>
+                        <span>{{ statistics[1] }}</span>
+                    </div>
+                    <div class="stat-pill penalties-pill">
+                        <span><i class="fas fa-exclamation-triangle"></i> Penalties</span>
+                        <span>{{ statistics[2] }}</span>
+                    </div>
+                </div>
+                {% else %}
+                <p class="empty-note">No statistics available for this player.</p>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -50,12 +242,3 @@
     });
 </script>
 {% endblock %}
-<style>
-    .card-header {
-        background-color: #007bff;
-        color: white;
-    }
-    .card-body {
-        background-color: #f8f9fa;
-    }
-</style>

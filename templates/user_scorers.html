@@ -1,55 +1,356 @@
 {% extends "user_dashboard.html" %}
+{% block page_icon %}<i class="fas fa-medal"></i>{% endblock %}
+{% block page_title %}{% endblock %}
 {% block user_content %}
-<h2>Top Scorers</h2>
+<style>
+    :root {
+        --primary: #0066cc;
+        --primary-dark: #004999;
+        --secondary: #f0f2f5;
+        --accent: #00d4ff;
+        --text-dark: #1a1a1a;
+        --text-light: #666666;
+    }
 
-<form method="get" action="{{ url_for('user.user_scorers') }}">
-    <div class="form-row">
-        <div class="form-group col-md-4">
-            <label for="league">League</label>
-            <select id="league" name="league_id" class="form-control">
-                <option value="">All Leagues</option>
-                {% for league in leagues %}
+    .page-header {
+        display: none !important;
+    }
+
+    .main-content {
+        padding-left: 0.5rem !important;
+    }
+
+    .filter-panel {
+        background: linear-gradient(135deg, var(--secondary) 0%, #ffffff 100%);
+        border-radius: 12px;
+        padding: 0.85rem 1.25rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 102, 204, 0.05);
+        border: 1px solid #e0e0e0;
+    }
+
+    .filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.8rem;
+    }
+
+    .form-group-modern {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        white-space: nowrap;
+    }
+
+    .form-group-modern label {
+        font-weight: 600;
+        color: var(--text-dark);
+        font-size: 0.95rem;
+        margin: 0;
+    }
+
+    .form-select-modern {
+        padding: 0.42rem 0.75rem;
+        border: 2px solid var(--secondary);
+        border-radius: 8px;
+        background-color: white;
+        color: var(--text-dark);
+        font-weight: 500;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        font-size: 0.9rem;
+        min-width: 165px;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        padding-right: 2.2rem;
+        background-image: linear-gradient(45deg, transparent 50%, var(--primary) 50%),
+            linear-gradient(135deg, var(--primary) 50%, transparent 50%),
+            linear-gradient(to right, #dde5ef, #dde5ef);
+        background-position: calc(100% - 16px) calc(50% - 2px),
+            calc(100% - 11px) calc(50% - 2px),
+            calc(100% - 2.1rem) 50%;
+        background-size: 5px 5px, 5px 5px, 1px 1.4rem;
+        background-repeat: no-repeat;
+    }
+
+    .form-select-modern:hover {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    }
+
+    .form-select-modern:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.2);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        margin-left: auto;
+    }
+
+    .btn-modern {
+        padding: 0.42rem 0.9rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        text-decoration: none;
+    }
+
+    .btn-primary-modern {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(0, 102, 204, 0.3);
+    }
+
+    .btn-primary-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0, 102, 204, 0.4);
+        color: white;
+    }
+
+    .btn-secondary-modern {
+        background: var(--secondary);
+        color: var(--text-dark);
+        border: 2px solid transparent;
+    }
+
+    .btn-secondary-modern:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .scorers-wrapper {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e0e0e0;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 102, 204, 0.05);
+    }
+
+    .scorers-container {
+        padding: 1rem;
+        display: grid;
+        gap: 0.9rem;
+    }
+
+    .scorer-card {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        background: white;
+        border: 2px solid transparent;
+        border-radius: 10px;
+        padding: 0.9rem 1rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+
+    .scorer-card:hover {
+        border-color: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 102, 204, 0.16);
+    }
+
+    .rank-pill {
+        min-width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: white;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        flex-shrink: 0;
+    }
+
+    .team-logo {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+        border-radius: 8px;
+        background: var(--secondary);
+        border: 1px solid #e3e3e3;
+        flex-shrink: 0;
+    }
+
+    .scorer-main {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        min-width: 0;
+    }
+
+    .scorer-name {
+        color: var(--primary);
+        font-size: 1rem;
+        font-weight: 700;
+        text-decoration: none;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .scorer-name:hover {
+        color: var(--primary-dark);
+        text-decoration: underline;
+    }
+
+    .scorer-meta {
+        color: var(--text-light);
+        font-size: 0.88rem;
+        margin: 0;
+    }
+
+    .stats-pills {
+        margin-left: auto;
+        display: flex;
+        gap: 0.45rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .stat-pill {
+        border-radius: 999px;
+        padding: 0.3rem 0.7rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: white;
+    }
+
+    .goals-pill {
+        background: #0d6efd;
+    }
+
+    .assists-pill {
+        background: #198754;
+    }
+
+    .penalties-pill {
+        background: #fd7e14;
+    }
+
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    .empty-state i {
+        font-size: 3.5rem;
+        color: var(--secondary);
+        margin-bottom: 0.8rem;
+    }
+
+    .empty-state h3 {
+        color: var(--text-dark);
+        margin-bottom: 0.4rem;
+    }
+
+    .empty-state p {
+        color: var(--text-light);
+        margin: 0;
+    }
+
+    @media (max-width: 900px) {
+        .action-buttons {
+            margin-left: 0;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .scorer-card {
+            flex-wrap: wrap;
+        }
+
+        .stats-pills {
+            margin-left: 0;
+            justify-content: flex-start;
+        }
+    }
+</style>
+
+<div class="filter-panel">
+    <form method="get" action="{{ url_for('user.user_scorers') }}">
+        <div class="filter-row">
+            <div class="form-group-modern">
+                <label for="league"><i class="fas fa-trophy"></i> League</label>
+                <select id="league" name="league_id" class="form-select-modern">
+                    <option value="">All Leagues</option>
+                    {% for league in leagues %}
                     <option value="{{ league[0] }}" {% if request.args.get('league_id') == str(league[0]) %}selected{% endif %}>{{ league[1] }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group col-md-4">
-            <label for="country">Country</label>
-            <select id="country" name="country_id" class="form-control">
-                <option value="">All Countries</option>
-                {% for country in countries %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group-modern">
+                <label for="country"><i class="fas fa-globe"></i> Country</label>
+                <select id="country" name="country_id" class="form-select-modern">
+                    <option value="">All Countries</option>
+                    {% for country in countries %}
                     <option value="{{ country[0] }}" {% if request.args.get('country_id') == str(country[0]) %}selected{% endif %}>{{ country[1] }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group col-md-4">
-            <label for="team">Team</label>
-            <select id="team" name="team_id" class="form-control">
-                <option value="">All Teams</option>
-                {% for team in teams %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group-modern">
+                <label for="team"><i class="fas fa-shield-alt"></i> Team</label>
+                <select id="team" name="team_id" class="form-select-modern">
+                    <option value="">All Teams</option>
+                    {% for team in teams %}
                     <option value="{{ team[0] }}" {% if request.args.get('team_id') == str(team[0]) %}selected{% endif %}>{{ team[1] }}</option>
-                {% endfor %}
-            </select>
-        </div>
-    </div>
-    <button type="submit" class="btn btn-primary">Filter</button>
-</form>
+                    {% endfor %}
+                </select>
+            </div>
 
-<ul class="list-group mt-4">
-    {% for scorer in scorers %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-            <div>
-                {% if scorer[5] %}
-                    <img src="{{ scorer[5] if scorer[5] and scorer[5] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" alt="{{ scorer[1] }} Logo" style="height: 20px; margin-right: 10px;">
-                {% endif %}
-                <a href="{{ url_for('user.profile_player', player_id=scorer[0]) }}">{{ scorer[1] }}</a> ({{ scorer[6] }})
+            <div class="action-buttons">
+                <button type="submit" class="btn-modern btn-primary-modern">
+                    <i class="fas fa-filter"></i> Apply
+                </button>
+                <a href="{{ url_for('user.user_scorers') }}" class="btn-modern btn-secondary-modern">
+                    <i class="fas fa-times"></i> Clear
+                </a>
             </div>
-            <div>
-                <span class="badge badge-primary badge-pill">Goals: {{ scorer[2] }}</span>
-                <span class="badge badge-success badge-pill">Assists: {{ scorer[3] }}</span>
-                <span class="badge badge-warning badge-pill">Penalties: {{ scorer[4] }}</span>
+        </div>
+    </form>
+</div>
+
+<div class="scorers-wrapper">
+    {% if scorers %}
+    <div class="scorers-container">
+        {% for scorer in scorers %}
+        <div class="scorer-card">
+            <span class="rank-pill">{{ loop.index }}</span>
+            <img src="{{ scorer[5] if scorer[5] and scorer[5] != 'None' else url_for('static', filename='images/default_team.png') }}" alt="{{ scorer[1] }} Team Logo" class="team-logo">
+            <div class="scorer-main">
+                <a href="{{ url_for('user.profile_player', player_id=scorer[0]) }}" class="scorer-name">{{ scorer[1] }}</a>
+                <p class="scorer-meta"><i class="fas fa-flag"></i> {{ scorer[6] }}</p>
             </div>
-        </li>
-    {% endfor %}
-</ul>
+            <div class="stats-pills">
+                <span class="stat-pill goals-pill">Goals: {{ scorer[2] }}</span>
+                <span class="stat-pill assists-pill">Assists: {{ scorer[3] }}</span>
+                <span class="stat-pill penalties-pill">Penalties: {{ scorer[4] }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-search"></i>
+        <h3>No Scorers Found</h3>
+        <p>Try adjusting the filters to see scorer stats.</p>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}

@@ -69,6 +69,7 @@
         <th>Country</th>
         <th>Latitude</th>
         <th>Longitude</th>
+        <th>Team</th>
         <th>Edit</th>
         <th>Delete</th>
     </tr>
@@ -77,23 +78,25 @@
                     {% for stadium in stadiums %}
                     <tr>
                         <td>{{ stadium[0] }}</td>
-<td>{{ stadium[1] }}</td>
-<td>{{ stadium[2] }}</td>
-<td>{{ stadium[3] }}</td>
-<td>{{ stadium[4] }}</td>
-<td>{{ stadium[5] }}</td>
-<td>{{ stadium[6] }}</td>
-<td>{{ stadium[7] }}</td>
-                        <td>
+                        <td>{{ stadium[1] }}</td>
+                        <td>{{ stadium[2] }}</td>
+                        <td>{{ stadium[3] or 'None' }}</td>
+                        <td>{{ stadium[4] or 'None' }}</td>
+                        <td>{{ stadium[5] or 'None' }}</td>
+                        <td>{{ stadium[6] or 'None' }}</td>
+                        <td>{{ stadium[7] or 'None' }}</td>
+                        <td>{{ stadium[9] or 'No team assigned' }}</td>
+                    <td>
                             <button type="button" class="btn btn-success btn-sm edit-btn"
                                 data-id="{{ stadium[0] | e }}"
                                 data-name="{{ stadium[1] | e }}"
                                 data-location="{{ stadium[2] | e }}"
-                                data-capacity="{{ stadium[3] | e }}"
-                                data-city="{{ stadium[4] | e }}"
-                                data-country="{{ stadium[5] | e }}"
-                                data-latitude="{{ stadium[6] | e }}"
-                                data-longitude="{{ stadium[7] | e }}">
+                                data-capacity="{{ stadium[3] or '' }}"
+                                data-city="{{ stadium[4] or '' }}"
+                                data-country="{{ stadium[5] or '' }}"
+                                data-latitude="{{ stadium[6] or '' }}"
+                                data-longitude="{{ stadium[7] or '' }}"
+                                data-team-id="{{ stadium[8] or '' }}">
                                 <i class="fa fa-pencil-alt"></i>
                         </button>
                         </td>
@@ -173,15 +176,21 @@ document.querySelectorAll('.edit-btn').forEach(button => {
     button.addEventListener('click', function() {
 
         document.getElementById('stadium_id').value = this.dataset.id;
-        document.getElementById('name').value = this.dataset.name;
-        document.getElementById('location').value = this.dataset.location;
-        document.getElementById('capacity').value = this.dataset.capacity;
-        document.getElementById('city').value = this.dataset.city;
-        document.getElementById('country').value = this.dataset.country;
-        document.getElementById('latitude').value = this.dataset.latitude;
-        document.getElementById('longitude').value = this.dataset.longitude;
+        function cleanInputValue(value) {
+    return (!value || value === "None" || value === "null") ? "" : value;
+}
+
+document.getElementById('name').value = cleanInputValue(this.dataset.name);
+document.getElementById('location').value = cleanInputValue(this.dataset.location);
+document.getElementById('capacity').value = cleanInputValue(this.dataset.capacity);
+document.getElementById('city').value = cleanInputValue(this.dataset.city);
+document.getElementById('country').value = cleanInputValue(this.dataset.country);
+document.getElementById('latitude').value = cleanInputValue(this.dataset.latitude);
+document.getElementById('longitude').value = cleanInputValue(this.dataset.longitude);
+document.getElementById('team_id').value = this.dataset.teamId || "";
 
         document.getElementById('submit-button').innerText = 'Update Stadium';
+
         document.getElementById('submit-button').name = 'edit';
         document.getElementById('form-title').innerText = 'Edit Stadium';
     });

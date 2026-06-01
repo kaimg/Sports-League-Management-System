@@ -1,18 +1,38 @@
-from unittest import result
+
 
 from flask import Blueprint, render_template, request, redirect, session, url_for, flash
 from functools import wraps
 from db import get_db
+
 
 admin_bp = Blueprint('admin', __name__)
 
 def admin_required(f):
     @wraps(f)
     def wrap(*args, **kwargs):
-        if 'user_id' not in session or not session.get('is_admin'):
+        user_id = session.get('user_id')
+
+        if not user_id:
+            flash('You need to be logged in to access this page', 'error')
+            return redirect(url_for('login'))
+
+        db = get_db()
+        cur = db.cursor()
+        cur.execute(
+            "SELECT is_admin FROM users WHERE user_id = %s",
+            (user_id,)
+        )
+        user = cur.fetchone()
+        cur.close()
+
+        if not user or not user[0]:
+            session['is_admin'] = False
             flash('You need to be an admin to access this page', 'error')
             return redirect(url_for('login'))
+
+        session['is_admin'] = True
         return f(*args, **kwargs)
+
     return wrap
 
 def get_existing_data(table_name):
@@ -22,6 +42,31 @@ def get_existing_data(table_name):
     data = cur.fetchall()
     cur.close()
     return data
+
+def clean_value(value):
+    if value is None:
+        return None
+
+    value = value.strip()
+
+    if value == "" or value.lower() == "none":
+        return None
+
+    return value
+
+
+def clean_int(value):
+    value = clean_value(value)
+    if value is None:
+        return None
+    return int(value)
+
+
+def clean_float(value):
+    value = clean_value(value)
+    if value is None:
+        return None
+    return float(value)
 
 @admin_bp.route('/manage_stadiums', methods=['GET', 'POST'])
 @admin_required
@@ -37,36 +82,80 @@ def manage_stadiums():
                 if not stadium_id:
                     flash('No stadium selected for deletion', 'error')
                 else:
-                    cur.execute('DELETE FROM stadiums WHERE stadium_id = %s', (stadium_id,))
+                    cur.execute("""
+                        UPDATE teams
+                        SET stadium_id = NULL
+                        WHERE stadium_id = %s
+                    """, (stadium_id,))
+
+                    cur.execute("""
+                        DELETE FROM stadiums
+                        WHERE stadium_id = %s
+                    """, (stadium_id,))
+
                     flash('Stadium deleted successfully', 'success')
 
             else:
-                name = request.form['name']
-                location = request.form['location']
-                capacity = request.form['capacity']
-                latitude = request.form.get('latitude')
-                longitude = request.form.get('longitude')
-                city = request.form.get('city')
-                country = request.form.get('country')
-                team_id = request.form.get('team_id') or None
+                name = clean_value(request.form.get('name'))
+                location = clean_value(request.form.get('location'))
+                capacity = clean_int(request.form.get('capacity'))
+                city = clean_value(request.form.get('city'))
+                country = clean_value(request.form.get('country'))
+                latitude = clean_float(request.form.get('latitude'))
+                longitude = clean_float(request.form.get('longitude'))
+                team_id = clean_value(request.form.get('team_id'))
+
+                if not name:
+                    flash('Stadium name is required', 'error')
+                    return redirect(url_for('admin.manage_stadiums'))
+
+                if not location:
+                    flash('Stadium location is required', 'error')
+                    return redirect(url_for('admin.manage_stadiums'))
 
                 if 'add' in request.form:
                     cur.execute("""
                         INSERT INTO stadiums
-(name, location, capacity, city, country, latitude, longitude, geom)
-VALUES (%s, %s, %s, %s, %s, %s, %s,
-        ST_SetSRID(ST_MakePoint(%s, %s), 4326))
-RETURNING stadium_id
-                    """, (name, location, capacity, city, country, latitude, longitude, longitude, latitude))
+                            (name, location, capacity, city, country, latitude, longitude, geom)
+                        VALUES
+                            (
+                                %s, %s, %s, %s, %s, %s, %s,
+                                CASE
+                                    WHEN %s IS NOT NULL AND %s IS NOT NULL
+                                    THEN ST_SetSRID(ST_MakePoint(%s, %s), 4326)
+                                    ELSE NULL
+                                END
+                        )
+                        RETURNING stadium_id
+                     """, (
+                        name,
+                        location,
+                        capacity,
+                        city,
+                        country,
+                        latitude,
+                        longitude,
+                        longitude,
+                        latitude,
+                        longitude,
+                        latitude
+                    ))
 
                     result = cur.fetchone()
+
+                    if not result:
+                        flash('Could not create stadium', 'error')
+                        db.rollback()
+                        return redirect(url_for('admin.manage_stadiums'))
+
                     new_stadium_id = result[0]
 
                     if team_id:
-                        cur.execute(
-                            'UPDATE teams SET stadium_id = %s WHERE team_id = %s',
-                            (new_stadium_id, team_id)
-                        )
+                        cur.execute("""
+                            UPDATE teams
+                            SET stadium_id = %s
+                            WHERE team_id = %s
+                        """, (new_stadium_id, team_id))
 
                     flash('Stadium added successfully', 'success')
 
@@ -80,15 +169,39 @@ RETURNING stadium_id
                             country = %s,
                             latitude = %s,
                             longitude = %s,
-                            geom = ST_SetSRID(ST_MakePoint(%s, %s), 4326)
+                            geom = CASE
+                                WHEN %s IS NOT NULL AND %s IS NOT NULL
+                                THEN ST_SetSRID(ST_MakePoint(%s, %s), 4326)
+                                ELSE NULL
+                            END
                         WHERE stadium_id = %s
-                    """, (name, location, capacity, city, country, latitude, longitude, longitude, latitude, stadium_id))
+                    """, (
+                        name,
+                        location,
+                        capacity,
+                        city,
+                        country,
+                        latitude,
+                        longitude,
+                        longitude,
+                        latitude,
+                        longitude,
+                        latitude,
+                        stadium_id
+                    ))
+
+                    cur.execute("""
+                        UPDATE teams
+                        SET stadium_id = NULL
+                        WHERE stadium_id = %s
+                    """, (stadium_id,))
 
                     if team_id:
-                        cur.execute(
-                            'UPDATE teams SET stadium_id = %s WHERE team_id = %s',
-                            (stadium_id, team_id)
-                        )
+                        cur.execute("""
+                            UPDATE teams
+                            SET stadium_id = %s
+                            WHERE team_id = %s
+                        """, (stadium_id, team_id))
 
                     flash('Stadium updated successfully', 'success')
 
@@ -103,15 +216,39 @@ RETURNING stadium_id
 
         return redirect(url_for('admin.manage_stadiums'))
 
-    cur.execute('SELECT stadium_id, name, location, capacity, city, country, latitude, longitude FROM stadiums')
+    cur.execute("""
+        SELECT
+            s.stadium_id,
+            s.name,
+            s.location,
+            s.capacity,
+            s.city,
+            s.country,
+            s.latitude,
+            s.longitude,
+            t.team_id,
+            t.name AS team_name
+        FROM stadiums s
+        LEFT JOIN teams t ON t.stadium_id = s.stadium_id
+        ORDER BY s.stadium_id
+    """)
     stadiums = cur.fetchall()
 
-    cur.execute('SELECT team_id, name FROM teams ORDER BY name')
+    cur.execute("""
+        SELECT team_id, name, stadium_id
+        FROM teams
+        ORDER BY name
+    """)
     teams = cur.fetchall()
 
     cur.close()
-    return render_template('manage_stadiums.html', stadiums=stadiums, teams=teams)
 
+    return render_template(
+        'manage_stadiums.html',
+        stadiums=stadiums,
+        teams=teams
+    )
+    
 @admin_bp.route('/manage_leagues', methods=['GET', 'POST'])
 @admin_required
 def manage_leagues():
@@ -712,7 +849,7 @@ def sync_api_matches():
             # Foreign key errors might happen if a team doesn't exist yet, we catch them but log
             errors.append(f"{league}: {result['error']}")
         else:
-            total_updated += result.get("success", 0)
+            total_updated += int(result.get("success", 0) or 0)
             
     if errors:
         flash(f"Sync completed with some errors: {', '.join(errors)}. Updated {total_updated} matches.", "warning")
@@ -735,7 +872,7 @@ def sync_api_scorers():
         if "error" in result:
             errors.append(f"{league}: {result['error']}")
         else:
-            total_updated += result.get("success", 0)
+            total_updated += int(result.get("success", 0) or 0)
             
     if errors:
         flash(f"Sync completed with some errors: {', '.join(errors)}. Updated {total_updated} scorers.", "warning")
@@ -759,8 +896,8 @@ def sync_api_teams():
         if "error" in result:
             errors.append(f"{league}: {result['error']}")
         else:
-            total_updated += result.get("success", 0)
-            total_players_updated += result.get("players_success", 0)
+            total_updated += int(result.get("success", 0) or 0)
+            total_players_updated += int(result.get("players_success", 0) or 0)
             
     if errors:
         flash(f"Sync completed with some errors: {', '.join(errors)}. Updated {total_updated} teams and {total_players_updated} players.", "warning")
@@ -785,7 +922,7 @@ def sync_api_all():
     current_app.config['SYNC_START_TIME'] = time.time()
     
     # Run the orchestrator in a background thread
-    app_context = current_app._get_current_object()
+    app_context = current_app._get_current_object()  # type: ignore[attr-defined]
     thread = threading.Thread(target=sync_all_data, args=(app_context,))
     thread.daemon = True
     thread.start()

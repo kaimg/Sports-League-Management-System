@@ -85,14 +85,21 @@
     
     
 
-    const map = L.map('map').setView([20, 0], 2);
+    const map = L.map('map').setView([48.8566, 2.3522], 4);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    let markers = L.markerClusterGroup();
+    let markers = L.markerClusterGroup({
+    showCoverageOnHover: true,
+    zoomToBoundsOnClick: true,
+    spiderfyOnMaxZoom: true,
+    disableClusteringAtZoom: 19,
+    maxClusterRadius: 500
+});
 map.addLayer(markers);
+console.log("MarkerCluster loaded:", typeof L.markerClusterGroup);
 let radiusCircle = null;
 let heatLayer;
 
@@ -150,45 +157,44 @@ function createLeagueIcon(leagueName) {
     });
 }
 
-    function addGeoJsonToMap(geojson) {
+   function addGeoJsonToMap(geojson) {
     const bounds = [];
 
-    L.geoJSON(geojson, {
-        pointToLayer: function(feature, latlng) {
+    console.log("GeoJSON received:", geojson);
+    console.log("Features count:", geojson.features.length);
 
-            const leagueName = feature.properties.league_name;
+    geojson.features.forEach(function(feature) {
+        const coordinates = feature.geometry.coordinates;
+        const lng = coordinates[0];
+        const lat = coordinates[1];
+        const p = feature.properties;
 
-            return L.marker(latlng, {
-                icon: createLeagueIcon(leagueName)
-            });
-        },
+        const marker = L.marker([lat, lng], {
+            icon: createLeagueIcon(p.league_name)
+        });
 
-        onEachFeature: function(feature, layer) {
+        marker.bindPopup(`
+            <strong>${p.name}</strong><br>
+            Team: ${p.team_name || 'N/A'}<br>
+            League: ${p.league_name || 'N/A'}<br>
+            ${p.city || 'N/A'}, ${p.country || 'N/A'}<br>
+            Location: ${p.location || 'N/A'}<br>
+            Capacity: ${p.capacity || 'N/A'}<br>
+            Latitude: ${lat}<br>
+            Longitude: ${lng}
+        `);
 
-            const p = feature.properties;
-
-            layer.bindPopup(`
-                <strong>${p.name}</strong><br>
-                Team: ${p.team_name || 'N/A'}<br>
-                League: ${p.league_name || 'N/A'}<br>
-                ${p.city || 'N/A'}, ${p.country || 'N/A'}<br>
-                Location: ${p.location || 'N/A'}<br>
-                Capacity: ${p.capacity || 'N/A'}<br>
-Latitude: ${feature.geometry.coordinates[1]}<br>
-Longitude: ${feature.geometry.coordinates[0]}
-            `);
-
-            markers.addLayer(layer);
-
-            bounds.push([
-                feature.geometry.coordinates[1],
-                feature.geometry.coordinates[0]
-            ]);
-        }
+        markers.addLayer(marker);
+        bounds.push([lat, lng]);
     });
 
+    console.log("Markers inside cluster:", markers.getLayers().length);
+
     if (bounds.length > 0) {
-        map.fitBounds(bounds);
+        map.fitBounds(bounds, {
+            padding: [40, 40],
+            maxZoom: 4
+        });
     }
 }
 

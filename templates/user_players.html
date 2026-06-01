@@ -1,104 +1,460 @@
 {% extends "user_dashboard.html" %}
+{% block page_icon %}<i class="fas fa-users"></i>{% endblock %}
+{% block page_title %}{% endblock %}
 {% block user_content %}
-<h2>Player Profiles</h2>
 <style>
+    :root {
+        --primary: #0066cc;
+        --primary-dark: #004999;
+        --secondary: #f0f2f5;
+        --accent: #00d4ff;
+        --text-dark: #1a1a1a;
+        --text-light: #666666;
+    }
+
+    .page-header {
+        display: none !important;
+    }
+
+    .main-content {
+        padding-left: 0.5rem !important;
+    }
+
+    .filter-panel {
+        background: linear-gradient(135deg, var(--secondary) 0%, #ffffff 100%);
+        border-radius: 12px;
+        padding: 0.85rem 1.25rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 102, 204, 0.05);
+        border: 1px solid #e0e0e0;
+    }
+
+    .filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.8rem;
+    }
+
+    .form-group-modern {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    background: rgba(255, 255, 255, 0.75);
+    border: 1px solid #e0e8f2;
+    border-radius: 12px;
+    padding: 0.45rem 0.65rem;
+    box-shadow: 0 2px 8px rgba(0, 102, 204, 0.04);
+    }
+
+    .form-group-modern label {
+    font-weight: 600;
+    color: var(--primary-dark);
+    font-size: 0.95rem;
+    margin: 0;
+    }
+
+    .form-select-modern {
+    height: 42px;
+    min-width: 170px;
+    padding: 0.42rem 2.2rem 0.42rem 0.75rem;
+    border: 2px solid #dbe4f0;
+    border-radius: 10px;
+    background-color: #ffffff;
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 102, 204, 0.06);
+    border: 2px solid #dbe4f0;
+    border-radius: 10px;
+
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--primary) 50%),
+        linear-gradient(135deg, var(--primary) 50%, transparent 50%),
+        linear-gradient(to right, #dde5ef, #dde5ef);
+    background-position:
+        calc(100% - 16px) calc(50% - 2px),
+        calc(100% - 11px) calc(50% - 2px),
+        calc(100% - 2.1rem) 50%;
+    background-size: 5px 5px, 5px 5px, 1px 1.4rem;
+    background-repeat: no-repeat;
+    }
+
+    .form-select-modern:hover {
+        border-color: var(--primary);
+        background-color: #f8fbff;
+        box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    }
+
+    .form-select-modern:focus {
+        outline: none;
+        border-color: var(--accent);
+        background-color: #ffffff;
+        box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.18);
+    }
+
+    .form-select-modern:disabled {
+        cursor: not-allowed;
+        opacity: 0.65;
+        background-color: #f7f9fc;
+    }
+
+    .form-select-modern option {
+        background-color: #ffffff;
+        color: var(--text-dark);
+        font-weight: 500;
+    }
+
+    .form-select-modern option:checked {
+        background-color: var(--primary);
+        color: #ffffff;
+    }
+
+    .btn-modern {
+        padding: 0.42rem 0.9rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        text-decoration: none;
+    }
+
+    .btn-primary-modern {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(0, 102, 204, 0.3);
+    }
+
+    .btn-primary-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0, 102, 204, 0.4);
+        color: white;
+    }
+
+    .btn-secondary-modern {
+        background: var(--secondary);
+        color: var(--text-dark);
+        border: 2px solid transparent;
+    }
+
+    .btn-secondary-modern:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .players-wrapper {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e0e0e0;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 102, 204, 0.05);
+    }
+
+    .players-container {
+        padding: 1rem;
+    }
+
+    .player-list {
+        display: grid;
+        gap: 0.9rem;
+    }
+
+    .player-card {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        background: white;
+        border: 2px solid transparent;
+        border-radius: 10px;
+        padding: 0.85rem 1rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+
+    .player-card:hover {
+        border-color: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 102, 204, 0.16);
+    }
+
+    .team-logo,
     .flag-img {
         width: 40px;
-        height: auto;
-        max-height: 30px;
+        height: 40px;
         object-fit: cover;
-        border-radius: 5px;
-        margin-right: 10px;
+        border-radius: 8px;
+        background: var(--secondary);
+        border: 1px solid #e3e3e3;
+    }
+
+    .player-main {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        min-width: 0;
+    }
+
+    .player-name {
+        color: var(--primary);
+        font-size: 1rem;
+        font-weight: 700;
+        text-decoration: none;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .player-name:hover {
+        color: var(--primary-dark);
+        text-decoration: underline;
+    }
+
+    .player-team {
+        color: var(--text-light);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .position-pill {
+        margin-left: auto;
+        border-radius: 999px;
+        padding: 0.3rem 0.7rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: white;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .pos-goalkeeper {
+        background: #6c757d;
+    }
+
+    .pos-defence {
+        background: #0d6efd;
+    }
+
+    .pos-midfield {
+        background: #198754;
+    }
+
+    .pos-offence {
+        background: #dc3545;
+    }
+
+    .pos-default {
+        background: #495057;
+    }
+
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    .empty-state i {
+        font-size: 3.5rem;
+        color: var(--secondary);
+        margin-bottom: 0.8rem;
+    }
+
+    .empty-state h3 {
+        color: var(--text-dark);
+        margin-bottom: 0.4rem;
+    }
+
+    .empty-state p {
+        color: var(--text-light);
+        margin: 0;
+    }
+
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1.25rem;
+        background: var(--secondary);
+        border-top: 1px solid #e0e0e0;
+        flex-wrap: wrap;
+    }
+
+    .pagination-links {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .page-link-modern {
+        padding: 0.45rem 0.75rem;
+        border-radius: 6px;
+        border: 2px solid transparent;
+        background: white;
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 600;
+        min-width: 40px;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .page-link-modern:hover {
+        background: var(--primary);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0, 102, 204, 0.3);
+    }
+
+    .page-link-modern.active {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        border-color: var(--accent);
+    }
+
+    .page-link-modern.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    @media (max-width: 768px) {
+        .action-buttons {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        .player-card {
+            flex-wrap: wrap;
+        }
+
+        .position-pill {
+            margin-left: 0;
+        }
     }
 </style>
-<form method="get" action="{{ url_for('user.user_players') }}">
-    <div class="form-row">
-        <div class="form-group col-md-3">
-            <label for="league_id">League</label>
-            <select id="league_id" name="league_id" class="form-control">
-                <option value="">All Leagues</option>
-                {% for league in leagues %}
+
+<div class="filter-panel">
+    <form method="get" action="{{ url_for('user.user_players') }}" id="playerFilterForm">
+        <div class="filter-row">
+            <div class="form-group-modern">
+                <label for="league_id"><i class="fas fa-trophy"></i> League</label>
+                <select id="league_id" name="league_id" class="form-select-modern">
+                    <option value="">All Leagues</option>
+                    {% for league in leagues %}
                     <option value="{{ league[0] }}" {% if request.args.get('league_id') == str(league[0]) %}selected{% endif %}>{{ league[1] }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group col-md-3">
-            <label for="country_id">Country</label>
-            <select id="country_id" name="country_id" class="form-control">
-                <option value="">All Countries</option>
-                {% for country in countries %}
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group-modern">
+                <label for="country_id"><i class="fas fa-globe"></i> Country</label>
+                <select id="country_id" name="country_id" class="form-select-modern">
+                    <option value="">All Countries</option>
+                    {% for country in countries %}
                     <option value="{{ country[0] }}" {% if request.args.get('country_id') == str(country[0]) %}selected{% endif %}>{{ country[1] }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group col-md-3">
-            <label for="team_id">Team</label>
-            <select id="team_id" name="team_id" class="form-control">
-                <option value="">All Teams</option>
-                {% for team in teams %}
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group-modern">
+                <label for="team_id"><i class="fas fa-shield-alt"></i> Team</label>
+                <select id="team_id" name="team_id" class="form-select-modern">
+                    <option value="">All Teams</option>
+                    {% for team in teams %}
                     <option value="{{ team[0] }}" {% if request.args.get('team_id') == str(team[0]) %}selected{% endif %}>{{ team[1] }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group col-md-3">
-            <label for="position">Position</label>
-            <select id="position" name="position" class="form-control">
-                <option value="">All Positions</option>
-                {% for pos in positions %}
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group-modern">
+                <label for="position"><i class="fas fa-running"></i> Position</label>
+                <select id="position" name="position" class="form-select-modern">
+                    <option value="">All Positions</option>
+                    {% for pos in positions %}
                     <option value="{{ pos }}" {% if request.args.get('position') == pos %}selected{% endif %}>{{ pos }}</option>
-                {% endfor %}
-            </select>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="action-buttons">
+                <button type="submit" class="btn-modern btn-primary-modern">
+                    <i class="fas fa-filter"></i> Apply
+                </button>
+                <a href="{{ url_for('user.user_players') }}" class="btn-modern btn-secondary-modern">
+                    <i class="fas fa-times"></i> Clear
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="players-wrapper">
+    <div class="players-container">
+        {% if players %}
+        <div class="player-list">
+            {% for player in players %}
+            <div class="player-card">
+                <img src="{{ player[3] if player[3] and player[3] != 'None' else url_for('static', filename='images/default_team.png') }}" alt="{{ player[4] }} Logo" title="{{ player[4] }}" class="team-logo">
+                <img src="{{ player[5] if player[5] and player[5] != 'None' else url_for('static', filename='images/default_flag.png') }}" alt="Nationality Flag" class="flag-img">
+                <div class="player-main">
+                    <a href="{{ url_for('user.profile_player', player_id=player[0]) }}" class="player-name">{{ player[1] }}</a>
+                    <p class="player-team"><i class="fas fa-shield-alt"></i> {{ player[4] }}</p>
+                </div>
+                <span class="position-pill {% if player[2] == 'Goalkeeper' %}pos-goalkeeper{% elif player[2] == 'Defence' %}pos-defence{% elif player[2] == 'Midfield' %}pos-midfield{% elif player[2] == 'Offence' %}pos-offence{% else %}pos-default{% endif %}">
+                    {{ player[2] }}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-user-slash"></i>
+            <h3>No Players Found</h3>
+            <p>Try adjusting your filters to find matching player profiles.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if players and total_pages %}
+    <div class="pagination-container">
+        <div class="pagination-links">
+            {% if page > 1 %}
+            <a href="{{ url_for('user.user_players', page=1, league_id=request.args.get('league_id'), country_id=request.args.get('country_id'), team_id=request.args.get('team_id'), position=request.args.get('position')) }}" class="page-link-modern" title="First"><i class="fas fa-chevron-left"></i><i class="fas fa-chevron-left"></i></a>
+            <a href="{{ url_for('user.user_players', page=page-1, league_id=request.args.get('league_id'), country_id=request.args.get('country_id'), team_id=request.args.get('team_id'), position=request.args.get('position')) }}" class="page-link-modern" title="Previous"><i class="fas fa-chevron-left"></i></a>
+            {% else %}
+            <button class="page-link-modern disabled"><i class="fas fa-chevron-left"></i><i class="fas fa-chevron-left"></i></button>
+            <button class="page-link-modern disabled"><i class="fas fa-chevron-left"></i></button>
+            {% endif %}
+
+            {% for p in range(max(1, page-2), min(total_pages, page+2) + 1) %}
+            <a href="{{ url_for('user.user_players', page=p, league_id=request.args.get('league_id'), country_id=request.args.get('country_id'), team_id=request.args.get('team_id'), position=request.args.get('position')) }}" class="page-link-modern {% if page == p %}active{% endif %}">{{ p }}</a>
+            {% endfor %}
+
+            {% if page < total_pages %}
+            <a href="{{ url_for('user.user_players', page=page+1, league_id=request.args.get('league_id'), country_id=request.args.get('country_id'), team_id=request.args.get('team_id'), position=request.args.get('position')) }}" class="page-link-modern" title="Next"><i class="fas fa-chevron-right"></i></a>
+            <a href="{{ url_for('user.user_players', page=total_pages, league_id=request.args.get('league_id'), country_id=request.args.get('country_id'), team_id=request.args.get('team_id'), position=request.args.get('position')) }}" class="page-link-modern" title="Last"><i class="fas fa-chevron-right"></i><i class="fas fa-chevron-right"></i></a>
+            {% else %}
+            <button class="page-link-modern disabled"><i class="fas fa-chevron-right"></i></button>
+            <button class="page-link-modern disabled"><i class="fas fa-chevron-right"></i><i class="fas fa-chevron-right"></i></button>
+            {% endif %}
         </div>
     </div>
-    <button type="submit" class="btn btn-primary">Filter</button>
-</form>
-
-<ul class="list-group mt-3">
-    {% for player in players %}
-        <li class="list-group-item d-flex align-items-center">
-            {% if player[3] %}
-                <img src="{{ player[3] if player[3] and player[3] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_team.png') }}';" alt="{{ player[4] }} Logo" title="{{ player[4] }}" class="team-logo-tooltip mr-2" style="width: 40px;">
-            {% endif %}
-            {% if player[5] %}
-                <img src="{{ player[5] if player[5] and player[5] != 'None' else '' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_flag.png') }}';" alt="Nationality Flag" class="flag-img mr-2">
-            {% endif %}
-            <span class="badge {% if player[2] == 'Goalkeeper' %}badge-secondary{% elif player[2] == 'Defence' %}badge-primary{% elif player[2] == 'Midfield' %}badge-success{% elif player[2] == 'Offence' %}badge-danger{% endif %} mr-2">&bull;</span>
-            <a href="{{ url_for('user.profile_player', player_id=player[0]) }}">{{ player[1] }}</a>
-        </li>
-    {% endfor %}
-</ul>
-
-<nav aria-label="Page navigation" class="mt-3">
-    <ul class="pagination justify-content-center">
-        {% if page > 1 %}
-            <li class="page-item">
-                <a class="page-link" href="{{ url_for('user.user_players', page=1) }}" aria-label="First">
-                    <span aria-hidden="true">&laquo;&laquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="{{ url_for('user.user_players', page=page-1) }}" aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
-        {% endif %}
-        {% for p in range(max(1, page-2), min(total_pages, page+2) + 1) %}
-            <li class="page-item {% if page == p %}active{% endif %}">
-                <a class="page-link" href="{{ url_for('user.user_players', page=p) }}">{{ p }}</a>
-            </li>
-        {% endfor %}
-        {% if page < total_pages %}
-            <li class="page-item">
-                <a class="page-link" href="{{ url_for('user.user_players', page=page+1) }}" aria-label="Next">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="{{ url_for('user.user_players', page=total_pages) }}" aria-label="Last">
-                    <span aria-hidden="true">&raquo;&raquo;</span>
-                </a>
-            </li>
-        {% endif %}
-    </ul>
-</nav>
+    {% endif %}
+</div>
 {% endblock %}
