@@ -419,37 +419,120 @@ def manage_seasons():
     if request.method == 'POST':
         try:
             season_id = request.form.get('season_id')
-            league_id = request.form['league_id']
-            year = request.form['year']
+            league_id = request.form.get('league_id')
+            year = clean_value(request.form.get('year'))
 
-            if 'add' in request.form:
-                cur.execute('INSERT INTO seasons (league_id, year) VALUES (%s, %s)', (league_id, year))
-                flash('Season added successfully', 'success')
-            elif 'edit' in request.form and season_id:
-                cur.execute('UPDATE seasons SET league_id = %s, year = %s WHERE season_id = %s', (league_id, year, season_id))
-                flash('Season updated successfully', 'success')
-            elif 'delete' in request.form:
-                season_id = request.form['deleteItemId']
-                cur.execute('DELETE FROM seasons WHERE season_id = %s', (season_id,))
-                flash('Season deleted successfully', 'success')
+            if 'delete' in request.form:
+                season_id = (
+                    request.form.get('deleteItemId')
+                    or request.form.get('deleteEntityId')
+                    or request.form.get('item_id')
+                    or request.form.get('season_id')
+                )
+
+                if not season_id:
+                    flash('No season selected for deletion', 'error')
+                else:
+                    cur.execute("SELECT COUNT(*) FROM matches WHERE season_id = %s", (season_id,))
+                    matches_result = cur.fetchone()
+                    matches_count = matches_result[0] if matches_result else 0
+
+                    cur.execute("SELECT COUNT(*) FROM scorers WHERE season_id = %s", (season_id,))
+                    scorers_result = cur.fetchone()
+                    scorers_count = scorers_result[0] if scorers_result else 0
+
+                    if matches_count > 0 or scorers_count > 0:
+                        flash('This season cannot be deleted because it is being used by matches, scorers, or other records.', 'warning')
+                    else:
+                        cur.execute("DELETE FROM seasons WHERE season_id = %s", (season_id,))
+                        flash('Season deleted successfully', 'success')
+
+            else:
+                if not league_id:
+                    flash('Please select a league', 'error')
+                    return redirect(url_for('admin.manage_seasons'))
+
+                if not year:
+                    flash('Season year is required', 'error')
+                    return redirect(url_for('admin.manage_seasons'))
+
+                # Validar duplicado: misma liga + mismo año
+                if season_id:
+                    cur.execute("""
+                        SELECT season_id
+                        FROM seasons
+                        WHERE league_id = %s
+                          AND LOWER(year) = LOWER(%s)
+                          AND season_id <> %s
+                    """, (league_id, year, season_id))
+                else:
+                    cur.execute("""
+                        SELECT season_id
+                        FROM seasons
+                        WHERE league_id = %s
+                          AND LOWER(year) = LOWER(%s)
+                    """, (league_id, year))
+
+                existing = cur.fetchone()
+
+                if existing:
+                    flash('This season already exists for the selected league.', 'warning')
+                    return redirect(url_for('admin.manage_seasons'))
+
+                if season_id:
+                    cur.execute("""
+                        UPDATE seasons
+                        SET league_id = %s,
+                            year = %s
+                        WHERE season_id = %s
+                    """, (league_id, year, season_id))
+
+                    flash('Season updated successfully', 'success')
+                else:
+                    cur.execute("""
+                        INSERT INTO seasons (league_id, year)
+                        VALUES (%s, %s)
+                    """, (league_id, year))
+
+                    flash('Season added successfully', 'success')
+
             db.commit()
+
         except Exception as e:
             db.rollback()
             flash('An error occurred: ' + str(e), 'error')
+
         finally:
             cur.close()
+
         return redirect(url_for('admin.manage_seasons'))
 
-    cur.execute('''
-        SELECT s.season_id, s.league_id, s.year, l.name
+    cur.execute("""
+        SELECT
+            s.season_id,
+            s.league_id,
+            s.year,
+            l.name AS league_name
         FROM seasons s
         JOIN leagues l ON s.league_id = l.league_id
-    ''')
+        ORDER BY s.year DESC, l.name ASC
+    """)
     seasons = cur.fetchall()
-    cur.execute('SELECT league_id, name FROM leagues')
+
+    cur.execute("""
+        SELECT league_id, name
+        FROM leagues
+        ORDER BY name ASC
+    """)
     leagues = cur.fetchall()
+
     cur.close()
-    return render_template('manage_seasons.html', seasons=seasons, leagues=leagues)
+
+    return render_template(
+        'manage_seasons.html',
+        seasons=seasons,
+        leagues=leagues
+    )
 
 @admin_bp.route('/manage_teams', methods=['GET', 'POST'])
 @admin_required
