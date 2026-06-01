@@ -542,61 +542,182 @@ def manage_teams():
 
     if request.method == 'POST':
         try:
-            team_id = request.form.get('team_id')
-            name = request.form['name']
-            founded_year = request.form['founded_year']
-            stadium_id = request.form.get('stadium_id') or None
-            league_id = request.form['league_id']
-            coach_id = request.form['coach_id']
+            if 'delete' in request.form:
+                team_id = (
+                    request.form.get('deleteItemId')
+                    or request.form.get('deleteEntityId')
+                    or request.form.get('item_id')
+                    or request.form.get('team_id')
+                )
 
-            if 'add' in request.form:
-                cur.execute('INSERT INTO teams (name, founded_year, stadium_id, league_id, coach_id) VALUES (%s, %s, %s, %s, %s)', 
-                            (name, founded_year, stadium_id, league_id, coach_id))
-                flash('Team added successfully', 'success')
-            elif 'edit' in request.form and team_id:
-                cur.execute('UPDATE teams SET name = %s, founded_year = %s, stadium_id = %s, league_id = %s, coach_id = %s WHERE team_id = %s', 
-                            (name, founded_year, stadium_id, league_id, coach_id, team_id))
-                flash('Team updated successfully', 'success')
-            elif 'delete' in request.form and team_id:
-                cur.execute('DELETE FROM teams WHERE team_id = %s', (team_id,))
-                flash('Team deleted successfully', 'success')
+                if not team_id:
+                    flash('No team selected for deletion', 'error')
+                    return redirect(url_for('admin.manage_teams'))
+
+                cur.execute("SELECT COUNT(*) FROM players WHERE team_id = %s", (team_id,))
+                players_result = cur.fetchone()
+                players_count = players_result[0] if players_result else 0
+
+                cur.execute("""
+                    SELECT COUNT(*)
+                    FROM matches
+                    WHERE home_team_id = %s OR away_team_id = %s
+                """, (team_id, team_id))
+                matches_result = cur.fetchone()
+                matches_count = matches_result[0] if matches_result else 0
+
+                cur.execute("SELECT COUNT(*) FROM standings WHERE team_id = %s", (team_id,))
+                standings_result = cur.fetchone()
+                standings_count = standings_result[0] if standings_result else 0
+
+                cur.execute("""
+                    SELECT COUNT(*)
+                    FROM scorers sc
+                    JOIN players p ON sc.player_id = p.player_id
+                    WHERE p.team_id = %s
+                """, (team_id,))
+                scorers_result = cur.fetchone()
+                scorers_count = scorers_result[0] if scorers_result else 0
+
+                if players_count > 0 or matches_count > 0 or standings_count > 0 or scorers_count > 0:
+                    flash('This team cannot be deleted because it is being used by players, matches, standings, scorers, or other records.', 'warning')
+                else:
+                    cur.execute("DELETE FROM teams WHERE team_id = %s", (team_id,))
+                    flash('Team deleted successfully', 'success')
+
+            else:
+                team_id = request.form.get('team_id')
+                name = clean_value(request.form.get('name'))
+                founded_year = clean_int(request.form.get('founded_year'))
+                stadium_id = clean_value(request.form.get('stadium_id'))
+                league_id = clean_value(request.form.get('league_id'))
+                coach_id = clean_value(request.form.get('coach_id'))
+
+                if not name:
+                    flash('Team name is required', 'error')
+                    return redirect(url_for('admin.manage_teams'))
+
+                if not league_id:
+                    flash('League is required', 'error')
+                    return redirect(url_for('admin.manage_teams'))
+
+                if team_id:
+                    cur.execute("""
+                        SELECT team_id
+                        FROM teams
+                        WHERE LOWER(name) = LOWER(%s)
+                          AND league_id = %s
+                          AND team_id <> %s
+                    """, (name, league_id, team_id))
+                else:
+                    cur.execute("""
+                        SELECT team_id
+                        FROM teams
+                        WHERE LOWER(name) = LOWER(%s)
+                          AND league_id = %s
+                    """, (name, league_id))
+
+                existing = cur.fetchone()
+
+                if existing:
+                    flash('This team already exists in the selected league.', 'warning')
+                    return redirect(url_for('admin.manage_teams'))
+
+                if team_id:
+                    cur.execute("""
+                        UPDATE teams
+                        SET name = %s,
+                            founded_year = %s,
+                            stadium_id = %s,
+                            league_id = %s,
+                            coach_id = %s
+                        WHERE team_id = %s
+                    """, (
+                        name,
+                        founded_year,
+                        stadium_id,
+                        league_id,
+                        coach_id,
+                        team_id
+                    ))
+                    flash('Team updated successfully', 'success')
+                else:
+                    cur.execute("""
+                        INSERT INTO teams
+                            (name, founded_year, stadium_id, league_id, coach_id)
+                        VALUES
+                            (%s, %s, %s, %s, %s)
+                    """, (
+                        name,
+                        founded_year,
+                        stadium_id,
+                        league_id,
+                        coach_id
+                    ))
+                    flash('Team added successfully', 'success')
+
             db.commit()
+
         except Exception as e:
             db.rollback()
             flash('An error occurred: ' + str(e), 'error')
+
         finally:
             cur.close()
+
         return redirect(url_for('admin.manage_teams'))
 
     cur.execute("""
-    SELECT 
-        t.team_id,
-        t.name,
-        t.founded_year,
-        t.stadium_id,
-        t.league_id,
-        t.coach_id,
-        COALESCE(s.name, 'N/A') AS stadium_name,
-        l.name AS league_name,
-        c.name AS coach_name,
-        t.is_active
-    FROM teams t
-    LEFT JOIN stadiums s ON t.stadium_id = s.stadium_id
-    JOIN leagues l ON t.league_id = l.league_id
-    JOIN coaches c ON t.coach_id = c.coach_id
-    ORDER BY t.team_id
-""")
+        SELECT 
+            t.team_id,
+            t.name,
+            t.founded_year,
+            t.stadium_id,
+            t.league_id,
+            t.coach_id,
+            COALESCE(s.name, 'N/A') AS stadium_name,
+            l.name AS league_name,
+            COALESCE(c.name, 'N/A') AS coach_name,
+            t.is_active
+        FROM teams t
+        LEFT JOIN stadiums s ON t.stadium_id = s.stadium_id
+        JOIN leagues l ON t.league_id = l.league_id
+        LEFT JOIN coaches c ON t.coach_id = c.coach_id
+        ORDER BY t.team_id
+    """)
     teams = cur.fetchall()
-    cur.execute('SELECT stadium_id, name FROM stadiums')
+
+    cur.execute("""
+        SELECT stadium_id, name
+        FROM stadiums
+        ORDER BY name ASC
+    """)
     stadiums = cur.fetchall()
-    cur.execute('SELECT league_id, name FROM leagues')
+
+    cur.execute("""
+        SELECT league_id, name
+        FROM leagues
+        ORDER BY name ASC
+    """)
     leagues = cur.fetchall()
-    cur.execute('SELECT coach_id, name FROM coaches')
+
+    cur.execute("""
+        SELECT coach_id, name
+        FROM coaches
+        ORDER BY name ASC
+    """)
     coaches = cur.fetchall()
+
     cur.close()
-    return render_template('manage_teams.html', teams=teams, stadiums=stadiums, leagues=leagues, coaches=coaches)
 
-
+    return render_template(
+        'manage_teams.html',
+        teams=teams,
+        stadiums=stadiums,
+        leagues=leagues,
+        coaches=coaches
+    )
+    
 @admin_bp.route('/manage_coaches', methods=['GET', 'POST'])
 @admin_required
 def manage_coaches():
@@ -605,43 +726,147 @@ def manage_coaches():
 
     if request.method == 'POST':
         try:
-            coach_id = request.form.get('coach_id')
-            name = request.form['name']
-            nationality = request.form['nationality']
-            team_id = request.form['team_id']
+            if 'delete' in request.form:
+                coach_id = (
+                    request.form.get('deleteItemId')
+                    or request.form.get('deleteEntityId')
+                    or request.form.get('item_id')
+                    or request.form.get('coach_id')
+                )
 
-            if 'add' in request.form:
-                cur.execute('INSERT INTO coaches (name, nationality, team_id) VALUES (%s, %s, %s)', 
-                            (name, nationality, team_id))
-                flash('Coach added successfully', 'success')
-            elif 'submit' in request.form and coach_id:
-                cur.execute('UPDATE coaches SET name = %s, nationality = %s, team_id = %s WHERE coach_id = %s', 
-                            (name, nationality, team_id, coach_id))
-                flash('Coach updated successfully', 'success')
-            elif 'delete' in request.form:
-                coach_id = request.form['deleteEntityId']
-                cur.execute('DELETE FROM coaches WHERE coach_id = %s', (coach_id,))
-                flash('Coach deleted successfully', 'success')
+                if not coach_id:
+                    flash('No coach selected for deletion', 'error')
+                    return redirect(url_for('admin.manage_coaches'))
+
+                cur.execute("SELECT COUNT(*) FROM teams WHERE coach_id = %s", (coach_id,))
+                teams_result = cur.fetchone()
+                teams_count = teams_result[0] if teams_result else 0
+
+                if teams_count > 0:
+                    flash(
+                        f'This coach cannot be deleted because it is assigned to {teams_count} team(s).',
+                        'warning'
+                    )
+                else:
+                    cur.execute("DELETE FROM coaches WHERE coach_id = %s", (coach_id,))
+                    flash('Coach deleted successfully', 'success')
+
+            else:
+                coach_id = request.form.get('coach_id')
+                name = clean_value(request.form.get('name'))
+                nationality = clean_value(request.form.get('nationality'))
+                team_id = clean_value(request.form.get('team_id'))
+
+                if not name:
+                    flash('Coach name is required', 'error')
+                    return redirect(url_for('admin.manage_coaches'))
+
+                if not nationality:
+                    flash('Coach nationality is required', 'error')
+                    return redirect(url_for('admin.manage_coaches'))
+
+                if coach_id:
+                    cur.execute("""
+                        SELECT coach_id
+                        FROM coaches
+                        WHERE LOWER(name) = LOWER(%s)
+                          AND LOWER(nationality) = LOWER(%s)
+                          AND coach_id <> %s
+                    """, (name, nationality, coach_id))
+                else:
+                    cur.execute("""
+                        SELECT coach_id
+                        FROM coaches
+                        WHERE LOWER(name) = LOWER(%s)
+                          AND LOWER(nationality) = LOWER(%s)
+                    """, (name, nationality))
+
+                existing = cur.fetchone()
+
+                if existing:
+                    flash('This coach already exists.', 'warning')
+                    return redirect(url_for('admin.manage_coaches'))
+
+                if coach_id:
+                    cur.execute("""
+                        UPDATE coaches
+                        SET name = %s,
+                            nationality = %s
+                        WHERE coach_id = %s
+                    """, (name, nationality, coach_id))
+
+                    cur.execute("""
+                        UPDATE teams
+                        SET coach_id = NULL
+                        WHERE coach_id = %s
+                    """, (coach_id,))
+
+                    if team_id:
+                        cur.execute("""
+                            UPDATE teams
+                            SET coach_id = %s
+                            WHERE team_id = %s
+                        """, (coach_id, team_id))
+
+                    flash('Coach updated successfully', 'success')
+
+                else:
+                    cur.execute("""
+                        INSERT INTO coaches (name, nationality)
+                        VALUES (%s, %s)
+                        RETURNING coach_id
+                    """, (name, nationality))
+
+                    new_coach = cur.fetchone()
+                    new_coach_id = new_coach[0] if new_coach else None
+
+                    if team_id and new_coach_id:
+                        cur.execute("""
+                            UPDATE teams
+                            SET coach_id = %s
+                            WHERE team_id = %s
+                        """, (new_coach_id, team_id))
+
+                    flash('Coach added successfully', 'success')
+
             db.commit()
+
         except Exception as e:
             db.rollback()
             flash('An error occurred: ' + str(e), 'error')
+
         finally:
             cur.close()
+
         return redirect(url_for('admin.manage_coaches'))
 
-    cur.execute('''
-        SELECT c.coach_id, c.name, c.team_id, c.nationality, t.name AS team_name
+    cur.execute("""
+        SELECT
+            c.coach_id,
+            c.name,
+            COALESCE(t.name, 'N/A') AS team_name,
+            c.nationality,
+            t.team_id
         FROM coaches c
-        JOIN teams t ON c.team_id = t.team_id
-    ''')
+        LEFT JOIN teams t ON t.coach_id = c.coach_id
+        ORDER BY c.coach_id
+    """)
     coaches = cur.fetchall()
-    cur.execute('SELECT team_id, name FROM teams')
+
+    cur.execute("""
+        SELECT team_id, name
+        FROM teams
+        ORDER BY name ASC
+    """)
     teams = cur.fetchall()
+
     cur.close()
-    return render_template('manage_coaches.html', coaches=coaches, teams=teams)
 
-
+    return render_template(
+        'manage_coaches.html',
+        coaches=coaches,
+        teams=teams
+    )
 
 @admin_bp.route('/manage_players', methods=['GET', 'POST'])
 @admin_required
