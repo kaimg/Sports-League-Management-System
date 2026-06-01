@@ -792,7 +792,7 @@ def add_favorite():
             """
             INSERT INTO user_favorites (user_id, entity_type, entity_id)
             VALUES (%s, %s, %s)
-            RETURNING favorite_id
+            RETURNING id
             """,
             (user_id, entity_type, entity_id)
         )
