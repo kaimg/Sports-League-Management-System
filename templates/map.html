@@ -30,30 +30,6 @@
         box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
     }
 
-    .league-premier {
-        background-color: #007bff;
-    }
-
-    .league-laliga {
-        background-color: #dc3545;
-    }
-
-    .league-bundesliga {
-        background-color: #ffc107;
-    }
-
-    .league-seriea {
-        background-color: #28a745;
-    }
-
-    .league-ligue1 {
-        background-color: #6f42c1;
-    }
-
-    .league-default {
-        background-color: #343a40;
-    }
-
     .map-legend {
         background: white;
         padding: 10px 14px;
@@ -114,6 +90,15 @@
     </div>
 
     <div id="globalMap"></div>
+
+    <div id="leagueLegendData" style="display: none;">
+    {% for league in leagues %}
+        <span
+            class="league-legend-item"
+            data-name="{{ league[1] }}"
+            data-color="{{ league[2] or '#343a40' }}">
+        </span>
+    {% endfor %}
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -137,45 +122,19 @@
 
         map.addLayer(markers);
 
-        function getLeagueClass(leagueName) {
-            if (!leagueName) {
-                return 'league-default';
-            }
 
-            const league = leagueName.toLowerCase();
 
-            if (league.includes('premier')) {
-                return 'league-premier';
-            }
+        function createLeagueIcon(leagueColor) {
+    const color = leagueColor || '#343a40';
 
-            if (league.includes('liga')) {
-                return 'league-laliga';
-            }
-
-            if (league.includes('bundesliga')) {
-                return 'league-bundesliga';
-            }
-
-            if (league.includes('serie')) {
-                return 'league-seriea';
-            }
-
-            if (league.includes('ligue')) {
-                return 'league-ligue1';
-            }
-
-            return 'league-default';
-        }
-
-        function createLeagueIcon(leagueName) {
-            return L.divIcon({
-                className: '',
-                html: `<div class="league-marker ${getLeagueClass(leagueName)}"></div>`,
-                iconSize: [18, 18],
-                iconAnchor: [9, 9],
-                popupAnchor: [0, -9]
-            });
-        }
+    return L.divIcon({
+        className: '',
+        html: `<div class="league-marker" style="background-color: ${color};"></div>`,
+        iconSize: [18, 18],
+        iconAnchor: [9, 9],
+        popupAnchor: [0, -9]
+    });
+}
 
         function loadStadiums() {
             const leagueId = document.getElementById('leagueFilter').value;
@@ -209,8 +168,8 @@
                         const lat = feature.geometry.coordinates[1];
 
                         const marker = L.marker([lat, lng], {
-                            icon: createLeagueIcon(props.league_name)
-                        });
+    icon: createLeagueIcon(props.league_color)
+});
 
                         const popupContent = `
                             <div>
@@ -244,23 +203,29 @@
 
         const legend = L.control({ position: 'bottomright' });
 
-        legend.onAdd = function () {
-            const div = L.DomUtil.create('div', 'map-legend');
+legend.onAdd = function () {
+    const div = L.DomUtil.create('div', 'map-legend');
 
-            div.innerHTML = `
-                <strong>Leagues</strong><br>
-                <span><i class="league-premier"></i> Premier League</span><br>
-                <span><i class="league-laliga"></i> LaLiga</span><br>
-                <span><i class="league-bundesliga"></i> Bundesliga</span><br>
-                <span><i class="league-seriea"></i> Serie A</span><br>
-                <span><i class="league-ligue1"></i> Ligue 1</span><br>
-                <span><i class="league-default"></i> Other</span>
-            `;
+    div.innerHTML = '<strong>Leagues</strong><br>';
 
-            return div;
-        };
+    const leagueItems = document.querySelectorAll('#leagueLegendData .league-legend-item');
 
-        legend.addTo(map);
+    leagueItems.forEach(function(item) {
+        const name = item.dataset.name;
+        const color = item.dataset.color || '#343a40';
+
+        div.innerHTML += `
+            <span>
+                <i style="background-color: ${color};"></i>
+                ${name}
+            </span><br>
+        `;
+    });
+
+    return div;
+};
+
+legend.addTo(map);
 
         loadStadiums();
 

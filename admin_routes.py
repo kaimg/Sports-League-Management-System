@@ -257,33 +257,158 @@ def manage_leagues():
 
     if request.method == 'POST':
         try:
-            league_id = request.form.get('league_id')
-            name = request.form['name']
-            country = request.form['country']
+            if 'delete' in request.form:
+                league_id = (
+                    request.form.get('deleteEntityId')
+                    or request.form.get('deleteItemId')
+                    or request.form.get('item_id')
+                    or request.form.get('league_id')
+                )
 
-            if 'add' in request.form:
-                cur.execute('INSERT INTO leagues (name, country) VALUES (%s, %s)', 
-                            (name, country))
-                flash('League added successfully', 'success')
-            elif 'edit' in request.form and league_id:
-                cur.execute('UPDATE leagues SET name = %s, country = %s WHERE league_id = %s', 
-                            (name, country, league_id))
-                flash('League updated successfully', 'success')
-            elif 'delete' in request.form and league_id:
-                cur.execute('DELETE FROM leagues WHERE league_id = %s', (league_id,))
+                if not league_id:
+                    flash('No league selected for deletion', 'error')
+                    return redirect(url_for('admin.manage_leagues'))
+
+                cur.execute(
+                    'DELETE FROM leagues WHERE league_id = %s',
+                    (league_id,)
+                )
+
+                db.commit()
                 flash('League deleted successfully', 'success')
-            db.commit()
+
+            else:
+                league_id = request.form.get('league_id')
+                name = clean_value(request.form.get('name'))
+                country_id = request.form.get('country_id')
+                color = request.form.get('color') or '#343a40'
+
+                if not name:
+                    flash('League name is required', 'error')
+                    return redirect(url_for('admin.manage_leagues'))
+
+                if not country_id:
+                    flash('Country is required', 'error')
+                    return redirect(url_for('admin.manage_leagues'))
+
+                cur.execute(
+                    'SELECT name FROM countries WHERE country_id = %s',
+                    (country_id,)
+                )
+                country_row = cur.fetchone()
+
+                if not country_row:
+                    flash('Selected country does not exist', 'error')
+                    return redirect(url_for('admin.manage_leagues'))
+
+                country_name = country_row[0]
+
+                if league_id:
+                    cur.execute(
+                        """
+                        SELECT league_id
+                        FROM leagues
+                        WHERE LOWER(name) = LOWER(%s)
+                        AND country_id = %s
+                        AND league_id <> %s
+                        LIMIT 1
+                        """,
+                        (name, country_id, league_id)
+                    )
+
+                    existing_league = cur.fetchone()
+
+                    if existing_league:
+                        flash('Another league with this name already exists for this country.', 'warning')
+                        return redirect(url_for('admin.manage_leagues'))
+
+                    cur.execute(
+                        """
+                        UPDATE leagues
+                        SET name = %s,
+                            country = %s,
+                            country_id = %s,
+                            color = %s
+                        WHERE league_id = %s
+                        """,
+                        (name, country_name, country_id, color, league_id)
+                    )
+
+                    db.commit()
+                    flash('League updated successfully', 'success')
+
+                else:
+                    cur.execute(
+                        """
+                        SELECT league_id
+                        FROM leagues
+                        WHERE LOWER(name) = LOWER(%s)
+                        AND country_id = %s
+                        LIMIT 1
+                        """,
+                        (name, country_id)
+                    )
+
+                    existing_league = cur.fetchone()
+
+                    if existing_league:
+                        flash('This league already exists for this country.', 'warning')
+                        return redirect(url_for('admin.manage_leagues'))
+
+                    cur.execute(
+                        """
+                        INSERT INTO leagues (name, country, country_id, color)
+                        VALUES (%s, %s, %s, %s)
+                        """,
+                        (name, country_name, country_id, color)
+                    )
+
+                    db.commit()
+                    flash('League added successfully', 'success')
+
         except Exception as e:
             db.rollback()
-            flash('An error occurred: ' + str(e), 'error')
+            error_message = str(e).lower()
+
+            if 'foreign key' in error_message:
+                flash('This league cannot be deleted because it is being used by teams, seasons, matches, or other records.', 'warning')
+            elif 'duplicate key value' in error_message or 'unique constraint' in error_message:
+                flash('This league already exists.', 'warning')
+            else:
+                flash('An error occurred: ' + str(e), 'error')
+
         finally:
             cur.close()
+
         return redirect(url_for('admin.manage_leagues'))
 
-    cur.execute('SELECT league_id, name, country FROM leagues')
+    cur.execute("""
+        SELECT
+            l.league_id,
+            l.name,
+            c.name AS country_name,
+            l.country_id,
+            l.color
+        FROM leagues l
+        LEFT JOIN countries c ON l.country_id = c.country_id
+        ORDER BY l.league_id
+    """)
     leagues = cur.fetchall()
+
+    cur.execute("""
+        SELECT country_id, name
+        FROM countries
+        ORDER BY name
+    """)
+    countries = cur.fetchall()
+
     cur.close()
-    return render_template('manage_leagues.html', leagues=leagues)
+
+    return render_template(
+        'manage_leagues.html',
+        leagues=leagues,
+        countries=countries
+    )
 
 @admin_bp.route('/manage_seasons', methods=['GET', 'POST'])
 @admin_required

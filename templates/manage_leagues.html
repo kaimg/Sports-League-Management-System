@@ -1,52 +1,117 @@
 {% extends "layout.html" %}
 {% block title %}Manage Leagues - Admin Panel{% endblock %}
+
 {% block content %}
+
+<style>
+    .league-color-dot {
+        display: inline-block;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: 1px solid #333;
+        vertical-align: middle;
+        margin-right: 6px;
+    }
+</style>
+
+<div class="container mt-4">
+
 <div class="container mt-4">
     <h1 class="mb-4">Manage Leagues</h1>
+
     <div class="row">
         <div class="col-md-6">
             <h2 id="form-title">Add League</h2>
+
             <form action="{{ url_for('admin.manage_leagues') }}" method="POST" id="leagueForm">
                 <input type="hidden" id="league_id" name="league_id">
-                <div class="form-group">
+
+                <div class="form-group mb-2">
                     <label for="name">Name:</label>
                     <input type="text" class="form-control" id="name" name="name" required>
                 </div>
-                <div class="form-group">
-                    <label for="country">Country:</label>
-                    <input type="text" class="form-control" id="country" name="country" required>
+
+                <div class="form-group mb-2">
+                    <label for="country_id">Country:</label>
+                    <select class="form-control" id="country_id" name="country_id" required>
+                        <option value="">Select country</option>
+                        {% for country in countries %}
+                            <option value="{{ country[0] }}">{{ country[1] }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
-                <button type="submit" name="add" class="btn btn-primary" id="submit-button">Add League</button>
+
+                <div class="form-group mb-2">
+    <label for="color">League Color:</label>
+    <input 
+        type="color" 
+        class="form-control form-control-color" 
+        id="color" 
+        name="color" 
+        value="#343a40">
+</div>
+
+                <button type="submit" name="submit" class="btn btn-primary" id="submit-button">
+                    Add League
+                </button>
             </form>
         </div>
+
         <div class="col-md-6">
             <h2>Existing Leagues</h2>
+
             <table class="table table-striped">
                 <thead>
                     <tr>
                         <th>ID</th>
                         <th>Name</th>
                         <th>Country</th>
+                        <th>Color</th>
                         <th>Edit</th>
                         <th>Delete</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     {% for league in leagues %}
                     <tr>
                         <td>{{ league[0] }}</td>
                         <td>{{ league[1] }}</td>
-                        <td>{{ league[2] }}</td>
+                        <td>{{ league[2] or 'N/A' }}</td>
+
                         <td>
-                            <button class="btn btn-success btn-sm" onclick="editLeague('{{ league[0] }}', '{{ league[1] }}', '{{ league[2] }}')">
+                            <button
+                                type="button"
+                                class="btn btn-success btn-sm edit-league-btn"
+                                data-id="{{ league[0] }}"
+                                data-name="{{ league[1] }}"
+                                data-country-id="{{ league[3] }}"
+                                data-color="{{ league[4] or '#343a40' }}">
                                 <i class="fa fa-pencil-alt"></i>
                             </button>
                         </td>
+
                         <td>
-                            <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal" data-id="{{ league[0] }}" data-action="{{ url_for('admin.manage_leagues') }}">
+                            <button
+                                type="button"
+                                class="btn btn-danger btn-sm"
+                                data-bs-toggle="modal"
+                                data-bs-target="#deleteModal"
+                                data-id="{{ league[0] }}"
+                                data-action="{{ url_for('admin.manage_leagues') }}">
                                 <i class="fa fa-minus"></i>
                             </button>
                         </td>
+
+                        <td>
+    <span
+        class="league-color-dot"
+        data-color="{{ league[4] or '#343a40' }}">
+    </span>
+    <small>{{ league[4] or '#343a40' }}</small>
+</td>
+
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -55,24 +120,42 @@
     </div>
 </div>
 
-<!-- Include the delete modal -->
 {% include 'delete_modal.html' %}
 
 <script>
-    function editLeague(id, name, country) {
-        document.getElementById('league_id').value = id;
-        document.getElementById('name').value = name;
-        document.getElementById('country').value = country;
-        document.getElementById('submit-button').innerText = 'Update League';
-        document.getElementById('form-title').innerText = 'Edit League';
-    }
+    document.querySelectorAll('.league-color-dot').forEach(function(dot) {
+    dot.style.backgroundColor = dot.dataset.color || '#343a40';
+});
 
-    $('#deleteModal').on('show.bs.modal', function (event) {
-        var button = $(event.relatedTarget);
-        var id = button.data('id');
-        var action = button.data('action');
-        document.getElementById('deleteItemId').value = id;
-        document.getElementById('deleteForm').action = action;
+    document.querySelectorAll('.edit-league-btn').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const name = this.getAttribute('data-name');
+            const countryId = this.getAttribute('data-country-id');
+            const color = this.getAttribute('data-color');
+
+            document.getElementById('league_id').value = id;
+            document.getElementById('name').value = name;
+            document.getElementById('country_id').value = countryId;
+            document.getElementById('color').value = color || '#343a40';
+            document.getElementById('submit-button').innerText = 'Update League';
+            document.getElementById('form-title').innerText = 'Edit League';
+        });
     });
+
+    const deleteModal = document.getElementById('deleteModal');
+
+    if (deleteModal) {
+        deleteModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const id = button.getAttribute('data-id');
+            const action = button.getAttribute('data-action');
+
+            document.getElementById('deleteItemId').value = id;
+            document.getElementById('deleteForm').action = action;
+
+            
+        });
+    }
 </script>
 {% endblock %}

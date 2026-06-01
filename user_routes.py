@@ -243,7 +243,11 @@ def stadiums_map():
     db = get_db()
     cur = db.cursor()
 
-    cur.execute('SELECT league_id, name FROM leagues ORDER BY name ASC')
+    cur.execute("""
+        SELECT league_id, name, COALESCE(color, '#343a40') AS color
+        FROM leagues
+        ORDER BY name ASC
+    """)
     leagues = cur.fetchall()
 
     cur.execute('SELECT DISTINCT country FROM stadiums WHERE country IS NOT NULL ORDER BY country ASC')
@@ -992,7 +996,9 @@ def get_notifications():
         "SELECT COUNT(*) FROM notifications WHERE user_id = %s AND is_read = FALSE",
         (user_id,),
     )
-    unread_count = cur.fetchone()[0]
+    unread_result = cur.fetchone()
+    unread_count = unread_result[0] if unread_result else 0
+
     cur.close()
 
     return jsonify({
