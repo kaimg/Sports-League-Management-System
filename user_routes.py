@@ -487,8 +487,8 @@ def user_matches():
         )
     )
     """
-    filters.append(country_id)
-    filters.append(country_id)
+        filters.append(country_id)
+        filters.append(country_id)
     if team_id:
         query += " AND (m.home_team_id = %s OR m.away_team_id = %s)"
         filters.append(team_id)

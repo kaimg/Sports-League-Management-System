@@ -76,7 +76,10 @@ The Sports League Management System aims to manage comprehensive data associated
    - Create necessary environment files
    - Build and start the Docker containers
    - Wait for PostgreSQL and apply `schema.sql` if tables are missing
-   - Run SQL migrations and synchronize sequences
+   - Run SQL migrations (including automated data fixes like league colors and country flags)
+   - Synchronize all database sequences automatically
+
+   *Note: There is no need to run any extra python scripts manually after this process. The setup handles everything.*
 
    If the database was partially initialized or tables are missing, reset and run setup again:
 
@@ -214,6 +217,23 @@ The ER diagram illustrates the relationships between different entities in the S
 
 ### Player Profile Screen
 ![Player Profile Screen](img/player_profile_screen.png)
+
+---
+
+## Documentación del Proyecto
+
+La documentación detallada y técnica del proyecto se encuentra en la carpeta `/docs`. A continuación, los enlaces directos a cada documento generado:
+
+- [Caso de Negocio e Investigación](docs/business-case.md)
+- [Solución Propuesta](docs/proposed-solution.md)
+- [Especificación Técnica](docs/technical-specification.md)
+- [Manual de Usuario y Guía de Instalación](docs/user-manual.md)
+- [Documentación de API](docs/api-documentation.md)
+- [Registro de Decisiones](docs/decision-log.md)
+- [Evidencias de Kanban y Sprints](docs/kanban-sprints.md)
+- [Gestión de Riesgos](docs/risk-management.md)
+- [Preguntas Frecuentes (FAQ)](docs/faq.md)
+- [La Historia del Proyecto](docs/project-story.md)
 
 ---
 
