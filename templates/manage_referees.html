@@ -1,11 +1,15 @@
-{% extends "layout.html" %}
+{% extends "admin_dashboard.html" %}
 {% block title %}Manage Referees - Admin Panel{% endblock %}
-{% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">Manage Referees</h1>
+{% block page_icon %}<i class="fas fa-whistle"></i>{% endblock %}
+{% block page_title %}Manage Referees{% endblock %}
+{% block admin_content %}
+
+    
     <div class="row">
-        <div class="col-md-6">
-            <h2 id="form-title">Add Referee</h2>
+        <div class="col-12 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 id="form-title" class="mb-3">Add Referee</h2>
             <form action="{{ url_for('admin.manage_referees') }}" method="POST">
                 <input type="hidden" id="referee_id" name="referee_id">
                 <div class="form-group">
@@ -18,10 +22,13 @@
                 </div>
                 <button type="submit" name="submit" class="btn btn-primary" id="submit-button">Add Referee</button>
             </form>
+                </div>
+            </div>
         </div>
-        <div class="col-md-6">
-            <h2>Existing Referees</h2>
-            <table class="table table-striped">
+        <div class="col-12">
+            <h2 class="mb-3">Existing Referees</h2>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover admin-datatable">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -51,9 +58,9 @@
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
-</div>
 
 <!-- Delete Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">

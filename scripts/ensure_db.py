@@ -149,6 +149,8 @@ def fix_sequences(database_url: str) -> None:
         ("players", "players_player_id_seq", "player_id"),
         ("matches", "matches_match_id_seq", "match_id"),
         ("scores", "scores_score_id_seq", "score_id"),
+        ("countries", "countries_country_id_seq", "country_id"),
+        ("stadiums", "stadiums_stadium_id_seq", "stadium_id"),
     ]
 
     with psycopg2.connect(database_url) as conn:

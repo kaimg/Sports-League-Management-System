@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, session, url_for, flash, jsonify
 from functools import wraps
 
-from pip._vendor.distlib.util import OR
 from db import get_db
+from notification_service import notification_row_to_dict, run_notification_detection
 
 user_bp = Blueprint('user', __name__)
 
@@ -15,10 +15,135 @@ def login_required(f):
         return f(*args, **kwargs)
     return wrap
 
+
+def login_required_api(f):
+    @wraps(f)
+    def wrap(*args, **kwargs):
+        if 'user_id' not in session:
+            return jsonify({"error": "Authentication required"}), 401
+        return f(*args, **kwargs)
+    return wrap
+
 @user_bp.route('/user')
 @login_required
 def user_dashboard():
-    return render_template('user_dashboard.html')
+    user_id = session['user_id']
+    db = get_db()
+    cur = db.cursor()
+
+    # Get favorite teams and leagues
+    cur.execute("SELECT entity_id FROM user_favorites WHERE user_id = %s AND entity_type = 'team'", (user_id,))
+    fav_team_ids = [row[0] for row in cur.fetchall()]
+
+    cur.execute("SELECT entity_id FROM user_favorites WHERE user_id = %s AND entity_type = 'league'", (user_id,))
+    fav_league_ids = [row[0] for row in cur.fetchall()]
+
+    upcoming_match = None
+    recent_match = None
+    standings = []
+    favorite_league = None
+
+    if fav_team_ids or fav_league_ids:
+        team_placeholders = ','.join(['%s'] * len(fav_team_ids)) if fav_team_ids else 'NULL'
+        league_placeholders = ','.join(['%s'] * len(fav_league_ids)) if fav_league_ids else 'NULL'
+        
+        params = []
+        if fav_team_ids:
+            params.extend(fav_team_ids)
+            params.extend(fav_team_ids)
+        if fav_league_ids:
+            params.extend(fav_league_ids)
+            
+        where_clause = []
+        if fav_team_ids:
+            where_clause.append(f"(m.home_team_id IN ({team_placeholders}) OR m.away_team_id IN ({team_placeholders}))")
+        if fav_league_ids:
+            where_clause.append(f"m.league_id IN ({league_placeholders})")
+        where_sql = " OR ".join(where_clause)
+
+        # 1. Upcoming match preview
+        cur.execute(f"""
+            SELECT m.match_id, t1.name, t2.name, TO_CHAR(m.utc_date, 'Mon DD, HH24:MI'), t1.crestURL, t2.crestURL
+            FROM matches m
+            JOIN teams t1 ON m.home_team_id = t1.team_id
+            JOIN teams t2 ON m.away_team_id = t2.team_id
+            WHERE ({where_sql}) AND m.status IN ('SCHEDULED', 'TIMED', 'POSTPONED')
+            ORDER BY m.utc_date ASC LIMIT 1
+        """, tuple(params))
+        upcoming_match = cur.fetchone()
+
+        # 1. Recent match preview
+        cur.execute(f"""
+            SELECT m.match_id, t1.name, t2.name, s.full_time_home, s.full_time_away, t1.crestURL, t2.crestURL, m.status
+            FROM matches m
+            JOIN teams t1 ON m.home_team_id = t1.team_id
+            JOIN teams t2 ON m.away_team_id = t2.team_id
+            LEFT JOIN scores s ON m.match_id = s.match_id
+            WHERE ({where_sql}) AND m.status IN ('FINISHED', 'IN_PLAY', 'PAUSED')
+            ORDER BY m.utc_date DESC LIMIT 1
+        """, tuple(params))
+        recent_match = cur.fetchone()
+
+    # 4. Mini Standings table
+    if fav_league_ids:
+        fav_league_id = fav_league_ids[0]
+        cur.execute("SELECT name FROM leagues WHERE league_id = %s", (fav_league_id,))
+        league_row = cur.fetchone()
+        if league_row:
+            favorite_league = league_row[0]
+
+        cur.execute("""
+            SELECT s.position, t.name, s.played_games, s.points, t.crestURL
+            FROM standings s
+            JOIN teams t ON s.team_id = t.team_id
+            WHERE s.league_id = %s AND s.season_id = (
+                SELECT season_id FROM seasons WHERE league_id = %s ORDER BY year DESC LIMIT 1
+            )
+            ORDER BY s.position ASC LIMIT 5
+        """, (fav_league_id, fav_league_id))
+        standings = cur.fetchall()
+    else:
+        # Fallback to some major league, e.g. Premier League or La Liga
+        cur.execute("SELECT league_id, name FROM leagues ORDER BY league_id LIMIT 1")
+        default_league = cur.fetchone()
+        if default_league:
+            favorite_league = default_league[1]
+            cur.execute("""
+                SELECT s.position, t.name, s.played_games, s.points, t.crestURL
+                FROM standings s
+                JOIN teams t ON s.team_id = t.team_id
+                WHERE s.league_id = %s AND s.season_id = (
+                    SELECT season_id FROM seasons WHERE league_id = %s ORDER BY year DESC LIMIT 1
+                )
+                ORDER BY s.position ASC LIMIT 5
+            """, (default_league[0], default_league[0]))
+            standings = cur.fetchall()
+
+    # 6. Suggestions
+    if fav_team_ids:
+        placeholders = ','.join(['%s']*len(fav_team_ids))
+        cur.execute(f"SELECT team_id, name, crestURL FROM teams WHERE is_active = TRUE AND team_id NOT IN ({placeholders}) LIMIT 4", tuple(fav_team_ids))
+    else:
+        cur.execute("SELECT team_id, name, crestURL FROM teams WHERE is_active = TRUE LIMIT 4")
+    suggested_teams = cur.fetchall()
+
+    if fav_league_ids:
+        placeholders = ','.join(['%s']*len(fav_league_ids))
+        cur.execute(f"SELECT league_id, name, icon_url FROM leagues WHERE league_id NOT IN ({placeholders}) LIMIT 3", tuple(fav_league_ids))
+    else:
+        cur.execute("SELECT league_id, name, icon_url FROM leagues LIMIT 3")
+    suggested_leagues = cur.fetchall()
+
+    cur.close()
+
+    return render_template('user_dashboard.html', 
+                           upcoming_match=upcoming_match, 
+                           recent_match=recent_match, 
+                           favorite_league=favorite_league,
+                           standings=standings,
+                           suggested_teams=suggested_teams,
+                           suggested_leagues=suggested_leagues,
+                           has_favorites=bool(fav_team_ids or fav_league_ids))
 
 @user_bp.route('/my-feed')
 @login_required
@@ -117,14 +242,28 @@ def my_feed():
 def stadiums_map():
     db = get_db()
     cur = db.cursor()
-    cur.execute('SELECT league_id, name FROM leagues')
+
+    cur.execute("""
+        SELECT league_id, name, COALESCE(color, '#343a40') AS color
+        FROM leagues
+        ORDER BY name ASC
+    """)
     leagues = cur.fetchall()
+
     cur.execute('SELECT DISTINCT country FROM stadiums WHERE country IS NOT NULL ORDER BY country ASC')
     countries = cur.fetchall()
+
     cur.execute('SELECT DISTINCT city FROM stadiums WHERE city IS NOT NULL ORDER BY city ASC')
     cities = cur.fetchall()
+
     cur.close()
-    return render_template('map.html', leagues=leagues, countries=countries, cities=cities)
+
+    return render_template(
+        'map.html',
+        leagues=leagues,
+        countries=countries,
+        cities=cities
+    )
 
 @user_bp.route('/user/teams')
 @login_required
@@ -194,7 +333,8 @@ def user_teams():
         count_filters.append(f"%{search}%")
 
     cur.execute(count_query, count_filters)
-    total_teams =  cur.fetchone()[0]
+    total_teams_result = cur.fetchone()
+    total_teams = total_teams_result[0] if total_teams_result else 0
     cur.close()
 
     total_pages = (total_teams + 19) // 20
@@ -261,7 +401,8 @@ def user_players():
     players = cur.fetchall()
 
     cur.execute('SELECT COUNT(*) FROM players p JOIN teams t ON p.team_id = t.team_id JOIN countries c ON p.nationality = c.name WHERE 1=1' + (' AND t.league_id = %s' if league_id else '') + (' AND c.country_id = %s' if country_id else '') + (' AND p.team_id = %s' if team_id else '') + (' AND p.position = %s' if position else ''), filters[:-2])
-    total_players = cur.fetchone()[0]
+    total_players_result = cur.fetchone()
+    total_players = total_players_result[0] if total_players_result else 0
     cur.close()
 
     total_pages = (total_players + per_page - 1) // per_page
@@ -346,8 +487,8 @@ def user_matches():
         )
     )
     """
-    filters.append(country_id)
-    filters.append(country_id)
+        filters.append(country_id)
+        filters.append(country_id)
     if team_id:
         query += " AND (m.home_team_id = %s OR m.away_team_id = %s)"
         filters.append(team_id)
@@ -386,10 +527,17 @@ def profile_team(team_id):
 
     # Get players
     cur.execute("""
-        SELECT p.player_id, p.name, p.date_of_birth, p.position, p.nationality, c.flag_url
-        FROM players p 
-        JOIN countries c ON p.nationality = c.name
+        SELECT 
+            p.player_id,
+            p.name,
+            p.date_of_birth,
+            p.position,
+            p.nationality,
+            c.flag_url
+        FROM players p
+        LEFT JOIN countries c ON LOWER(p.nationality) = LOWER(c.name)
         WHERE p.team_id = %s
+        ORDER BY p.position, p.name
     """, (team_id,))
     players = cur.fetchall()
 
@@ -639,29 +787,46 @@ def user_scorers():
 @login_required
 def add_favorite():
     data = request.get_json()
+
     if not data or 'entity_type' not in data or 'entity_id' not in data:
         return jsonify({"error": "Missing required fields"}), 400
-        
+
     entity_type = data['entity_type']
     entity_id = data['entity_id']
     user_id = session['user_id']
-    
+
     db = get_db()
     cur = db.cursor()
+
     try:
         cur.execute(
-            "INSERT INTO user_favorites (user_id, entity_type, entity_id) VALUES (%s, %s, %s) RETURNING id",
+            """
+            INSERT INTO user_favorites (user_id, entity_type, entity_id)
+            VALUES (%s, %s, %s)
+            RETURNING id
+            """,
             (user_id, entity_type, entity_id)
         )
-        fav_id = cur.fetchone()[0]
+
+        fav_result = cur.fetchone()
+
+        if fav_result is None:
+            db.rollback()
+            return jsonify({"error": "Could not create favorite"}), 500
+
+        fav_id = fav_result[0]
         db.commit()
+
         return jsonify({"success": True, "id": fav_id}), 201
+
     except Exception as e:
         db.rollback()
-        # Handle unique constraint violation
-        if 'unique constraint' in str(e).lower():
+
+        if "unique constraint" in str(e).lower():
             return jsonify({"error": "Already marked as favorite"}), 409
+
         return jsonify({"error": str(e)}), 500
+
     finally:
         cur.close()
 
@@ -719,3 +884,143 @@ def get_favorites():
         })
         
     return jsonify(result), 200
+
+
+def _fetch_user_notifications(user_id, unread_only=False, limit=None):
+    db = get_db()
+    cur = db.cursor()
+
+    query = """
+        SELECT id, type, message, related_match_id, is_read, created_at
+        FROM notifications
+        WHERE user_id = %s
+    """
+    params = [user_id]
+
+    if unread_only:
+        query += " AND is_read = FALSE"
+
+    query += " ORDER BY created_at DESC"
+
+    if limit is not None:
+        query += " LIMIT %s"
+        params.append(limit)
+
+    cur.execute(query, tuple(params))
+    rows = cur.fetchall()
+    cur.close()
+    return [notification_row_to_dict(row) for row in rows]
+
+
+@user_bp.route('/api/notifications/detect', methods=['POST'])
+@login_required_api
+def trigger_notification_detection():
+    """Run upcoming-match detection on demand (e.g. after login or cron)."""
+    db = get_db()
+    try:
+        counts = run_notification_detection(db)
+        return jsonify({"success": True, "created": counts}), 200
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@user_bp.route('/api/notifications/history', methods=['GET'])
+@login_required_api
+def get_notification_history():
+    user_id = session['user_id']
+    return jsonify(_fetch_user_notifications(user_id)), 200
+
+
+@user_bp.route('/api/notifications/read-all', methods=['PATCH'])
+@login_required_api
+def mark_all_notifications_read():
+    user_id = session['user_id']
+    db = get_db()
+    cur = db.cursor()
+    try:
+        cur.execute(
+            """
+            UPDATE notifications
+            SET is_read = TRUE
+            WHERE user_id = %s AND is_read = FALSE
+            RETURNING id
+            """,
+            (user_id,),
+        )
+        updated = cur.rowcount
+        db.commit()
+        return jsonify({"success": True, "updated": updated}), 200
+    except Exception as exc:
+        db.rollback()
+        return jsonify({"error": str(exc)}), 500
+    finally:
+        cur.close()
+
+
+@user_bp.route('/api/notifications/<int:notification_id>/read', methods=['PATCH'])
+@login_required_api
+def mark_notification_read(notification_id):
+    user_id = session['user_id']
+    db = get_db()
+    cur = db.cursor()
+    try:
+        cur.execute(
+            """
+            UPDATE notifications
+            SET is_read = TRUE
+            WHERE id = %s AND user_id = %s
+            RETURNING id
+            """,
+            (notification_id, user_id),
+        )
+        updated = cur.fetchone()
+        db.commit()
+        if not updated:
+            return jsonify({"error": "Notification not found or unauthorized"}), 404
+        return jsonify({"success": True, "id": notification_id}), 200
+    except Exception as exc:
+        db.rollback()
+        return jsonify({"error": str(exc)}), 500
+    finally:
+        cur.close()
+
+
+@user_bp.route('/api/notifications', methods=['GET'])
+@login_required_api
+def get_notifications():
+    user_id = session['user_id']
+    unread_only = request.args.get('unread_only', '').lower() in ('1', 'true', 'yes')
+    limit = request.args.get('limit', type=int)
+
+    if limit is None:
+        limit = 50
+
+    notifications = _fetch_user_notifications(user_id, unread_only=unread_only, limit=limit)
+
+    db = get_db()
+    cur = db.cursor()
+    cur.execute(
+        "SELECT COUNT(*) FROM notifications WHERE user_id = %s AND is_read = FALSE",
+        (user_id,),
+    )
+    unread_result = cur.fetchone()
+    unread_count = unread_result[0] if unread_result else 0
+
+    cur.close()
+
+    return jsonify({
+        "notifications": notifications,
+        "unread_count": unread_count,
+    }), 200
+
+
+@user_bp.route('/notifications')
+@login_required
+def notifications_page():
+    return render_template('notifications.html')
+
+
+@user_bp.route('/notifications/history')
+@login_required
+def notifications_history_page():
+    return render_template('notifications_history.html')

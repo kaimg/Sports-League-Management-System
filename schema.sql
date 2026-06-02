@@ -10201,7 +10201,8 @@ CREATE TABLE public.notifications (
     message text NOT NULL,
     related_match_id integer REFERENCES public.matches(match_id) ON DELETE CASCADE,
     is_read boolean DEFAULT FALSE,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id, type, related_match_id)
 );
 
 --

@@ -1,0 +1,120 @@
+{% extends "layout.html" %}
+{% block title %}Notifications - Sports League Management{% endblock %}
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h1 class="mb-1"><i class="fas fa-bell text-primary"></i> Notifications</h1>
+            <p class="text-muted mb-0">Updates from the teams and leagues you follow.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <button type="button" class="btn btn-outline-primary btn-sm me-2" id="refreshNotificationsBtn">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm me-2" id="detectNotificationsBtn">
+                <i class="fas fa-search"></i> Check upcoming
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" id="markAllReadPageBtn">
+                <i class="fas fa-check-double"></i> Mark all read
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <div class="card notification-page-card bg-white">
+                <div class="card-body py-3">
+                    <div class="text-muted small">Unread</div>
+                    <div class="h3 mb-0 text-primary" id="unreadCountStat">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card notification-page-card bg-white">
+                <div class="card-body py-3 d-flex align-items-center justify-content-between">
+                    <span class="text-muted">Need the full archive?</span>
+                    <a href="{{ url_for('user.notifications_history_page') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-history"></i> View history
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card notification-page-card bg-white">
+        <div class="card-header bg-white border-bottom py-3">
+            <h5 class="mb-0"><i class="fas fa-inbox"></i> Recent notifications</h5>
+        </div>
+        <div id="notificationsPageList">
+            <div class="p-4 text-center text-muted">Loading notifications...</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function refreshNotificationsPage() {
+        const list = document.getElementById('notificationsPageList');
+        const unreadStat = document.getElementById('unreadCountStat');
+
+        try {
+            const response = await fetch('/api/notifications?limit=50');
+            if (!response.ok) throw new Error('Failed to load');
+
+            const data = await response.json();
+            unreadStat.textContent = data.unread_count || 0;
+            window.NotificationCenter.updateBadge(data.unread_count || 0);
+
+            if (!data.notifications || data.notifications.length === 0) {
+                list.innerHTML = `
+                    <div class="p-5 text-center text-muted">
+                        <i class="fas fa-inbox fa-2x mb-3 d-block"></i>
+                        No notifications yet.<br>
+                        <small>Follow a team or league, then use "Check upcoming" or sync matches from admin.</small>
+                    </div>`;
+                return;
+            }
+
+            list.innerHTML = data.notifications.map(function (n) {
+                return window.NotificationCenter.renderNotificationItem(n, false);
+            }).join('');
+            window.NotificationCenter.bindNotificationClicks(list, false);
+        } catch (e) {
+            list.innerHTML = '<div class="p-4 text-center text-danger">Could not load notifications.</div>';
+        }
+    }
+
+    window.refreshNotificationsPage = refreshNotificationsPage;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        refreshNotificationsPage();
+
+        document.getElementById('refreshNotificationsBtn').addEventListener('click', refreshNotificationsPage);
+
+        document.getElementById('markAllReadPageBtn').addEventListener('click', async function () {
+            await window.NotificationCenter.markAllNotificationsRead();
+            await refreshNotificationsPage();
+        });
+
+        document.getElementById('detectNotificationsBtn').addEventListener('click', async function () {
+            const btn = this;
+            btn.disabled = true;
+            try {
+                const response = await fetch('/api/notifications/detect', { method: 'POST' });
+                const data = await response.json();
+                if (response.ok) {
+                    await refreshNotificationsPage();
+                    if (window.NotificationCenter.loadNotificationDropdown) {
+                        await window.NotificationCenter.loadNotificationDropdown(true);
+                    }
+                } else {
+                    alert(data.error || 'Detection failed');
+                }
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    });
+</script>
+{% endblock %}
