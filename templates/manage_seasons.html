@@ -1,11 +1,15 @@
-{% extends "layout.html" %}
+{% extends "admin_dashboard.html" %}
 {% block title %}Manage Seasons - Admin Panel{% endblock %}
-{% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">Manage Seasons</h1>
+{% block page_icon %}<i class="fas fa-calendar-alt"></i>{% endblock %}
+{% block page_title %}Manage Seasons{% endblock %}
+{% block admin_content %}
+
+    
     <div class="row">
-        <div class="col-md-6">
-            <h2 id="form-title">Add Season</h2>
+        <div class="col-12 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 id="form-title" class="mb-3">Add Season</h2>
             <form action="{{ url_for('admin.manage_seasons') }}" method="POST" id="seasonForm">
                 <input type="hidden" id="season_id" name="season_id">
                 <div class="form-group">
@@ -31,10 +35,13 @@
                     Add Season
                 </button>
             </form>
+                </div>
+            </div>
         </div>
-        <div class="col-md-6">
-            <h2>Existing Seasons</h2>
-            <table class="table table-striped">
+        <div class="col-12">
+            <h2 class="mb-3">Existing Seasons</h2>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover admin-datatable">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -78,9 +85,9 @@
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
-</div>
 
 
 

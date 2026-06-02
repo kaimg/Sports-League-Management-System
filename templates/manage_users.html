@@ -1,6 +1,8 @@
-{% extends "layout.html" %}
+{% extends "admin_dashboard.html" %}
 {% block title %}Manage Users - Admin Panel{% endblock %}
-{% block content %}
+{% block page_icon %}<i class="fas fa-users-cog"></i>{% endblock %}
+{% block page_title %}Manage Users{% endblock %}
+{% block admin_content %}
 <style>
     .badge-user {
         background-color: #007bff;
@@ -11,11 +13,13 @@
         color: white;
     }
 </style>
-<div class="container mt-4">
-    <h1 class="mb-4">Manage Users</h1>
+
+    
     <div class="row">
-        <div class="col-md-6">
-            <h2 id="form-title">Edit User Privileges</h2>
+        <div class="col-12 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 id="form-title" class="mb-3">Edit User Privileges</h2>
             <form action="{{ url_for('admin.manage_users') }}" method="POST">
                 <input type="hidden" id="user_id" name="user_id">
                 <div class="form-group">
@@ -27,10 +31,13 @@
                 </div>
                 <button type="submit" name="submit" class="btn btn-primary" id="submit-button">Update Privilege</button>
             </form>
+                </div>
+            </div>
         </div>
-        <div class="col-md-6">
-            <h2>Existing Users</h2>
-            <table class="table table-striped">
+        <div class="col-12">
+            <h2 class="mb-3">Existing Users</h2>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover admin-datatable">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -58,9 +65,9 @@
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
-</div>
 
 <script>
     function editUser(id, isAdmin) {

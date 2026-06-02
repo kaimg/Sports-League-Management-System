@@ -1,0 +1,313 @@
+{% extends "layout.html" %}
+{% block title %}Admin Panel - Sports League Management{% endblock %}
+{% block content %}
+<style>
+    :root {
+        --admin-bg: #1e1e2d;
+        --admin-bg-darker: #151521;
+        --admin-accent: #00d4ff;
+        --admin-text: #a1a5b7;
+        --admin-text-light: #ffffff;
+        --admin-card-bg: #ffffff;
+    }
+
+    .admin-container {
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr);
+        gap: 1.5rem;
+        min-height: calc(100vh - 120px);
+        max-width: 100%;
+        overflow-x: hidden;
+        padding-top: 1rem;
+    }
+
+    /* Admin Sidebar */
+    .admin-sidebar {
+        background: var(--admin-bg);
+        border-radius: 16px;
+        padding: 0;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        overflow-y: auto;
+        position: sticky;
+        top: 2rem;
+        max-height: calc(100vh - 120px);
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .admin-sidebar-header {
+        background: var(--admin-bg-darker);
+        padding: 1.5rem;
+        color: var(--admin-text-light);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 700;
+        font-size: 1.2rem;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .admin-sidebar-header i {
+        color: var(--admin-accent);
+        font-size: 1.5rem;
+        filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.4));
+    }
+
+    .admin-nav {
+        list-style: none;
+        padding: 1rem 0.5rem;
+        margin: 0;
+        flex-grow: 1;
+    }
+
+    .admin-nav li {
+        margin: 0.2rem 0;
+    }
+
+    .admin-nav a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0.85rem 1.25rem;
+        color: var(--admin-text);
+        text-decoration: none;
+        border-left: 4px solid transparent;
+        transition: all 0.3s ease;
+        border-radius: 8px;
+        margin: 0 0.5rem;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+
+    .admin-nav a:hover {
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--admin-text-light);
+        transform: translateX(4px);
+    }
+
+    .admin-nav a.active {
+        background: rgba(0, 212, 255, 0.1);
+        color: var(--admin-accent);
+        border-left-color: var(--admin-accent);
+        font-weight: 600;
+        box-shadow: inset 0 0 12px rgba(0, 212, 255, 0.05);
+    }
+
+    .admin-nav a i {
+        width: 24px;
+        text-align: center;
+        font-size: 1.1rem;
+        transition: transform 0.3s ease;
+    }
+
+    .admin-nav a.active i {
+        color: var(--admin-accent);
+    }
+
+    .admin-nav a:hover i {
+        transform: scale(1.1);
+        color: var(--admin-text-light);
+    }
+
+    /* Main Content Wrapper */
+    .admin-main-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .admin-page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: white;
+        padding: 1.5rem 2rem;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    }
+
+    .admin-page-header h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1e1e2d;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .admin-page-header h1 i {
+        color: var(--admin-accent);
+        font-size: 2rem;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* Content Styling for Sub-pages */
+    .admin-content-area {
+        background: transparent;
+    }
+
+    .admin-content-area .card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04) !important;
+        overflow: hidden;
+    }
+    
+    .admin-content-area .card-header {
+        background: white;
+        border-bottom: 1px solid #f0f2f5;
+        padding: 1.25rem 1.5rem;
+    }
+
+    .admin-content-area .table-striped tbody tr:nth-of-type(odd) {
+        background-color: rgba(0, 0, 0, 0.015);
+    }
+
+    .admin-content-area .table {
+        margin-bottom: 0;
+    }
+    
+    .admin-content-area .table th {
+        font-weight: 600;
+        color: #5e6278;
+        border-bottom: 2px solid #f0f2f5;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+
+    .admin-content-area .btn-primary {
+        background-color: var(--admin-bg);
+        border-color: var(--admin-bg);
+        box-shadow: 0 4px 10px rgba(30, 30, 45, 0.2);
+    }
+
+    .admin-content-area .btn-primary:hover {
+        background-color: var(--admin-bg-darker);
+        border-color: var(--admin-bg-darker);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .admin-container {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .admin-sidebar {
+            display: none !important;
+        }
+
+        .admin-page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1.25rem;
+        }
+    }
+</style>
+
+<style>
+    /* Mobile Offcanvas Admin Nav */
+    #mobileAdminSidebar {
+        background-color: var(--admin-bg-darker) !important;
+    }
+    #mobileAdminSidebar .offcanvas-header {
+        background-color: var(--admin-bg) !important;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    #mobileAdminSidebar .btn-close-white {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
+</style>
+
+<!-- Mobile sidebar toggle -->
+{% block mobile_sidebar_toggle %}
+<button class="btn btn-outline-dark mobile-admin-btn ms-2" type="button" data-bs-toggle="offcanvas"
+    data-bs-target="#mobileAdminSidebar" aria-controls="mobileAdminSidebar">
+    <i class="fas fa-bars"></i>
+</button>
+<style>
+    .mobile-admin-btn { display: none; }
+    @media (max-width: 1024px) {
+        .mobile-admin-btn { display: inline-block !important; }
+    }
+</style>
+{% endblock %}
+
+<div class="container-fluid px-4">
+    <div class="admin-container">
+        <!-- Mobile Offcanvas Sidebar -->
+        <div class="offcanvas offcanvas-start text-white" tabindex="-1" id="mobileAdminSidebar"
+            aria-labelledby="mobileAdminSidebarLabel">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="mobileAdminSidebarLabel">
+                    <i class="fas fa-user-shield text-info"></i> Admin Control
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body p-0">
+                <ul class="admin-nav mt-2">
+                    <li><a href="{{ url_for('admin') }}" class="{% if request.endpoint == 'admin' %}active{% endif %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                    <li><a href="{{ url_for('admin.manage_users') }}" class="{% if request.endpoint == 'admin.manage_users' %}active{% endif %}"><i class="fas fa-users-cog"></i> Users</a></li>
+                    <li><a href="{{ url_for('admin.manage_stadiums') }}" class="{% if request.endpoint == 'admin.manage_stadiums' %}active{% endif %}"><i class="fas fa-building"></i> Stadiums</a></li>
+                    <li><a href="{{ url_for('admin.manage_leagues') }}" class="{% if request.endpoint == 'admin.manage_leagues' %}active{% endif %}"><i class="fas fa-trophy"></i> Leagues</a></li>
+                    <li><a href="{{ url_for('admin.manage_seasons') }}" class="{% if request.endpoint == 'admin.manage_seasons' %}active{% endif %}"><i class="fas fa-calendar-alt"></i> Seasons</a></li>
+                    <li><a href="{{ url_for('admin.manage_teams') }}" class="{% if request.endpoint == 'admin.manage_teams' %}active{% endif %}"><i class="fas fa-shield-alt"></i> Teams</a></li>
+                    <li><a href="{{ url_for('admin.manage_coaches') }}" class="{% if request.endpoint == 'admin.manage_coaches' %}active{% endif %}"><i class="fas fa-user-tie"></i> Coaches</a></li>
+                    <li><a href="{{ url_for('admin.manage_players') }}" class="{% if request.endpoint == 'admin.manage_players' %}active{% endif %}"><i class="fas fa-running"></i> Players</a></li>
+                    <li><a href="{{ url_for('admin.manage_matches') }}" class="{% if request.endpoint == 'admin.manage_matches' %}active{% endif %}"><i class="fas fa-futbol"></i> Matches</a></li>
+                    <li><a href="{{ url_for('admin.manage_scores') }}" class="{% if request.endpoint == 'admin.manage_scores' %}active{% endif %}"><i class="fas fa-clipboard-list"></i> Scores</a></li>
+                    <li><a href="{{ url_for('admin.manage_countries') }}" class="{% if request.endpoint == 'admin.manage_countries' %}active{% endif %}"><i class="fas fa-globe"></i> Countries</a></li>
+                    <li><a href="{{ url_for('admin.manage_referees') }}" class="{% if request.endpoint == 'admin.manage_referees' %}active{% endif %}"><i class="fas fa-whistle"></i> Referees</a></li>
+                    <li><a href="{{ url_for('admin.manage_scorers') }}" class="{% if request.endpoint == 'admin.manage_scorers' %}active{% endif %}"><i class="fas fa-fire"></i> Scorers</a></li>
+                    <li><a href="{{ url_for('admin.manage_standings') }}" class="{% if request.endpoint == 'admin.manage_standings' %}active{% endif %}"><i class="fas fa-list-ol"></i> Standings</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Sidebar Desktop -->
+        <aside class="admin-sidebar">
+            <div class="admin-sidebar-header">
+                <i class="fas fa-user-shield"></i>
+                <span>Admin Control</span>
+            </div>
+            <ul class="admin-nav">
+                <li><a href="{{ url_for('admin') }}" class="{% if request.endpoint == 'admin' %}active{% endif %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="{{ url_for('admin.manage_users') }}" class="{% if request.endpoint == 'admin.manage_users' %}active{% endif %}"><i class="fas fa-users-cog"></i> Users</a></li>
+                <li><a href="{{ url_for('admin.manage_stadiums') }}" class="{% if request.endpoint == 'admin.manage_stadiums' %}active{% endif %}"><i class="fas fa-building"></i> Stadiums</a></li>
+                <li><a href="{{ url_for('admin.manage_leagues') }}" class="{% if request.endpoint == 'admin.manage_leagues' %}active{% endif %}"><i class="fas fa-trophy"></i> Leagues</a></li>
+                <li><a href="{{ url_for('admin.manage_seasons') }}" class="{% if request.endpoint == 'admin.manage_seasons' %}active{% endif %}"><i class="fas fa-calendar-alt"></i> Seasons</a></li>
+                <li><a href="{{ url_for('admin.manage_teams') }}" class="{% if request.endpoint == 'admin.manage_teams' %}active{% endif %}"><i class="fas fa-shield-alt"></i> Teams</a></li>
+                <li><a href="{{ url_for('admin.manage_coaches') }}" class="{% if request.endpoint == 'admin.manage_coaches' %}active{% endif %}"><i class="fas fa-user-tie"></i> Coaches</a></li>
+                <li><a href="{{ url_for('admin.manage_players') }}" class="{% if request.endpoint == 'admin.manage_players' %}active{% endif %}"><i class="fas fa-running"></i> Players</a></li>
+                <li><a href="{{ url_for('admin.manage_matches') }}" class="{% if request.endpoint == 'admin.manage_matches' %}active{% endif %}"><i class="fas fa-futbol"></i> Matches</a></li>
+                <li><a href="{{ url_for('admin.manage_scores') }}" class="{% if request.endpoint == 'admin.manage_scores' %}active{% endif %}"><i class="fas fa-clipboard-list"></i> Scores</a></li>
+                <li><a href="{{ url_for('admin.manage_countries') }}" class="{% if request.endpoint == 'admin.manage_countries' %}active{% endif %}"><i class="fas fa-globe"></i> Countries</a></li>
+                <li><a href="{{ url_for('admin.manage_referees') }}" class="{% if request.endpoint == 'admin.manage_referees' %}active{% endif %}"><i class="fas fa-bullhorn"></i> Referees</a></li>
+                <li><a href="{{ url_for('admin.manage_scorers') }}" class="{% if request.endpoint == 'admin.manage_scorers' %}active{% endif %}"><i class="fas fa-fire"></i> Scorers</a></li>
+                <li><a href="{{ url_for('admin.manage_standings') }}" class="{% if request.endpoint == 'admin.manage_standings' %}active{% endif %}"><i class="fas fa-list-ol"></i> Standings</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="admin-main-wrapper">
+            <div class="admin-page-header">
+                <h1>
+                    {% block page_icon %}<i class="fas fa-cog"></i>{% endblock %}
+                    {% block page_title %}Admin Panel{% endblock %}
+                </h1>
+                <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm shadow-sm">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+            
+            <div class="admin-content-area">
+                {% block admin_content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

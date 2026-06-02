@@ -1,29 +1,8 @@
-{% extends "layout.html" %}
-{% block title %}Admin Panel - Sports League Management{% endblock %}
-{% block content %}
-<div class="container mt-4">
-    <h1>Admin Panel</h1>
-    <div class="row">
-        <div class="col-md-3">
-            <div class="list-group">
-                 <a href="{{ url_for('admin.manage_users') }}" class="list-group-item list-group-item-action">Manage Users</a>
-                <a href="{{ url_for('admin.manage_stadiums') }}" class="list-group-item list-group-item-action">Manage Stadiums</a>
-                <a href="{{ url_for('admin.manage_leagues') }}" class="list-group-item list-group-item-action">Manage Leagues</a>
-                <a href="{{ url_for('admin.manage_seasons') }}" class="list-group-item list-group-item-action">Manage Seasons</a>
-                <a href="{{ url_for('admin.manage_teams') }}" class="list-group-item list-group-item-action">Manage Teams</a>
-                <a href="{{ url_for('admin.manage_coaches') }}" class="list-group-item list-group-item-action">Manage Coaches</a>
-                <a href="{{ url_for('admin.manage_players') }}" class="list-group-item list-group-item-action">Manage Players</a>
-                <a href="{{ url_for('admin.manage_matches') }}" class="list-group-item list-group-item-action">Manage Matches</a>
-                <a href="{{ url_for('admin.manage_scores') }}" class="list-group-item list-group-item-action">Manage Scores</a>
-                <a href="{{ url_for('admin.manage_countries') }}" class="list-group-item list-group-item-action">Manage Countries</a>
-                <a href="{{ url_for('admin.manage_referees') }}" class="list-group-item list-group-item-action">Manage Referees</a>
-                <a href="{{ url_for('admin.manage_scorers') }}" class="list-group-item list-group-item-action">Manage Scorers</a>
-                <a href="{{ url_for('admin.manage_standings') }}" class="list-group-item list-group-item-action">Manage Standings</a>
-            </div>
-        </div>
-        <div class="col-md-9">
-            <h2>Welcome to the Admin Dashboard</h2>
-            <p class="mb-4">Use the sidebar to manage the system.</p>
+{% extends "admin_dashboard.html" %}
+{% block page_icon %}<i class="fas fa-tachometer-alt"></i>{% endblock %}
+{% block page_title %}Admin Dashboard{% endblock %}
+{% block admin_content %}
+            <p class="mb-4 text-muted">Welcome to the Admin Dashboard. Use the sidebar to manage the system.</p>
             
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-header bg-dark text-white font-weight-bold">
@@ -62,14 +41,5 @@
                     {% endif %}
                 </div>
             </div>
-        </div>
     </div>
-    <nav class="mt-4">
-        <ul class="nav">
-            <li class="nav-item">
-                <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
-            </li>
-        </ul>
-    </nav>
-</div>
 {% endblock %}

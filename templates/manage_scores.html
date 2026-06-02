@@ -1,11 +1,15 @@
-{% extends "layout.html" %}
+{% extends "admin_dashboard.html" %}
 {% block title %}Manage Scores - Admin Panel{% endblock %}
-{% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">Manage Scores</h1>
+{% block page_icon %}<i class="fas fa-clipboard-list"></i>{% endblock %}
+{% block page_title %}Manage Scores{% endblock %}
+{% block admin_content %}
+
+    
     <div class="row">
-        <div class="col-md-6">
-            <h2 id="form-title">Add Score</h2>
+        <div class="col-12 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 id="form-title" class="mb-3">Add Score</h2>
             <form action="{{ url_for('admin.manage_scores') }}" method="POST">
                 <input type="hidden" id="score_id" name="score_id">
                 <div class="form-group">
@@ -34,10 +38,13 @@
                 </div>
                 <button type="submit" name="submit" class="btn btn-primary" id="submit-button">Add Score</button>
             </form>
+                </div>
+            </div>
         </div>
-        <div class="col-md-6">
-            <h2>Existing Scores</h2>
-            <table class="table table-striped">
+        <div class="col-12">
+            <h2 class="mb-3">Existing Scores</h2>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover admin-datatable">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -73,9 +80,9 @@
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
-</div>
 
 <!-- Delete Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">

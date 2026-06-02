@@ -1,7 +1,9 @@
-{% extends "layout.html" %}
+{% extends "admin_dashboard.html" %}
 {% block title %}Manage Leagues - Admin Panel{% endblock %}
 
-{% block content %}
+{% block page_icon %}<i class="fas fa-trophy"></i>{% endblock %}
+{% block page_title %}Manage Leagues{% endblock %}
+{% block admin_content %}
 
 <style>
     .league-color-dot {
@@ -15,14 +17,16 @@
     }
 </style>
 
-<div class="container mt-4">
 
-<div class="container mt-4">
-    <h1 class="mb-4">Manage Leagues</h1>
+
+
+    
 
     <div class="row">
-        <div class="col-md-6">
-            <h2 id="form-title">Add League</h2>
+        <div class="col-12 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 id="form-title" class="mb-3">Add League</h2>
 
             <form action="{{ url_for('admin.manage_leagues') }}" method="POST" id="leagueForm">
                 <input type="hidden" id="league_id" name="league_id">
@@ -56,12 +60,14 @@
                     Add League
                 </button>
             </form>
+                </div>
+            </div>
         </div>
 
-        <div class="col-md-6">
-            <h2>Existing Leagues</h2>
-
-            <table class="table table-striped">
+        <div class="col-12">
+            <h2 class="mb-3">Existing Leagues</h2>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover admin-datatable">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -116,9 +122,9 @@
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
-</div>
 
 {% include 'delete_modal.html' %}
 
